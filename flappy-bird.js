@@ -1312,72 +1312,129 @@ class FlappyBirdGame {
     }
     
     createPipe() {
+        // Determine how many pipes to create in this group (1-3 pipes)
+        const pipeGroupSize = Math.random() < 0.7 ? 1 : Math.random() < 0.8 ? 2 : 3;
+        
+        for (let i = 0; i < pipeGroupSize; i++) {
+            this.createSinglePipe(i, pipeGroupSize);
+        }
+    }
+    
+    createSinglePipe(pipeIndex, groupSize) {
         const minHeight = 50;
         const maxHeight = this.canvas.height - this.settings.pipeGap - minHeight;
-        
-        // Enhanced random positioning with pattern variations
-        let topHeight;
-        
-        // Create different pipe positioning patterns for variety
-        const pattern = Math.random();
-        
-        if (pattern < 0.3) {
-            // High pipes (30% chance) - gap in upper area
-            const upperRange = (maxHeight - minHeight) * 0.3;
-            topHeight = minHeight + Math.random() * upperRange;
-        } else if (pattern < 0.6) {
-            // Low pipes (30% chance) - gap in lower area  
-            const lowerRange = (maxHeight - minHeight) * 0.3;
-            topHeight = maxHeight - lowerRange + Math.random() * lowerRange;
-        } else if (pattern < 0.8) {
-            // Middle pipes (20% chance) - gap in center area
-            const centerY = (minHeight + maxHeight) / 2;
-            const centerRange = (maxHeight - minHeight) * 0.3;
-            topHeight = centerY - centerRange/2 + Math.random() * centerRange;
-        } else {
-            // Completely random (20% chance) - anywhere
-            topHeight = minHeight + Math.random() * (maxHeight - minHeight);
-        }
-        
-        // Add some influence from previous pipe to create flowing patterns
-        if (this.pipes.length > 0) {
-            const lastPipe = this.pipes[this.pipes.length - 1];
-            
-            // Adjust influence based on difficulty - harder = more erratic
-            const difficultyFactor = Math.min(this.score / 20, 1); // 0 to 1 based on score
-            const influence = 0.3 - (difficultyFactor * 0.1); // Less influence = more erratic
-            const randomness = 0.7 + (difficultyFactor * 0.2); // More randomness = more erratic
-            
-            topHeight = topHeight * randomness + lastPipe.topHeight * influence;
-            
-            // Add difficulty-based extreme positions
-            if (this.score > 10 && Math.random() < 0.1) {
-                // 10% chance for extreme positions after score 10
-                topHeight = Math.random() < 0.5 ? minHeight + 20 : maxHeight - 20;
-            }
-            
-            // Ensure we stay within bounds
-            topHeight = Math.max(minHeight, Math.min(maxHeight, topHeight));
-        }
         
         // Random pipe spacing for varied gameplay
         const baseSpacing = Math.max(this.canvas.width * 0.5, 400);
         const spacingVariation = baseSpacing * 0.4; // 40% variation
         const randomSpacing = baseSpacing + (Math.random() - 0.5) * spacingVariation;
         
+        // For grouped pipes, space them closer together
+        const groupSpacing = groupSize > 1 ? baseSpacing * 0.6 : randomSpacing;
+        const pipeSpacing = pipeIndex === 0 ? randomSpacing : groupSpacing;
+        
         const pipeX = this.pipes.length === 0 ? 
             this.bird.x + this.canvas.width * 0.8 : 
-            this.pipes[this.pipes.length - 1].x + randomSpacing;
+            this.pipes[this.pipes.length - 1].x + pipeSpacing;
         
-        this.pipes.push({
-            x: pipeX,
-            topHeight: topHeight,
-            bottomY: topHeight + this.settings.pipeGap,
-            scored: false
-        });
+        // Determine pipe type for variety
+        const pipeTypeRandom = Math.random();
+        let pipeType;
         
-        // Spawn easter egg with chance (only if power-up not active)
-        if (Math.random() < this.easterEggSpawnChance && !this.powerUp.active) {
+        if (pipeTypeRandom < 0.6) {
+            pipeType = 'full'; // 60% chance - traditional full pipe
+        } else if (pipeTypeRandom < 0.8) {
+            pipeType = 'topOnly'; // 20% chance - only top pipe (fly under)
+        } else {
+            pipeType = 'bottomOnly'; // 20% chance - only bottom pipe (fly over)
+        }
+        
+        // Create pipe based on type
+        let pipe;
+        
+        if (pipeType === 'full') {
+            // Traditional pipe with gap
+            let topHeight;
+            
+            // Enhanced random positioning with pattern variations
+            const pattern = Math.random();
+            
+            if (pattern < 0.3) {
+                // High pipes (30% chance) - gap in upper area
+                const upperRange = (maxHeight - minHeight) * 0.3;
+                topHeight = minHeight + Math.random() * upperRange;
+            } else if (pattern < 0.6) {
+                // Low pipes (30% chance) - gap in lower area  
+                const lowerRange = (maxHeight - minHeight) * 0.3;
+                topHeight = maxHeight - lowerRange + Math.random() * lowerRange;
+            } else if (pattern < 0.8) {
+                // Middle pipes (20% chance) - gap in center area
+                const centerY = (minHeight + maxHeight) / 2;
+                const centerRange = (maxHeight - minHeight) * 0.3;
+                topHeight = centerY - centerRange/2 + Math.random() * centerRange;
+            } else {
+                // Completely random (20% chance) - anywhere
+                topHeight = minHeight + Math.random() * (maxHeight - minHeight);
+            }
+            
+            // Add some influence from previous pipe to create flowing patterns
+            if (this.pipes.length > 0) {
+                const lastPipe = this.pipes[this.pipes.length - 1];
+                
+                // Adjust influence based on difficulty - harder = more erratic
+                const difficultyFactor = Math.min(this.score / 20, 1); // 0 to 1 based on score
+                const influence = 0.3 - (difficultyFactor * 0.1); // Less influence = more erratic
+                const randomness = 0.7 + (difficultyFactor * 0.2); // More randomness = more erratic
+                
+                topHeight = topHeight * randomness + lastPipe.topHeight * influence;
+                
+                // Add difficulty-based extreme positions
+                if (this.score > 10 && Math.random() < 0.1) {
+                    // 10% chance for extreme positions after score 10
+                    topHeight = Math.random() < 0.5 ? minHeight + 20 : maxHeight - 20;
+                }
+                
+                // Ensure we stay within bounds
+                topHeight = Math.max(minHeight, Math.min(maxHeight, topHeight));
+            }
+            
+            pipe = {
+                x: pipeX,
+                topHeight: topHeight,
+                bottomY: topHeight + this.settings.pipeGap,
+                scored: false,
+                type: 'full'
+            };
+            
+        } else if (pipeType === 'topOnly') {
+            // Only top pipe - fly underneath
+            const topHeight = this.canvas.height * 0.3 + Math.random() * (this.canvas.height * 0.4);
+            
+            pipe = {
+                x: pipeX,
+                topHeight: topHeight,
+                bottomY: this.canvas.height + 100, // No bottom pipe (way off screen)
+                scored: false,
+                type: 'topOnly'
+            };
+            
+        } else { // bottomOnly
+            // Only bottom pipe - fly overhead
+            const bottomHeight = this.canvas.height * 0.4 + Math.random() * (this.canvas.height * 0.3);
+            
+            pipe = {
+                x: pipeX,
+                topHeight: -100, // No top pipe (way off screen)
+                bottomY: bottomHeight,
+                scored: false,
+                type: 'bottomOnly'
+            };
+        }
+        
+        this.pipes.push(pipe);
+        
+        // Spawn easter egg with chance (only if power-up not active and it's the last pipe in group)
+        if (pipeIndex === groupSize - 1 && Math.random() < this.easterEggSpawnChance && !this.powerUp.active) {
             this.spawnEasterEgg(pipeX + this.settings.pipeWidth + 100);
         }
     }
@@ -2744,33 +2801,39 @@ class FlappyBirdGame {
         const capHeight = 24;
         const capOverhang = 4;
         
-        // Top pipe
-        this.ctx.fillStyle = colors.body;
-        this.ctx.fillRect(pipe.x, 0, this.settings.pipeWidth, pipe.topHeight - capHeight);
+        // Draw top pipe (if it should be visible)
+        if (pipe.type !== 'bottomOnly' && pipe.topHeight > 0) {
+            // Top pipe body
+            this.ctx.fillStyle = colors.body;
+            this.ctx.fillRect(pipe.x, 0, this.settings.pipeWidth, pipe.topHeight - capHeight);
+            
+            // Top pipe highlights
+            this.ctx.fillStyle = colors.light;
+            this.ctx.fillRect(pipe.x, 0, 4, pipe.topHeight - capHeight);
+            this.ctx.fillStyle = colors.dark;
+            this.ctx.fillRect(pipe.x + this.settings.pipeWidth - 4, 0, 4, pipe.topHeight - capHeight);
+            
+            // Top pipe cap
+            this.ctx.fillStyle = colors.body;
+            this.ctx.fillRect(pipe.x - capOverhang, pipe.topHeight - capHeight, this.settings.pipeWidth + (capOverhang * 2), capHeight);
+        }
         
-        // Top pipe highlights
-        this.ctx.fillStyle = colors.light;
-        this.ctx.fillRect(pipe.x, 0, 4, pipe.topHeight - capHeight);
-        this.ctx.fillStyle = colors.dark;
-        this.ctx.fillRect(pipe.x + this.settings.pipeWidth - 4, 0, 4, pipe.topHeight - capHeight);
-        
-        // Top pipe cap
-        this.ctx.fillStyle = colors.body;
-        this.ctx.fillRect(pipe.x - capOverhang, pipe.topHeight - capHeight, this.settings.pipeWidth + (capOverhang * 2), capHeight);
-        
-        // Bottom pipe
-        this.ctx.fillStyle = colors.body;
-        this.ctx.fillRect(pipe.x, pipe.bottomY + capHeight, this.settings.pipeWidth, this.canvas.height - pipe.bottomY - capHeight);
-        
-        // Bottom pipe highlights
-        this.ctx.fillStyle = colors.light;
-        this.ctx.fillRect(pipe.x, pipe.bottomY + capHeight, 4, this.canvas.height - pipe.bottomY - capHeight);
-        this.ctx.fillStyle = colors.dark;
-        this.ctx.fillRect(pipe.x + this.settings.pipeWidth - 4, pipe.bottomY + capHeight, 4, this.canvas.height - pipe.bottomY - capHeight);
-        
-        // Bottom pipe cap
-        this.ctx.fillStyle = colors.body;
-        this.ctx.fillRect(pipe.x - capOverhang, pipe.bottomY, this.settings.pipeWidth + (capOverhang * 2), capHeight);
+        // Draw bottom pipe (if it should be visible)
+        if (pipe.type !== 'topOnly' && pipe.bottomY < this.canvas.height) {
+            // Bottom pipe body
+            this.ctx.fillStyle = colors.body;
+            this.ctx.fillRect(pipe.x, pipe.bottomY + capHeight, this.settings.pipeWidth, this.canvas.height - pipe.bottomY - capHeight);
+            
+            // Bottom pipe highlights
+            this.ctx.fillStyle = colors.light;
+            this.ctx.fillRect(pipe.x, pipe.bottomY + capHeight, 4, this.canvas.height - pipe.bottomY - capHeight);
+            this.ctx.fillStyle = colors.dark;
+            this.ctx.fillRect(pipe.x + this.settings.pipeWidth - 4, pipe.bottomY + capHeight, 4, this.canvas.height - pipe.bottomY - capHeight);
+            
+            // Bottom pipe cap
+            this.ctx.fillStyle = colors.body;
+            this.ctx.fillRect(pipe.x - capOverhang, pipe.bottomY, this.settings.pipeWidth + (capOverhang * 2), capHeight);
+        }
     }
     
     drawGracePipeIndicator(pipe) {
