@@ -468,60 +468,36 @@ class FlappyBirdGame {
     }
     
     loadMarioTapSound() {
-        // Load Super Mario laugh sound with mobile-specific handling
-        const marioLaugh = new Audio('Super mario laugh Sound Effects.mp3');
-        marioLaugh.volume = 0.6; // Pleasant volume
+        // Load Super Mario laugh sound with comprehensive fallback system
+        console.log('🔊 Loading Mario laugh tap sound...');
         
-        // Mobile-specific audio settings
-        marioLaugh.preload = 'auto'; // Ensure it preloads on mobile
-        marioLaugh.crossOrigin = 'anonymous'; // Handle CORS issues
+        // Try the simple filename first (no spaces)
+        const marioLaugh = new Audio('mario-laugh.mp3');
+        marioLaugh.volume = 0.6;
+        marioLaugh.preload = 'auto';
         
-        // Track loading state for mobile debugging
         let isLoaded = false;
-        let loadAttempts = 0;
-        const maxLoadAttempts = 3;
         
-        // Set up the Mario laugh as tap sound with better mobile support
+        // Set up the tap sound function
         this.audio.sounds.tap = () => {
-            if (isLoaded && marioLaugh.readyState >= 2) { // Audio is fully loaded
-                marioLaugh.volume = this.getEffectiveVolume('tap');
-                marioLaugh.currentTime = 0;
-                
-                // Clone the audio for mobile compatibility (prevents conflicts)
+            if (isLoaded && marioLaugh.readyState >= 2) {
                 const marioClone = marioLaugh.cloneNode();
                 marioClone.volume = this.getEffectiveVolume('tap');
+                marioClone.currentTime = 0;
                 marioClone.play().catch(error => {
-                    console.log('Mario laugh clone failed, trying original:', error);
-                    marioLaugh.play().catch(error2 => {
-                        console.log('Mario laugh original failed, using fallback:', error2);
-                        this.createBeepSound(800, 3.0)();
-                    });
+                    console.log('Mario laugh failed, using fallback beep');
+                    this.createBeepSound(800, 3.0)();
                 });
-            } else if (loadAttempts < maxLoadAttempts) {
-                // Try to reload the audio
-                loadAttempts++;
-                console.log(`🔄 Attempting to reload Mario laugh (attempt ${loadAttempts})`);
-                marioLaugh.load();
-                // Use fallback for this tap
-                this.createBeepSound(800, 3.0)();
             } else {
-                // Fallback if loading keeps failing
-                console.log('⚠️ Mario laugh loading failed, using synthesized sound');
+                console.log('Mario laugh not ready, using fallback beep');
                 this.createBeepSound(800, 3.0)();
             }
         };
         
-        // Enhanced error handling for mobile
-        marioLaugh.addEventListener('error', (e) => {
-            console.error('❌ Mario laugh failed to load:', e);
-            isLoaded = false;
-            // Don't immediately fallback - let the retry logic handle it
-        });
-        
+        // Success handler
         marioLaugh.addEventListener('canplaythrough', () => {
-            console.log('✅ Mario laugh loaded successfully on this platform!');
+            console.log('✅ Mario laugh loaded successfully!');
             isLoaded = true;
-            loadAttempts = 0; // Reset attempts on successful load
         });
         
         marioLaugh.addEventListener('loadeddata', () => {
@@ -529,7 +505,43 @@ class FlappyBirdGame {
             isLoaded = true;
         });
         
-        // Force load attempt
+        // Error handler - try original filename with spaces
+        marioLaugh.addEventListener('error', (e) => {
+            console.warn('⚠️ Simple filename failed, trying original filename...');
+            
+            const marioLaughOriginal = new Audio('Super mario laugh Sound Effects.mp3');
+            marioLaughOriginal.volume = 0.6;
+            marioLaughOriginal.preload = 'auto';
+            
+            marioLaughOriginal.addEventListener('canplaythrough', () => {
+                console.log('✅ Mario laugh loaded with original filename!');
+                isLoaded = true;
+                
+                // Update the tap sound to use the working audio
+                this.audio.sounds.tap = () => {
+                    if (marioLaughOriginal.readyState >= 2) {
+                        const clone = marioLaughOriginal.cloneNode();
+                        clone.volume = this.getEffectiveVolume('tap');
+                        clone.currentTime = 0;
+                        clone.play().catch(() => {
+                            this.createBeepSound(800, 3.0)();
+                        });
+                    } else {
+                        this.createBeepSound(800, 3.0)();
+                    }
+                };
+            });
+            
+            marioLaughOriginal.addEventListener('error', (e2) => {
+                console.error('❌ Both Mario laugh filenames failed:', e2);
+                console.log('🔊 Using synthesized beep as permanent fallback');
+                this.audio.sounds.tap = this.createBeepSound(800, 3.0);
+            });
+            
+            marioLaughOriginal.load();
+        });
+        
+        // Start loading
         marioLaugh.load();
     }
     
