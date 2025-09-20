@@ -643,9 +643,14 @@ class FlappyBirdGame {
     }
     
     updatePipes() {
+        // Calculate dynamic pipe speed based on difficulty (with maximum cap)
+        const speedIncrease = this.score * 0.08;
+        const maxSpeedIncrease = this.settings.pipeSpeed * 2; // Cap at 3x original speed
+        const dynamicPipeSpeed = this.settings.pipeSpeed + Math.min(speedIncrease, maxSpeedIncrease);
+        
         for (let i = this.pipes.length - 1; i >= 0; i--) {
             const pipe = this.pipes[i];
-            pipe.x -= this.settings.pipeSpeed;
+            pipe.x -= dynamicPipeSpeed;
             
             // Remove off-screen pipes
             if (pipe.x + this.settings.pipeWidth < this.camera.x - 100) {
@@ -971,12 +976,17 @@ class FlappyBirdGame {
     
     updateDifficulty() {
         const element = document.getElementById('difficulty');
+        const speedIncrease = this.score * 0.08;
+        const maxSpeedIncrease = this.settings.pipeSpeed * 2;
+        const currentPipeSpeed = this.settings.pipeSpeed + Math.min(speedIncrease, maxSpeedIncrease);
+        const speedMultiplier = Math.round((currentPipeSpeed / this.settings.pipeSpeed) * 100);
+        
         const levels = [
-            { max: 5, text: 'Easy Mode', color: '#27ae60' },
-            { max: 10, text: 'Getting Harder...', color: '#f39c12' },
-            { max: 20, text: 'Medium Mode', color: '#e67e22' },
-            { max: 30, text: 'Hard Mode', color: '#e74c3c' },
-            { max: Infinity, text: 'Expert Mode', color: '#8e44ad' }
+            { max: 5, text: `Easy Mode (${speedMultiplier}%)`, color: '#27ae60' },
+            { max: 10, text: `Getting Harder... (${speedMultiplier}%)`, color: '#f39c12' },
+            { max: 20, text: `Medium Mode (${speedMultiplier}%)`, color: '#e67e22' },
+            { max: 30, text: `Hard Mode (${speedMultiplier}%)`, color: '#e74c3c' },
+            { max: Infinity, text: `Expert Mode (${speedMultiplier}%)`, color: '#8e44ad' }
         ];
         
         const level = levels.find(l => this.score < l.max);
