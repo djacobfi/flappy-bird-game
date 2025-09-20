@@ -431,7 +431,31 @@ class FlappyBirdGame {
     }
     
     createDefaultSounds() {
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Mobile-specific audio context handling
+            if (this.audioContext.state === 'suspended') {
+                console.log('🔊 Audio context suspended, will resume on user interaction');
+            }
+            
+            // Ensure audio context works on mobile
+            const resumeAudioContext = () => {
+                if (this.audioContext.state === 'suspended') {
+                    this.audioContext.resume().then(() => {
+                        console.log('✅ Audio context resumed for mobile');
+                    });
+                }
+            };
+            
+            // Resume audio context on first user interaction (mobile requirement)
+            document.addEventListener('touchstart', resumeAudioContext, { once: true });
+            document.addEventListener('click', resumeAudioContext, { once: true });
+            
+        } catch (error) {
+            console.error('❌ Failed to create audio context:', error);
+            this.audioContext = null;
+        }
         
         // Load Super Mario laugh as default tap sound
         this.loadMarioTapSound();
@@ -439,7 +463,7 @@ class FlappyBirdGame {
         // Default crash sound (3 seconds) - same as previous version
         this.audio.sounds.crash = this.createNoiseSound(3.0);
         
-        // Default background music - full melody
+        // Default background music - full melody (ensure it works on mobile)
         this.audio.sounds.bgMusic = this.createMelodySound();
     }
     
@@ -688,9 +712,40 @@ class FlappyBirdGame {
         
         return {
             start: () => {
-                if (this.audioContext.state === 'suspended') {
-                    this.audioContext.resume();
+                // Ensure audio context is ready (critical for mobile/PWA)
+                if (!this.audioContext) {
+                    console.warn('⚠️ No audio context available for background music');
+                    return;
                 }
+                
+                if (this.audioContext.state === 'suspended') {
+                    console.log('🔊 Resuming audio context for melody...');
+                    this.audioContext.resume().then(() => {
+                        console.log('✅ Audio context resumed, starting melody');
+                        this.startMelodyIntervals();
+                    }).catch(e => {
+                        console.error('❌ Failed to resume audio context for melody:', e);
+                    });
+                    return;
+                }
+                
+                this.startMelodyIntervals();
+            },
+            stop: () => {
+                if (melodyInterval) {
+                    clearInterval(melodyInterval);
+                }
+                if (bassInterval) {
+                    clearInterval(bassInterval);
+                }
+                if (percussionInterval) {
+                    clearInterval(percussionInterval);
+                }
+            }
+        };
+        
+        // Define the melody intervals method within the closure
+        this.startMelodyIntervals = () => {
                 
                 // EPIC melody line with POWER!
                 melodyInterval = setInterval(() => {
@@ -808,18 +863,6 @@ class FlappyBirdGame {
                         kickOsc.stop(this.audioContext.currentTime + 0.15);
                     }
                 }, 400); // Fast percussion for ADRENALINE!
-            },
-            stop: () => {
-                if (melodyInterval) {
-                    clearInterval(melodyInterval);
-                }
-                if (bassInterval) {
-                    clearInterval(bassInterval);
-                }
-                if (percussionInterval) {
-                    clearInterval(percussionInterval);
-                }
-            }
         };
     }
     
@@ -985,7 +1028,15 @@ class FlappyBirdGame {
         // Show the in-game HUD
         document.getElementById('gameHUD').style.display = 'block';
         
-        if (!this.audio.playing) {
+        // Ensure audio context is ready for mobile/PWA before starting music
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            this.audioContext.resume().then(() => {
+                console.log('✅ Audio context resumed for game start');
+                if (!this.audio.playing) {
+                    this.startBackgroundMusic();
+                }
+            });
+        } else if (!this.audio.playing) {
             this.startBackgroundMusic();
         }
     }
@@ -1597,16 +1648,23 @@ class FlappyBirdGame {
             });
         } else if (this.audio.sounds.bgMusic) {
             try {
-                // Ensure audio context is resumed
+                // Ensure audio context is resumed (critical for mobile)
                 if (this.audioContext && this.audioContext.state === 'suspended') {
+                    console.log('🔊 Resuming audio context for background music...');
                     this.audioContext.resume().then(() => {
+                        console.log('✅ Audio context resumed, starting background music');
                         this.audio.sounds.bgMusic.start();
+                    }).catch(e => {
+                        console.error('❌ Failed to resume audio context:', e);
                     });
-                } else {
+                } else if (this.audioContext) {
+                    console.log('🎵 Starting background music (audio context ready)');
                     this.audio.sounds.bgMusic.start();
+                } else {
+                    console.warn('⚠️ No audio context available for background music');
                 }
             } catch (e) {
-                console.log('Default music failed to start:', e);
+                console.error('❌ Default music failed to start:', e);
             }
         } else {
             console.warn('No background music available (neither custom nor default)');
