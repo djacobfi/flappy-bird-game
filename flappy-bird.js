@@ -210,7 +210,7 @@ class FlappyBirdGame {
             birdCanvas.height = 40;
             const ctx = birdCanvas.getContext('2d');
             
-            this.drawRealisticBird(ctx, frame);
+            this.drawFunnyBird(ctx, frame);
             this.birdFrames.push(birdCanvas);
         }
         
@@ -221,124 +221,194 @@ class FlappyBirdGame {
         this.createDefaultSounds();
     }
     
-    drawRealisticBird(ctx, frame) {
+    drawFunnyBird(ctx, frame) {
         ctx.clearRect(0, 0, 50, 40);
         
-        // Bird body (rounded oval)
-        ctx.fillStyle = '#8B4513'; // Brown body
+        // Funny bird body (chubby oval with bright colors)
+        ctx.fillStyle = '#FF69B4'; // Hot pink body!
         ctx.beginPath();
-        ctx.ellipse(25, 25, 12, 8, 0, 0, Math.PI * 2);
+        ctx.ellipse(25, 25, 14, 10, 0, 0, Math.PI * 2); // Chubby!
         ctx.fill();
         
-        // Bird head (smaller circle)
-        ctx.fillStyle = '#A0522D'; // Lighter brown head
+        // Body stripes (silly pattern)
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(35, 20, 8, 0, Math.PI * 2);
+        ctx.arc(25, 22, 8, 0, Math.PI);
+        ctx.arc(25, 26, 6, 0, Math.PI);
+        ctx.stroke();
+        
+        // Giant comedic head
+        ctx.fillStyle = '#00FFFF'; // Cyan head!
+        ctx.beginPath();
+        ctx.arc(35, 18, 10, 0, Math.PI * 2); // Bigger head
         ctx.fill();
         
-        // Beak (triangle)
-        ctx.fillStyle = '#FFA500';
+        // Ridiculous oversized beak
+        ctx.fillStyle = '#FF4500';
         ctx.beginPath();
-        ctx.moveTo(42, 20);
-        ctx.lineTo(48, 18);
-        ctx.lineTo(48, 22);
+        ctx.moveTo(44, 18);
+        ctx.lineTo(52, 15); // Extra long beak
+        ctx.lineTo(52, 21);
+        ctx.lineTo(44, 22);
         ctx.closePath();
         ctx.fill();
         
-        // Eye (white with black pupil)
+        // Beak highlight (shiny)
+        ctx.fillStyle = '#FFA500';
+        ctx.beginPath();
+        ctx.moveTo(46, 17);
+        ctx.lineTo(49, 16);
+        ctx.lineTo(49, 18);
+        ctx.closePath();
+        ctx.fill();
+        
+        // HUGE googly eyes
         ctx.fillStyle = '#FFFFFF';
         ctx.beginPath();
-        ctx.arc(38, 18, 3, 0, Math.PI * 2);
+        ctx.arc(32, 15, 4, 0, Math.PI * 2); // Left eye
+        ctx.arc(38, 15, 4, 0, Math.PI * 2); // Right eye
         ctx.fill();
         
+        // Crazy pupils that change with animation frame
         ctx.fillStyle = '#000000';
         ctx.beginPath();
-        ctx.arc(39, 18, 1.5, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Wing animation (3 different positions)
-        ctx.fillStyle = '#654321'; // Darker brown for wing
-        ctx.beginPath();
-        
         if (frame === 0) {
-            // Wings up
-            ctx.ellipse(20, 22, 8, 4, -0.3, 0, Math.PI * 2);
+            // Cross-eyed look
+            ctx.arc(34, 15, 2, 0, Math.PI * 2); // Left pupil right
+            ctx.arc(36, 15, 2, 0, Math.PI * 2); // Right pupil left
         } else if (frame === 1) {
-            // Wings middle
-            ctx.ellipse(20, 25, 8, 3, 0, 0, Math.PI * 2);
+            // Normal look
+            ctx.arc(32, 15, 2, 0, Math.PI * 2);
+            ctx.arc(38, 15, 2, 0, Math.PI * 2);
         } else {
-            // Wings down
-            ctx.ellipse(20, 28, 8, 4, 0.3, 0, Math.PI * 2);
+            // Derp look
+            ctx.arc(30, 16, 2, 0, Math.PI * 2); // Left pupil down-left
+            ctx.arc(40, 14, 2, 0, Math.PI * 2); // Right pupil up-right
         }
         ctx.fill();
         
-        // Wing details (feather lines)
-        ctx.strokeStyle = '#4A2C17';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        
-        if (frame === 0) {
-            // Wing up details
-            ctx.moveTo(15, 20);
-            ctx.lineTo(22, 18);
-            ctx.moveTo(16, 22);
-            ctx.lineTo(23, 20);
-            ctx.moveTo(17, 24);
-            ctx.lineTo(24, 22);
-        } else if (frame === 1) {
-            // Wing middle details
-            ctx.moveTo(15, 24);
-            ctx.lineTo(22, 23);
-            ctx.moveTo(16, 26);
-            ctx.lineTo(23, 25);
-            ctx.moveTo(17, 28);
-            ctx.lineTo(24, 27);
-        } else {
-            // Wing down details
-            ctx.moveTo(15, 26);
-            ctx.lineTo(22, 28);
-            ctx.moveTo(16, 28);
-            ctx.lineTo(23, 30);
-            ctx.moveTo(17, 30);
-            ctx.lineTo(24, 32);
-        }
-        ctx.stroke();
-        
-        // Tail feathers
-        ctx.fillStyle = '#654321';
-        ctx.beginPath();
-        ctx.ellipse(12, 25, 6, 3, 0.2, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Tail feather details
-        ctx.strokeStyle = '#4A2C17';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(8, 23);
-        ctx.lineTo(15, 24);
-        ctx.moveTo(7, 25);
-        ctx.lineTo(14, 26);
-        ctx.moveTo(8, 27);
-        ctx.lineTo(15, 28);
-        ctx.stroke();
-        
-        // Small chest highlight
-        ctx.fillStyle = '#D2B48C';
-        ctx.beginPath();
-        ctx.ellipse(28, 28, 4, 2, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Feet (small orange lines)
-        ctx.strokeStyle = '#FFA500';
+        // Silly eyebrows
+        ctx.strokeStyle = '#8B0000';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(25, 33);
-        ctx.lineTo(23, 37);
-        ctx.moveTo(25, 33);
-        ctx.lineTo(25, 37);
-        ctx.moveTo(25, 33);
-        ctx.lineTo(27, 37);
+        ctx.moveTo(28, 11);
+        ctx.lineTo(36, 9); // Angry eyebrow
+        ctx.moveTo(34, 9);
+        ctx.lineTo(42, 11); // Other eyebrow
         ctx.stroke();
+        
+        // Ridiculous wing animation
+        if (frame === 0) {
+            // Wings way up (excited)
+            ctx.fillStyle = '#32CD32'; // Lime green wings
+            ctx.beginPath();
+            ctx.ellipse(18, 18, 10, 5, -0.8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Wing spots
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(15, 17, 2, 0, Math.PI * 2);
+            ctx.arc(19, 20, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (frame === 1) {
+            // Wings middle (normal-ish)
+            ctx.fillStyle = '#32CD32';
+            ctx.beginPath();
+            ctx.ellipse(20, 25, 9, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Wing spots
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(17, 24, 2, 0, Math.PI * 2);
+            ctx.arc(21, 26, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // Wings way down (dramatic)
+            ctx.fillStyle = '#32CD32';
+            ctx.beginPath();
+            ctx.ellipse(18, 32, 10, 5, 0.8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Wing spots
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(15, 33, 2, 0, Math.PI * 2);
+            ctx.arc(19, 30, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Crazy tail feathers (rainbow!)
+        const tailColors = ['#FF0000', '#FFA500', '#FFFF00', '#00FF00', '#0000FF', '#8B00FF'];
+        for (let i = 0; i < 6; i++) {
+            ctx.fillStyle = tailColors[i];
+            ctx.beginPath();
+            ctx.ellipse(8 + i, 25 + Math.sin(frame + i) * 2, 3, 1.5, 0.3 + i * 0.1, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Belly button (why not?)
+        ctx.fillStyle = '#8B0000';
+        ctx.beginPath();
+        ctx.arc(25, 28, 1, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Ridiculous chicken feet
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        // Left foot
+        ctx.moveTo(22, 35);
+        ctx.lineTo(18, 39);
+        ctx.moveTo(22, 35);
+        ctx.lineTo(22, 39);
+        ctx.moveTo(22, 35);
+        ctx.lineTo(26, 39);
+        // Right foot
+        ctx.moveTo(28, 35);
+        ctx.lineTo(24, 39);
+        ctx.moveTo(28, 35);
+        ctx.lineTo(28, 39);
+        ctx.moveTo(28, 35);
+        ctx.lineTo(32, 39);
+        ctx.stroke();
+        
+        // Silly hat (frame-dependent)
+        if (frame === 0) {
+            // Party hat
+            ctx.fillStyle = '#FF1493';
+            ctx.beginPath();
+            ctx.moveTo(35, 8);
+            ctx.lineTo(30, 2);
+            ctx.lineTo(40, 2);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Pom pom
+            ctx.fillStyle = '#FFFF00';
+            ctx.beginPath();
+            ctx.arc(35, 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (frame === 1) {
+            // Top hat
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(32, 3, 6, 8);
+            ctx.fillRect(30, 10, 10, 2);
+        } else {
+            // Propeller hat
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(33, 6, 4, 3);
+            
+            // Spinning propeller
+            ctx.strokeStyle = '#C0C0C0';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(25, 7.5);
+            ctx.lineTo(45, 7.5);
+            ctx.stroke();
+        }
     }
     
     createDefaultSounds() {
@@ -919,23 +989,39 @@ class FlappyBirdGame {
     }
     
     updateBirdAnimation() {
-        // Animate wing flapping for default bird only
+        // Animate wing flapping for default funny bird only
         if (!this.audio.custom.birdImage && this.birdFrames) {
             this.frameTimer++;
             
-            // Flap faster when jumping, slower when falling
+            // Funny bird has different expressions based on state
             let animationSpeed = this.frameDelay;
-            if (this.bird.velocity < -2) {
-                // Flapping up - faster animation
+            
+            if (this.bird.velocity < -5) {
+                // Super excited jumping - very fast animation
+                animationSpeed = 3;
+            } else if (this.bird.velocity < -2) {
+                // Normal jumping - fast animation  
                 animationSpeed = Math.max(4, this.frameDelay - 2);
+            } else if (this.bird.velocity > 5) {
+                // Panic falling - frantic animation
+                animationSpeed = 2;
             } else if (this.bird.velocity > 2) {
-                // Falling - slower animation
+                // Normal falling - slower animation
                 animationSpeed = this.frameDelay + 3;
+            } else {
+                // Cruising - normal speed
+                animationSpeed = this.frameDelay;
             }
             
             if (this.frameTimer >= animationSpeed) {
                 this.currentFrame = (this.currentFrame + 1) % this.birdFrames.length;
                 this.frameTimer = 0;
+                
+                // Add random silly expressions occasionally
+                if (Math.random() < 0.1) {
+                    // 10% chance to show a random expression
+                    this.currentFrame = Math.floor(Math.random() * this.birdFrames.length);
+                }
             }
         }
     }
@@ -1583,7 +1669,7 @@ class FlappyBirdGame {
             
             // Draw power-up effects overlay
             if (this.powerUp.active) {
-                this.drawPowerUpEffects();
+                this.drawFunnyPowerUpEffects();
             }
         }
         
@@ -2006,6 +2092,121 @@ class FlappyBirdGame {
         this.ctx.textAlign = 'left';
         
         this.ctx.globalAlpha = 1.0; // Reset alpha
+    }
+    
+    drawFunnyPowerUpEffects() {
+        const timeLeft = this.powerUp.duration - (Date.now() - this.powerUp.startTime);
+        const intensity = Math.sin(Date.now() * 0.02) * 0.5 + 0.5;
+        
+        // Rainbow screen flash
+        this.ctx.globalAlpha = 0.1 + intensity * 0.1;
+        const colors = ['#FF0000', '#FFA500', '#FFFF00', '#00FF00', '#0000FF', '#8B00FF'];
+        const colorIndex = Math.floor(Date.now() * 0.01) % colors.length;
+        this.ctx.fillStyle = colors[colorIndex];
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Crazy speed lines everywhere
+        this.ctx.globalAlpha = 0.8;
+        this.ctx.strokeStyle = '#FFFF00';
+        this.ctx.lineWidth = 3;
+        
+        for (let i = 0; i < 20; i++) {
+            const y = (Date.now() * 0.1 + i * 30) % this.canvas.height;
+            const length = 50 + Math.sin(Date.now() * 0.005 + i) * 30;
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.canvas.width, y);
+            this.ctx.lineTo(this.canvas.width - length, y);
+            this.ctx.stroke();
+        }
+        
+        // Spinning stars around the bird
+        this.ctx.globalAlpha = 1.0;
+        this.ctx.fillStyle = '#FFD700';
+        
+        for (let i = 0; i < 8; i++) {
+            const angle = (Date.now() * 0.01 + i * Math.PI / 4) % (Math.PI * 2);
+            const radius = 80 + Math.sin(Date.now() * 0.005 + i) * 20;
+            const x = this.canvas.width * 0.15 + Math.cos(angle) * radius;
+            const y = this.canvas.height / 2 + Math.sin(angle) * radius;
+            
+            this.drawFunnyStar(x, y, 8);
+        }
+        
+        // Hilarious text effects
+        this.ctx.font = 'bold 24px Arial';
+        this.ctx.textAlign = 'center';
+        
+        const funnyTexts = [
+            '🚀 ZOOM ZOOM! 🚀',
+            '💨 SUPER SPEEDY! 💨',
+            '⚡ LIGHTNING BIRD! ⚡',
+            '🎉 PARTY TIME! 🎉',
+            '🔥 ON FIRE! 🔥',
+            '🌟 AMAZING! 🌟'
+        ];
+        
+        const textIndex = Math.floor(Date.now() * 0.003) % funnyTexts.length;
+        const textY = 100 + Math.sin(Date.now() * 0.01) * 20;
+        
+        // Text outline
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 4;
+        this.ctx.strokeText(funnyTexts[textIndex], this.canvas.width / 2, textY);
+        
+        // Text fill
+        this.ctx.fillStyle = colors[(colorIndex + 2) % colors.length];
+        this.ctx.fillText(funnyTexts[textIndex], this.canvas.width / 2, textY);
+        
+        // Timer countdown with silly face
+        this.ctx.font = 'bold 18px Arial';
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 2;
+        
+        const seconds = Math.ceil(timeLeft / 1000);
+        const timerText = `${seconds}s left! 😵‍💫`;
+        
+        this.ctx.strokeText(timerText, this.canvas.width / 2, this.canvas.height - 50);
+        this.ctx.fillText(timerText, this.canvas.width / 2, this.canvas.height - 50);
+        
+        // Confetti particles
+        for (let i = 0; i < 15; i++) {
+            const x = (Date.now() * 0.1 + i * 50) % this.canvas.width;
+            const y = 50 + Math.sin(Date.now() * 0.008 + i) * 100;
+            const size = 3 + Math.sin(Date.now() * 0.01 + i) * 2;
+            
+            this.ctx.fillStyle = colors[i % colors.length];
+            this.ctx.fillRect(x, y, size, size);
+        }
+        
+        this.ctx.globalAlpha = 1.0;
+        this.ctx.textAlign = 'left';
+    }
+    
+    drawFunnyStar(x, y, size) {
+        this.ctx.save();
+        this.ctx.translate(x, y);
+        this.ctx.rotate(Date.now() * 0.01);
+        
+        this.ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+            const angle = (i * Math.PI * 2) / 5;
+            const x1 = Math.cos(angle) * size;
+            const y1 = Math.sin(angle) * size;
+            const x2 = Math.cos(angle + Math.PI / 5) * size * 0.5;
+            const y2 = Math.sin(angle + Math.PI / 5) * size * 0.5;
+            
+            if (i === 0) {
+                this.ctx.moveTo(x1, y1);
+            } else {
+                this.ctx.lineTo(x1, y1);
+            }
+            this.ctx.lineTo(x2, y2);
+        }
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.restore();
     }
     
     drawBird() {
