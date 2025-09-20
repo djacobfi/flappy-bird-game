@@ -166,69 +166,86 @@ class FlappyBirdGame {
                 this.audioContext.resume();
             }
             
-            // Create a more musical tap sound with harmonics
-            const fundamentalOsc = this.audioContext.createOscillator();
-            const harmonicOsc = this.audioContext.createOscillator();
-            const subOsc = this.audioContext.createOscillator();
+            // Create an EPIC, adrenaline-pumping tap sound!
+            const osc1 = this.audioContext.createOscillator(); // Power chord root
+            const osc2 = this.audioContext.createOscillator(); // Perfect fifth
+            const osc3 = this.audioContext.createOscillator(); // Octave
+            const osc4 = this.audioContext.createOscillator(); // Sub bass for punch
             
-            const gainNode = this.audioContext.createGain();
-            const harmonicGain = this.audioContext.createGain();
-            const subGain = this.audioContext.createGain();
+            const gain1 = this.audioContext.createGain();
+            const gain2 = this.audioContext.createGain();
+            const gain3 = this.audioContext.createGain();
+            const gain4 = this.audioContext.createGain();
             const masterGain = this.audioContext.createGain();
             
-            // Add reverb-like effect with delay
-            const delayNode = this.audioContext.createDelay();
-            const delayGain = this.audioContext.createGain();
+            // Add multiple delay nodes for epic reverb
+            const delay1 = this.audioContext.createDelay();
+            const delay2 = this.audioContext.createDelay();
+            const delayGain1 = this.audioContext.createGain();
+            const delayGain2 = this.audioContext.createGain();
             
-            delayNode.delayTime.setValueAtTime(0.1, this.audioContext.currentTime);
-            delayGain.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+            delay1.delayTime.setValueAtTime(0.08, this.audioContext.currentTime);
+            delay2.delayTime.setValueAtTime(0.15, this.audioContext.currentTime);
+            delayGain1.gain.setValueAtTime(0.4, this.audioContext.currentTime);
+            delayGain2.gain.setValueAtTime(0.2, this.audioContext.currentTime);
             
-            // Fundamental frequency (main note)
-            fundamentalOsc.frequency.value = frequency;
-            fundamentalOsc.type = 'sine';
-            fundamentalOsc.connect(gainNode);
+            // Epic power chord frequencies
+            osc1.frequency.value = frequency; // Root note
+            osc2.frequency.value = frequency * 1.5; // Perfect fifth (power chord!)
+            osc3.frequency.value = frequency * 2; // Octave for brightness
+            osc4.frequency.value = frequency * 0.5; // Sub bass for PUNCH
             
-            // Harmonic (octave up for brightness)
-            harmonicOsc.frequency.value = frequency * 2;
-            harmonicOsc.type = 'triangle';
-            harmonicOsc.connect(harmonicGain);
+            // Wave types for maximum impact
+            osc1.type = 'sawtooth'; // Aggressive main tone
+            osc2.type = 'square'; // Punchy fifth
+            osc3.type = 'triangle'; // Bright octave
+            osc4.type = 'sine'; // Deep sub bass
             
-            // Sub harmonic (fifth down for richness)
-            subOsc.frequency.value = frequency * 0.75;
-            subOsc.type = 'sawtooth';
-            subOsc.connect(subGain);
+            // Connect oscillators
+            osc1.connect(gain1);
+            osc2.connect(gain2);
+            osc3.connect(gain3);
+            osc4.connect(gain4);
             
-            // Mix the oscillators
-            gainNode.gain.setValueAtTime(0.4, this.audioContext.currentTime);
-            harmonicGain.gain.setValueAtTime(0.15, this.audioContext.currentTime);
-            subGain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+            // Mix for MAXIMUM IMPACT
+            gain1.gain.setValueAtTime(0.5, this.audioContext.currentTime); // Strong root
+            gain2.gain.setValueAtTime(0.3, this.audioContext.currentTime); // Punchy fifth
+            gain3.gain.setValueAtTime(0.2, this.audioContext.currentTime); // Bright top
+            gain4.gain.setValueAtTime(0.4, this.audioContext.currentTime); // POWERFUL bass
             
-            // Connect to master gain with delay
-            gainNode.connect(masterGain);
-            harmonicGain.connect(masterGain);
-            subGain.connect(masterGain);
+            // Connect to master with epic reverb
+            gain1.connect(masterGain);
+            gain2.connect(masterGain);
+            gain3.connect(masterGain);
+            gain4.connect(masterGain);
             
-            gainNode.connect(delayNode);
-            delayNode.connect(delayGain);
-            delayGain.connect(masterGain);
+            // Epic reverb chain
+            gain1.connect(delay1);
+            delay1.connect(delayGain1);
+            delayGain1.connect(delay2);
+            delay2.connect(delayGain2);
+            delayGain2.connect(masterGain);
             
             masterGain.connect(this.audioContext.destination);
             
-            // Musical envelope - quick attack, sustain, gentle release
+            // EXPLOSIVE envelope for adrenaline rush!
             masterGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-            masterGain.gain.linearRampToValueAtTime(0.6, this.audioContext.currentTime + 0.02); // Quick attack
-            masterGain.gain.exponentialRampToValueAtTime(0.3, this.audioContext.currentTime + 0.1); // Sustain
-            masterGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration); // Release
+            masterGain.gain.linearRampToValueAtTime(1.0, this.audioContext.currentTime + 0.01); // INSTANT ATTACK!
+            masterGain.gain.exponentialRampToValueAtTime(0.6, this.audioContext.currentTime + 0.05); // Quick sustain
+            masterGain.gain.exponentialRampToValueAtTime(0.3, this.audioContext.currentTime + 0.2); // Maintain energy
+            masterGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration); // Epic fade
             
-            // Start all oscillators
+            // Launch all oscillators for MAXIMUM IMPACT!
             const startTime = this.audioContext.currentTime;
-            fundamentalOsc.start(startTime);
-            harmonicOsc.start(startTime);
-            subOsc.start(startTime);
+            osc1.start(startTime);
+            osc2.start(startTime);
+            osc3.start(startTime);
+            osc4.start(startTime);
             
-            fundamentalOsc.stop(startTime + duration);
-            harmonicOsc.stop(startTime + duration);
-            subOsc.stop(startTime + duration);
+            osc1.stop(startTime + duration);
+            osc2.stop(startTime + duration);
+            osc3.stop(startTime + duration);
+            osc4.stop(startTime + duration);
         };
     }
     
@@ -238,103 +255,120 @@ class FlappyBirdGame {
                 this.audioContext.resume();
             }
             
-            // Create a musical crash sound with descending tones
-            const crashOsc1 = this.audioContext.createOscillator();
-            const crashOsc2 = this.audioContext.createOscillator();
-            const crashOsc3 = this.audioContext.createOscillator();
+            // Create an EPIC CRASH sound that gives MAXIMUM adrenaline rush!
+            const crashOsc1 = this.audioContext.createOscillator(); // Deep doom note
+            const crashOsc2 = this.audioContext.createOscillator(); // Dissonant clash
+            const crashOsc3 = this.audioContext.createOscillator(); // High tension
+            const crashOsc4 = this.audioContext.createOscillator(); // Ultra sub bass
             
             const gain1 = this.audioContext.createGain();
             const gain2 = this.audioContext.createGain();
             const gain3 = this.audioContext.createGain();
+            const gain4 = this.audioContext.createGain();
             const masterGain = this.audioContext.createGain();
             
-            // Add some filtered noise for texture
-            const bufferSize = this.audioContext.sampleRate * 0.3; // Short burst
+            // Create EXPLOSIVE noise burst
+            const bufferSize = this.audioContext.sampleRate * 0.5;
             const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
             const output = buffer.getChannelData(0);
             
             for (let i = 0; i < bufferSize; i++) {
-                output[i] = (Math.random() * 2 - 1) * 0.2;
-                if (i > 0) {
-                    output[i] = output[i] * 0.8 + output[i - 1] * 0.2;
-                }
+                // Chaotic noise with impact
+                output[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize); // Fade noise over time
             }
             
             const noiseSource = this.audioContext.createBufferSource();
             const noiseGain = this.audioContext.createGain();
-            const noiseFilter = this.audioContext.createBiquadFilter();
+            const distortion = this.audioContext.createWaveShaper();
             
-            noiseFilter.type = 'lowpass';
-            noiseFilter.frequency.setValueAtTime(400, this.audioContext.currentTime);
+            // Add distortion for EPIC crash effect
+            const samples = 44100;
+            const curve = new Float32Array(samples);
+            for (let i = 0; i < samples; i++) {
+                const x = (i * 2) / samples - 1;
+                curve[i] = ((3 + 20) * x * 20 * Math.PI / 180) / (Math.PI + 20 * Math.abs(x));
+            }
+            distortion.curve = curve;
             
             noiseSource.buffer = buffer;
-            noiseSource.connect(noiseFilter);
-            noiseFilter.connect(noiseGain);
+            noiseSource.connect(distortion);
+            distortion.connect(noiseGain);
             noiseGain.connect(masterGain);
             
-            // Descending tones for dramatic effect
-            crashOsc1.frequency.setValueAtTime(220, this.audioContext.currentTime); // A3
-            crashOsc1.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + duration); // A2
+            // DRAMATIC descending chord of DOOM!
+            crashOsc1.frequency.setValueAtTime(110, this.audioContext.currentTime); // Low A
+            crashOsc1.frequency.exponentialRampToValueAtTime(55, this.audioContext.currentTime + duration); // Drop an octave!
             crashOsc1.type = 'sawtooth';
             crashOsc1.connect(gain1);
             
-            crashOsc2.frequency.setValueAtTime(165, this.audioContext.currentTime); // E3
-            crashOsc2.frequency.exponentialRampToValueAtTime(82.5, this.audioContext.currentTime + duration); // E2
+            crashOsc2.frequency.setValueAtTime(146.83, this.audioContext.currentTime); // Dissonant D
+            crashOsc2.frequency.exponentialRampToValueAtTime(73.42, this.audioContext.currentTime + duration); // Doom descent
             crashOsc2.type = 'square';
             crashOsc2.connect(gain2);
             
-            crashOsc3.frequency.setValueAtTime(130, this.audioContext.currentTime); // C3
-            crashOsc3.frequency.exponentialRampToValueAtTime(65, this.audioContext.currentTime + duration); // C2
+            crashOsc3.frequency.setValueAtTime(220, this.audioContext.currentTime); // High tension A
+            crashOsc3.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + duration); // Fall to doom
             crashOsc3.type = 'triangle';
             crashOsc3.connect(gain3);
             
-            // Mix the oscillators
-            gain1.gain.setValueAtTime(0.15, this.audioContext.currentTime);
-            gain2.gain.setValueAtTime(0.1, this.audioContext.currentTime);
-            gain3.gain.setValueAtTime(0.08, this.audioContext.currentTime);
-            noiseGain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+            crashOsc4.frequency.setValueAtTime(55, this.audioContext.currentTime); // ULTRA SUB BASS
+            crashOsc4.frequency.exponentialRampToValueAtTime(27.5, this.audioContext.currentTime + duration); // Earthquake low
+            crashOsc4.type = 'sine';
+            crashOsc4.connect(gain4);
+            
+            // Mix for CATASTROPHIC impact
+            gain1.gain.setValueAtTime(0.25, this.audioContext.currentTime);
+            gain2.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+            gain3.gain.setValueAtTime(0.15, this.audioContext.currentTime);
+            gain4.gain.setValueAtTime(0.3, this.audioContext.currentTime); // MASSIVE sub bass
+            noiseGain.gain.setValueAtTime(0.2, this.audioContext.currentTime);
             
             gain1.connect(masterGain);
             gain2.connect(masterGain);
             gain3.connect(masterGain);
+            gain4.connect(masterGain);
             
             masterGain.connect(this.audioContext.destination);
             
-            // Dramatic envelope - quick spike then fade
+            // CATASTROPHIC envelope - INSTANT DOOM!
             masterGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-            masterGain.gain.linearRampToValueAtTime(0.8, this.audioContext.currentTime + 0.05); // Quick spike
-            masterGain.gain.exponentialRampToValueAtTime(0.2, this.audioContext.currentTime + 0.3); // Drop
-            masterGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration); // Fade out
+            masterGain.gain.linearRampToValueAtTime(1.2, this.audioContext.currentTime + 0.02); // MASSIVE IMPACT!
+            masterGain.gain.exponentialRampToValueAtTime(0.4, this.audioContext.currentTime + 0.1); // Sustain the doom
+            masterGain.gain.exponentialRampToValueAtTime(0.1, this.audioContext.currentTime + 0.8); // Slow fade of despair
+            masterGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration); // Final silence
             
-            // Start all sounds
+            // UNLEASH THE CHAOS!
             const startTime = this.audioContext.currentTime;
             crashOsc1.start(startTime);
             crashOsc2.start(startTime);
             crashOsc3.start(startTime);
+            crashOsc4.start(startTime);
             noiseSource.start(startTime);
             
             crashOsc1.stop(startTime + duration);
             crashOsc2.stop(startTime + duration);
             crashOsc3.stop(startTime + duration);
+            crashOsc4.stop(startTime + duration);
         };
     }
     
     createMelodySound() {
-        // Enhanced melody with chord progressions
-        const melody = [
-            { note: 523.25, chord: [523.25, 659.25, 783.99] }, // C major
-            { note: 587.33, chord: [587.33, 698.46, 880.00] }, // D minor
-            { note: 659.25, chord: [659.25, 783.99, 987.77] }, // E minor
-            { note: 523.25, chord: [523.25, 659.25, 783.99] }, // C major
-            { note: 698.46, chord: [698.46, 880.00, 1046.50] }, // F major
-            { note: 659.25, chord: [659.25, 783.99, 987.77] }, // E minor
-            { note: 587.33, chord: [587.33, 698.46, 880.00] }, // D minor
-            { note: 523.25, chord: [523.25, 659.25, 783.99] }  // C major
+        // EPIC ADVENTURE MUSIC for maximum adrenaline!
+        const epicMelody = [
+            { note: 659.25, chord: [659.25, 783.99, 987.77, 1318.51] }, // E major - HEROIC!
+            { note: 698.46, chord: [698.46, 880.00, 1046.50, 1396.91] }, // F major - RISING!
+            { note: 783.99, chord: [783.99, 987.77, 1174.66, 1567.98] }, // G major - EPIC!
+            { note: 659.25, chord: [659.25, 783.99, 987.77, 1318.51] }, // E major - RETURN!
+            { note: 880.00, chord: [880.00, 1046.50, 1318.51, 1760.00] }, // A major - CLIMAX!
+            { note: 783.99, chord: [783.99, 987.77, 1174.66, 1567.98] }, // G major - POWER!
+            { note: 698.46, chord: [698.46, 880.00, 1046.50, 1396.91] }, // F major - BUILDING!
+            { note: 659.25, chord: [659.25, 783.99, 987.77, 1318.51] }  // E major - VICTORY!
         ];
         
         let currentChord = 0;
         let melodyInterval;
         let bassInterval;
+        let percussionInterval;
         
         return {
             start: () => {
@@ -342,84 +376,122 @@ class FlappyBirdGame {
                     this.audioContext.resume();
                 }
                 
-                // Main melody line
+                // EPIC melody line with POWER!
                 melodyInterval = setInterval(() => {
                     if (this.audio.enabled && this.audio.volume > 0) {
-                        const chordData = melody[currentChord];
-                        const volume = this.audio.volume / 100 * 0.08;
+                        const chordData = epicMelody[currentChord];
+                        const volume = this.audio.volume / 100 * 0.12; // Louder for EPIC feel!
                         
-                        // Play melody note
+                        // Play POWERFUL melody note
                         const melodyOsc = this.audioContext.createOscillator();
                         const melodyGain = this.audioContext.createGain();
                         const melodyFilter = this.audioContext.createBiquadFilter();
+                        const melodyDistortion = this.audioContext.createWaveShaper();
                         
-                        melodyFilter.type = 'lowpass';
-                        melodyFilter.frequency.setValueAtTime(2000, this.audioContext.currentTime);
+                        // Add slight distortion for EPIC sound
+                        const curve = new Float32Array(256);
+                        for (let i = 0; i < 256; i++) {
+                            const x = (i - 128) / 128;
+                            curve[i] = Math.tanh(x * 2); // Soft distortion
+                        }
+                        melodyDistortion.curve = curve;
+                        
+                        melodyFilter.type = 'bandpass';
+                        melodyFilter.frequency.setValueAtTime(chordData.note * 2, this.audioContext.currentTime);
+                        melodyFilter.Q.setValueAtTime(3, this.audioContext.currentTime);
                         
                         melodyOsc.frequency.value = chordData.note;
-                        melodyOsc.type = 'triangle';
-                        melodyOsc.connect(melodyFilter);
+                        melodyOsc.type = 'sawtooth'; // More aggressive for EPIC feel
+                        melodyOsc.connect(melodyDistortion);
+                        melodyDistortion.connect(melodyFilter);
                         melodyFilter.connect(melodyGain);
                         melodyGain.connect(this.audioContext.destination);
                         
                         melodyGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-                        melodyGain.gain.linearRampToValueAtTime(volume * 1.5, this.audioContext.currentTime + 0.02);
-                        melodyGain.gain.exponentialRampToValueAtTime(volume, this.audioContext.currentTime + 0.1);
-                        melodyGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8);
+                        melodyGain.gain.linearRampToValueAtTime(volume * 2, this.audioContext.currentTime + 0.01); // EXPLOSIVE attack!
+                        melodyGain.gain.exponentialRampToValueAtTime(volume, this.audioContext.currentTime + 0.05);
+                        melodyGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
                         
                         melodyOsc.start(this.audioContext.currentTime);
-                        melodyOsc.stop(this.audioContext.currentTime + 0.8);
+                        melodyOsc.stop(this.audioContext.currentTime + 0.4);
                         
-                        // Play harmony (every other beat)
-                        if (currentChord % 2 === 0) {
-                            chordData.chord.forEach((freq, index) => {
-                                if (index > 0) { // Skip root note (already playing)
-                                    setTimeout(() => {
-                                        const harmonyOsc = this.audioContext.createOscillator();
-                                        const harmonyGain = this.audioContext.createGain();
-                                        
-                                        harmonyOsc.frequency.value = freq;
-                                        harmonyOsc.type = 'sine';
-                                        harmonyOsc.connect(harmonyGain);
-                                        harmonyGain.connect(this.audioContext.destination);
-                                        
-                                        harmonyGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-                                        harmonyGain.gain.linearRampToValueAtTime(volume * 0.3, this.audioContext.currentTime + 0.05);
-                                        harmonyGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.6);
-                                        
-                                        harmonyOsc.start(this.audioContext.currentTime);
-                                        harmonyOsc.stop(this.audioContext.currentTime + 0.6);
-                                    }, index * 50); // Slight delay for arpeggio effect
-                                }
-                            });
-                        }
+                        // EPIC harmony chord burst!
+                        chordData.chord.forEach((freq, index) => {
+                            if (index > 0) {
+                                setTimeout(() => {
+                                    const harmonyOsc = this.audioContext.createOscillator();
+                                    const harmonyGain = this.audioContext.createGain();
+                                    
+                                    harmonyOsc.frequency.value = freq;
+                                    harmonyOsc.type = 'triangle';
+                                    harmonyOsc.connect(harmonyGain);
+                                    harmonyGain.connect(this.audioContext.destination);
+                                    
+                                    harmonyGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                                    harmonyGain.gain.linearRampToValueAtTime(volume * 0.4, this.audioContext.currentTime + 0.02);
+                                    harmonyGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                                    
+                                    harmonyOsc.start(this.audioContext.currentTime);
+                                    harmonyOsc.stop(this.audioContext.currentTime + 0.3);
+                                }, index * 20); // Rapid arpeggio for EPIC effect!
+                            }
+                        });
                         
-                        currentChord = (currentChord + 1) % melody.length;
+                        currentChord = (currentChord + 1) % epicMelody.length;
                     }
-                }, 600);
+                }, 400); // Faster tempo for ADRENALINE!
                 
-                // Bass line (slower rhythm)
+                // POWERFUL bass line for EPIC foundation
                 bassInterval = setInterval(() => {
                     if (this.audio.enabled && this.audio.volume > 0) {
-                        const bassNote = melody[Math.floor(currentChord / 2) % melody.length].chord[0] / 2; // Octave down
-                        const volume = this.audio.volume / 100 * 0.06;
+                        const bassNote = epicMelody[Math.floor(currentChord / 2) % epicMelody.length].chord[0] / 4; // Two octaves down for POWER
+                        const volume = this.audio.volume / 100 * 0.1; // Strong bass
                         
                         const bassOsc = this.audioContext.createOscillator();
                         const bassGain = this.audioContext.createGain();
+                        const bassFilter = this.audioContext.createBiquadFilter();
+                        
+                        bassFilter.type = 'lowpass';
+                        bassFilter.frequency.setValueAtTime(200, this.audioContext.currentTime); // Deep bass only
                         
                         bassOsc.frequency.value = bassNote;
-                        bassOsc.type = 'sawtooth';
-                        bassOsc.connect(bassGain);
+                        bassOsc.type = 'sawtooth'; // Aggressive bass
+                        bassOsc.connect(bassFilter);
+                        bassFilter.connect(bassGain);
                         bassGain.connect(this.audioContext.destination);
                         
                         bassGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-                        bassGain.gain.linearRampToValueAtTime(volume, this.audioContext.currentTime + 0.05);
-                        bassGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 1.0);
+                        bassGain.gain.linearRampToValueAtTime(volume * 1.5, this.audioContext.currentTime + 0.02); // PUNCHY attack
+                        bassGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8);
                         
                         bassOsc.start(this.audioContext.currentTime);
-                        bassOsc.stop(this.audioContext.currentTime + 1.0);
+                        bassOsc.stop(this.audioContext.currentTime + 0.8);
                     }
-                }, 1200); // Half the speed of melody
+                }, 800); // Driving rhythm for EPIC adventure!
+                
+                // Add EPIC percussion for adrenaline rush!
+                percussionInterval = setInterval(() => {
+                    if (this.audio.enabled && this.audio.volume > 0) {
+                        const volume = this.audio.volume / 100 * 0.06;
+                        
+                        // Create kick drum effect
+                        const kickOsc = this.audioContext.createOscillator();
+                        const kickGain = this.audioContext.createGain();
+                        
+                        kickOsc.frequency.setValueAtTime(60, this.audioContext.currentTime); // Deep kick
+                        kickOsc.frequency.exponentialRampToValueAtTime(30, this.audioContext.currentTime + 0.1);
+                        kickOsc.type = 'sine';
+                        kickOsc.connect(kickGain);
+                        kickGain.connect(this.audioContext.destination);
+                        
+                        kickGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                        kickGain.gain.linearRampToValueAtTime(volume * 2, this.audioContext.currentTime + 0.01); // PUNCH!
+                        kickGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+                        
+                        kickOsc.start(this.audioContext.currentTime);
+                        kickOsc.stop(this.audioContext.currentTime + 0.15);
+                    }
+                }, 400); // Fast percussion for ADRENALINE!
             },
             stop: () => {
                 if (melodyInterval) {
@@ -427,6 +499,9 @@ class FlappyBirdGame {
                 }
                 if (bassInterval) {
                     clearInterval(bassInterval);
+                }
+                if (percussionInterval) {
+                    clearInterval(percussionInterval);
                 }
             }
         };
