@@ -1406,7 +1406,8 @@ class FlappyBirdGame {
         this.powerUp.extendedInvincibility = true;
         this.powerUp.invincibilityPipesLeft = this.powerUp.invincibilityPipesTotal;
         
-        console.log('🛡️ Power-up ended - Starting gradual slowdown, grace pipe, and extended invincibility for 2 pipes!');
+        console.log(`🛡️ Power-up ended - Starting gradual slowdown, grace pipe, and extended invincibility for ${this.powerUp.invincibilityPipesTotal} pipes!`);
+        console.log(`🛡️ Extended invincibility state: active=${this.powerUp.extendedInvincibility}, pipesLeft=${this.powerUp.invincibilityPipesLeft}`);
         
         // Stop Sonic music and resume background music
         if (this.sonicMusic) {
@@ -1437,8 +1438,20 @@ class FlappyBirdGame {
             return;
         }
         
-        // Pipe collision with safe corners (skip if power-up allows phasing, extended invincibility, or grace pipe)
-        if ((!this.powerUp.active || !this.powerUp.canPhaseThrough) && !this.powerUp.extendedInvincibility) {
+        // Pipe collision with safe corners - skip if any invincibility is active
+        const canPhaseThrough = (this.powerUp.active && this.powerUp.canPhaseThrough) || this.powerUp.extendedInvincibility;
+        
+        // Debug logging for invincibility states (only when bird is near pipes)
+        if (this.powerUp.extendedInvincibility && this.pipes.length > 0) {
+            const nearPipe = this.pipes.some(pipe => 
+                Math.abs(this.bird.x - pipe.x) < 100
+            );
+            if (nearPipe) {
+                console.log(`🛡️ Extended invincibility: ${this.powerUp.invincibilityPipesLeft} pipes left, phasing: ${canPhaseThrough}`);
+            }
+        }
+        
+        if (!canPhaseThrough) {
             for (const pipe of this.pipes) {
                 const pipeLeft = pipe.x + pipeMargin;
                 const pipeRight = pipe.x + this.settings.pipeWidth - pipeMargin;
