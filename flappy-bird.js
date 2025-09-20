@@ -192,14 +192,46 @@ class FlappyBirdGame {
     createDefaultSounds() {
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
-        // Default tap sound (3 seconds) - same as previous version
-        this.audio.sounds.tap = this.createBeepSound(800, 3.0);
+        // Load Super Mario laugh as default tap sound
+        this.loadMarioTapSound();
         
         // Default crash sound (3 seconds) - same as previous version
         this.audio.sounds.crash = this.createNoiseSound(3.0);
         
         // Default background music - full melody
         this.audio.sounds.bgMusic = this.createMelodySound();
+    }
+    
+    loadMarioTapSound() {
+        // Load Super Mario laugh sound
+        const marioLaugh = new Audio('Super mario laugh Sound Effects.mp3');
+        marioLaugh.volume = 0.6; // Pleasant volume
+        
+        // Set up the Mario laugh as tap sound
+        this.audio.sounds.tap = () => {
+            if (marioLaugh.readyState >= 2) { // Audio is loaded
+                marioLaugh.currentTime = 0;
+                marioLaugh.play().catch(error => {
+                    console.log('Mario laugh failed, using fallback:', error);
+                    // Fallback to synthesized sound if Mario sound fails
+                    this.createBeepSound(800, 3.0)();
+                });
+            } else {
+                // Fallback if not loaded yet
+                this.createBeepSound(800, 3.0)();
+            }
+        };
+        
+        // Add error handling
+        marioLaugh.addEventListener('error', (e) => {
+            console.error('❌ Mario laugh failed to load:', e);
+            // Fallback to synthesized sound
+            this.audio.sounds.tap = this.createBeepSound(800, 3.0);
+        });
+        
+        marioLaugh.addEventListener('canplaythrough', () => {
+            console.log('✅ Mario laugh loaded successfully!');
+        });
     }
     
     createBeepSound(frequency, duration) {
@@ -1104,6 +1136,7 @@ class FlappyBirdGame {
         if (soundType === 'tap') {
             // Spam-tap: restart sound from beginning
             if (this.audio.custom.tapSound) {
+                // Handle custom uploaded tap sounds
                 if (this.audio.state.currentTapAudio) {
                     this.audio.state.currentTapAudio.pause();
                     this.audio.state.currentTapAudio.currentTime = 0;
@@ -1122,6 +1155,7 @@ class FlappyBirdGame {
                     }
                 }, 3000);
             } else if (this.audio.sounds.tap) {
+                // Handle default Mario laugh sound (supports spam-tap naturally)
                 this.audio.sounds.tap();
             }
         } else if (soundType === 'crash') {
