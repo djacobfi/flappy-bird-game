@@ -1240,7 +1240,14 @@ class FlappyBirdGame {
         const currentBirdSpeed = this.settings.birdSpeed * this.powerUp.currentSpeedMultiplier;
         
         this.bird.x += currentBirdSpeed * smoothDelta;
-        this.bird.rotation = Math.min(Math.max(this.bird.velocity * 0.05, -0.5), 0.5);
+        // Bird rotation - less tilting when falling for more vertical descent
+        if (this.bird.velocity > 0) {
+            // When falling, minimal rotation for straighter fall
+            this.bird.rotation = Math.min(this.bird.velocity * 0.02, 0.15); // Much less rotation when falling
+        } else {
+            // When jumping, allow some upward tilt
+            this.bird.rotation = Math.max(this.bird.velocity * 0.03, -0.3); // Slight upward tilt when jumping
+        }
         
         // Update wing flapping animation
         this.updateBirdAnimation();
