@@ -97,7 +97,11 @@ class FlappyBirdGame {
             slowdownActive: false,
             slowdownStartTime: 0,
             slowdownDuration: 3000, // 3 seconds to return to normal speed
-            currentSpeedMultiplier: 1
+            currentSpeedMultiplier: 1,
+            // Extended invincibility system
+            extendedInvincibility: false,
+            invincibilityPipesLeft: 0,
+            invincibilityPipesTotal: 2 // 2 pipes of extended invincibility
         };
         
         this.easterEggs = [];
@@ -1011,6 +1015,8 @@ class FlappyBirdGame {
         this.powerUp.gracePipeUsed = false;
         this.powerUp.slowdownActive = false;
         this.powerUp.currentSpeedMultiplier = 1;
+        this.powerUp.extendedInvincibility = false;
+        this.powerUp.invincibilityPipesLeft = 0;
         
         // Reset world state
         this.world.totalPipesPassed = 0;
@@ -1194,6 +1200,17 @@ class FlappyBirdGame {
                 this.updateScore();
                 this.updateDifficulty();
                 this.checkSeasonChanges();
+                
+                // Decrement extended invincibility pipe counter
+                if (this.powerUp.extendedInvincibility && this.powerUp.invincibilityPipesLeft > 0) {
+                    this.powerUp.invincibilityPipesLeft--;
+                    console.log(`🛡️ Extended invincibility: ${this.powerUp.invincibilityPipesLeft} pipes remaining`);
+                    
+                    if (this.powerUp.invincibilityPipesLeft <= 0) {
+                        this.powerUp.extendedInvincibility = false;
+                        console.log('🛡️ Extended invincibility ended - bird is now vulnerable');
+                    }
+                }
             }
         }
     }
@@ -1385,7 +1402,11 @@ class FlappyBirdGame {
         this.powerUp.slowdownActive = true;
         this.powerUp.slowdownStartTime = Date.now();
         
-        console.log('🛡️ Power-up ended - Starting gradual slowdown and grace pipe activated!');
+        // Start extended invincibility for 2 more pipes
+        this.powerUp.extendedInvincibility = true;
+        this.powerUp.invincibilityPipesLeft = this.powerUp.invincibilityPipesTotal;
+        
+        console.log('🛡️ Power-up ended - Starting gradual slowdown, grace pipe, and extended invincibility for 2 pipes!');
         
         // Stop Sonic music and resume background music
         if (this.sonicMusic) {
@@ -1409,14 +1430,15 @@ class FlappyBirdGame {
         const birdCenterX = this.bird.x + this.bird.width / 2;
         const birdCenterY = this.bird.y + this.bird.height / 2;
         
-        // Ground and ceiling collision (skip during power-up invincibility)
-        if (!this.powerUp.active && (birdTop <= pipeMargin || birdBottom >= this.canvas.height - pipeMargin)) {
+        // Ground and ceiling collision (skip during power-up and extended invincibility)
+        const isInvincible = this.powerUp.active || this.powerUp.extendedInvincibility;
+        if (!isInvincible && (birdTop <= pipeMargin || birdBottom >= this.canvas.height - pipeMargin)) {
             this.gameOver();
             return;
         }
         
-        // Pipe collision with safe corners (skip if power-up allows phasing or grace pipe)
-        if (!this.powerUp.active || !this.powerUp.canPhaseThrough) {
+        // Pipe collision with safe corners (skip if power-up allows phasing, extended invincibility, or grace pipe)
+        if ((!this.powerUp.active || !this.powerUp.canPhaseThrough) && !this.powerUp.extendedInvincibility) {
             for (const pipe of this.pipes) {
                 const pipeLeft = pipe.x + pipeMargin;
                 const pipeRight = pipe.x + this.settings.pipeWidth - pipeMargin;
@@ -2164,6 +2186,8 @@ class FlappyBirdGame {
                 this.drawFunnyPowerUpEffects();
             } else if (this.powerUp.slowdownActive) {
                 this.drawSlowdownEffects();
+            } else if (this.powerUp.extendedInvincibility) {
+                this.drawExtendedInvincibilityEffects();
             }
         }
         
@@ -2742,12 +2766,51 @@ class FlappyBirdGame {
         this.ctx.fillStyle = speedColor;
         this.ctx.fillText(slowdownText, this.canvas.width / 2, 80);
         
-        // Invincibility indicator (fading)
-        if (intensity > 0.5) {
-            this.ctx.globalAlpha = (intensity - 0.5) * 2 * 0.7;
-            this.ctx.fillStyle = '#00FFFF';
-            this.ctx.fillText('🛡️ INVINCIBLE', this.canvas.width / 2, 120);
+        // Invincibility indicator (fading during slowdown, persistent during extended invincibility)
+        if (intensity > 0.5 || this.powerUp.extendedInvincibility) {
+            if (this.powerUp.extendedInvincibility) {
+                // Show pipe counter during extended invincibility
+                this.ctx.globalAlpha = 0.9;
+                this.ctx.fillStyle = '#00FFFF';
+                this.ctx.fillText(`🛡️ INVINCIBLE (${this.powerUp.invincibilityPipesLeft} pipes)`, this.canvas.width / 2, 120);
+            } else {
+                // Fading invincibility during slowdown
+                this.ctx.globalAlpha = (intensity - 0.5) * 2 * 0.7;
+                this.ctx.fillStyle = '#00FFFF';
+                this.ctx.fillText('🛡️ INVINCIBLE', this.canvas.width / 2, 120);
+            }
         }
+        
+        this.ctx.globalAlpha = 1.0;
+        this.ctx.textAlign = 'left';
+    }
+    
+    drawExtendedInvincibilityEffects() {
+        // Subtle effects for extended invincibility period
+        this.ctx.globalAlpha = 0.8;
+        this.ctx.font = 'bold 18px Arial';
+        this.ctx.textAlign = 'center';
+        
+        // Pipe counter with pulsing effect
+        const pulseIntensity = Math.sin(Date.now() * 0.008) * 0.3 + 0.7;
+        this.ctx.globalAlpha = pulseIntensity;
+        
+        // Text outline
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeText(`🛡️ INVINCIBLE (${this.powerUp.invincibilityPipesLeft} pipes left)`, this.canvas.width / 2, 100);
+        
+        // Text fill
+        this.ctx.fillStyle = '#00FFFF';
+        this.ctx.fillText(`🛡️ INVINCIBLE (${this.powerUp.invincibilityPipesLeft} pipes left)`, this.canvas.width / 2, 100);
+        
+        // Subtle shield effect around the bird
+        this.ctx.globalAlpha = 0.3 * pulseIntensity;
+        this.ctx.strokeStyle = '#00FFFF';
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        this.ctx.arc(this.canvas.width * 0.15, this.canvas.height / 2, 40, 0, Math.PI * 2);
+        this.ctx.stroke();
         
         this.ctx.globalAlpha = 1.0;
         this.ctx.textAlign = 'left';
@@ -2757,6 +2820,27 @@ class FlappyBirdGame {
         this.ctx.save();
         this.ctx.translate(this.bird.x + this.bird.width / 2, this.bird.y + this.bird.height / 2);
         this.ctx.rotate(this.bird.rotation);
+        
+        // Apply flickering effect during extended invincibility
+        if (this.powerUp.extendedInvincibility) {
+            // Fast flickering effect - visible/invisible every 100ms
+            const flickerRate = 100; // milliseconds
+            const isVisible = Math.floor(Date.now() / flickerRate) % 2 === 0;
+            
+            if (!isVisible) {
+                this.ctx.globalAlpha = 0.3; // Semi-transparent when "invisible"
+            } else {
+                this.ctx.globalAlpha = 0.8; // Slightly transparent when "visible"
+            }
+        } else if (this.powerUp.active) {
+            // Slight glow effect during power-up
+            this.ctx.globalAlpha = 1.0;
+            this.ctx.shadowColor = '#FFD700';
+            this.ctx.shadowBlur = 10;
+        } else {
+            // Normal visibility
+            this.ctx.globalAlpha = 1.0;
+        }
         
         // Use custom image or animated default bird
         let birdImage;
