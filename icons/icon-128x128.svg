@@ -1,0 +1,35 @@
+
+    <svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" style="stop-color:#87CEEB;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#4CAF50;stop-opacity:1" />
+        </radialGradient>
+      </defs>
+      
+      <!-- Background circle -->
+      <circle cx="64" cy="64" r="62" fill="url(#bg)" stroke="#2E7D32" stroke-width="2"/>
+      
+      <!-- Bird body -->
+      <ellipse cx="64" cy="70.4" rx="19.2" ry="15.36" fill="#FFD700"/>
+      
+      <!-- Bird wing -->
+      <ellipse cx="66.56" cy="64" rx="10.24" ry="7.68" fill="#FFA500"/>
+      
+      <!-- Bird head -->
+      <circle cx="57.6" cy="53.76" r="10.24" fill="#FFD700"/>
+      
+      <!-- Bird beak -->
+      <polygon points="47.36,53.76 40.96,51.2 47.36,48.64" fill="#FF4500"/>
+      
+      <!-- Bird eye -->
+      <circle cx="55.04" cy="51.2" r="1.92" fill="#000"/>
+      
+      <!-- Pipe elements (small decorative) -->
+      <rect x="19.2" y="12.8" width="7.68" height="38.4" fill="#5FAD56"/>
+      <rect x="96" y="76.8" width="7.68" height="38.4" fill="#5FAD56"/>
+      
+      <!-- Game title text (for larger icons) -->
+      <text x="64" y="108.8" font-family="Arial, sans-serif" font-size="10.24" font-weight="bold" text-anchor="middle" fill="#2E7D32">FLAPPY</text>
+    </svg>
+  
