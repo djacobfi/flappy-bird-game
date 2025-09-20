@@ -1273,7 +1273,7 @@ class FlappyBirdGame {
         if (this.sonicMusic && this.audio.enabled) {
             try {
                 this.sonicMusic.currentTime = 0;
-                this.sonicMusic.volume = this.audio.volume / 100 * 0.8;
+                this.sonicMusic.volume = this.getEffectiveVolume('powerup');
                 
                 // Ensure audio context is active
                 if (this.audioContext.state === 'suspended') {
@@ -1589,8 +1589,7 @@ class FlappyBirdGame {
         
         // Update sonic music volume
         if (this.sonicMusic) {
-            this.sonicMusic.volume = this.audio.enabled ? 
-                (this.audio.volumes.powerup / 100) * masterMultiplier : 0;
+            this.sonicMusic.volume = this.getEffectiveVolume('powerup');
         }
         
         // Note: Tap and crash sounds are applied when they play
