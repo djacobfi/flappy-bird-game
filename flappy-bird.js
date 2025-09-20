@@ -1511,7 +1511,7 @@ class FlappyBirdGame {
     checkCollisions() {
         const birdMargin = 4;
         const pipeMargin = 3;
-        const cornerSafeZone = 12;
+        const cornerSafeZone = 18; // Increased from 12 for more forgiving collisions
         
         const birdLeft = this.bird.x + birdMargin;
         const birdRight = this.bird.x + this.bird.width - birdMargin;
@@ -1544,7 +1544,8 @@ class FlappyBirdGame {
             for (const pipe of this.pipes) {
                 const pipeLeft = pipe.x + pipeMargin;
                 const pipeRight = pipe.x + this.settings.pipeWidth - pipeMargin;
-                const topPipeBottom = pipe.topHeight - pipeMargin;
+                // Extra margin for top pipe to reduce sensitivity
+                const topPipeBottom = pipe.topHeight - (pipeMargin + 5); // Extra 5 pixels margin
                 const bottomPipeTop = pipe.bottomY + pipeMargin;
                 
                 if (birdRight > pipeLeft && birdLeft < pipeRight) {
@@ -1562,9 +1563,23 @@ class FlappyBirdGame {
                     const inBottomSafeZone = this.isInSafeZone(birdCenterX, birdCenterY, pipe.x, pipe.bottomY, cornerSafeZone, 'bottom');
                     
                     if (!inTopSafeZone && !inBottomSafeZone) {
-                        if (birdTop < topPipeBottom || birdBottom > bottomPipeTop) {
-                            this.gameOver();
-                            return;
+                        // Extra check for top pipe right corner (most sensitive area)
+                        const isNearTopRightCorner = (birdCenterX > pipe.x + this.settings.pipeWidth * 0.7) && 
+                                                   (birdCenterY < pipe.topHeight + 20);
+                        
+                        if (isNearTopRightCorner) {
+                            // More forgiving collision for top right corner
+                            const extraMargin = 8; // Additional 8 pixels of forgiveness
+                            if (birdTop < topPipeBottom - extraMargin || birdBottom > bottomPipeTop) {
+                                this.gameOver();
+                                return;
+                            }
+                        } else {
+                            // Normal collision detection for other areas
+                            if (birdTop < topPipeBottom || birdBottom > bottomPipeTop) {
+                                this.gameOver();
+                                return;
+                            }
                         }
                     }
                 }
@@ -1579,7 +1594,14 @@ class FlappyBirdGame {
         const distToLeft = Math.sqrt((birdX - leftCorner) ** 2 + (birdY - pipeY) ** 2);
         const distToRight = Math.sqrt((birdX - rightCorner) ** 2 + (birdY - pipeY) ** 2);
         
-        return distToLeft < safeZone || distToRight < safeZone;
+        // Make top pipe right corner extra forgiving (most problematic area)
+        let effectiveSafeZone = safeZone;
+        if (pipeType === 'top' && distToRight < distToLeft) {
+            // Bird is near the top pipe's right corner - increase safe zone
+            effectiveSafeZone = safeZone * 1.5; // 50% larger safe zone
+        }
+        
+        return distToLeft < effectiveSafeZone || distToRight < effectiveSafeZone;
     }
     
     gameOver() {
