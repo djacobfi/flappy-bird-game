@@ -188,8 +188,8 @@ class FlappyBirdGame {
         
         // Scale for different screen sizes
         const scale = Math.max(Math.min(this.canvas.width / 800, this.canvas.height / 600), 0.5);
-        this.bird.width = 40 * scale;
-        this.bird.height = 30 * scale;
+        this.bird.width = 50 * scale; // Updated to match new sprite
+        this.bird.height = 40 * scale; // Updated to match new sprite
         this.settings.pipeWidth = Math.max(60 * scale, 40);
         this.settings.pipeGap = Math.max(250 * scale, 180);
         
@@ -197,43 +197,148 @@ class FlappyBirdGame {
     }
     
     createDefaultAssets() {
-        // Create default bird sprite
-        const birdCanvas = document.createElement('canvas');
-        birdCanvas.width = 40;
-        birdCanvas.height = 40;
-        const ctx = birdCanvas.getContext('2d');
+        // Create realistic bird sprite with animation frames
+        this.birdFrames = [];
+        this.currentFrame = 0;
+        this.frameTimer = 0;
+        this.frameDelay = 8; // Change frame every 8 game loops
         
-        // Bird body
-        ctx.fillStyle = '#FFD700';
-        ctx.beginPath();
-        ctx.ellipse(20, 15, 18, 12, 0, 0, 2 * Math.PI);
-        ctx.fill();
+        // Create 3 frames for wing flapping animation
+        for (let frame = 0; frame < 3; frame++) {
+            const birdCanvas = document.createElement('canvas');
+            birdCanvas.width = 50;
+            birdCanvas.height = 40;
+            const ctx = birdCanvas.getContext('2d');
+            
+            this.drawRealisticBird(ctx, frame);
+            this.birdFrames.push(birdCanvas);
+        }
         
-        // Wing
-        ctx.fillStyle = '#FFA500';
-        ctx.beginPath();
-        ctx.ellipse(25, 15, 8, 6, 0, 0, 2 * Math.PI);
-        ctx.fill();
-        
-        // Eye
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.arc(28, 12, 3, 0, 2 * Math.PI);
-        ctx.fill();
-        
-        // Beak
-        ctx.fillStyle = '#FF4500';
-        ctx.beginPath();
-        ctx.moveTo(35, 15);
-        ctx.lineTo(40, 13);
-        ctx.lineTo(35, 17);
-        ctx.closePath();
-        ctx.fill();
-        
-        this.defaultBirdImage = birdCanvas;
+        // Set default to first frame
+        this.defaultBirdImage = this.birdFrames[0];
         
         // Create default sounds
         this.createDefaultSounds();
+    }
+    
+    drawRealisticBird(ctx, frame) {
+        ctx.clearRect(0, 0, 50, 40);
+        
+        // Bird body (rounded oval)
+        ctx.fillStyle = '#8B4513'; // Brown body
+        ctx.beginPath();
+        ctx.ellipse(25, 25, 12, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Bird head (smaller circle)
+        ctx.fillStyle = '#A0522D'; // Lighter brown head
+        ctx.beginPath();
+        ctx.arc(35, 20, 8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Beak (triangle)
+        ctx.fillStyle = '#FFA500';
+        ctx.beginPath();
+        ctx.moveTo(42, 20);
+        ctx.lineTo(48, 18);
+        ctx.lineTo(48, 22);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Eye (white with black pupil)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(38, 18, 3, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(39, 18, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Wing animation (3 different positions)
+        ctx.fillStyle = '#654321'; // Darker brown for wing
+        ctx.beginPath();
+        
+        if (frame === 0) {
+            // Wings up
+            ctx.ellipse(20, 22, 8, 4, -0.3, 0, Math.PI * 2);
+        } else if (frame === 1) {
+            // Wings middle
+            ctx.ellipse(20, 25, 8, 3, 0, 0, Math.PI * 2);
+        } else {
+            // Wings down
+            ctx.ellipse(20, 28, 8, 4, 0.3, 0, Math.PI * 2);
+        }
+        ctx.fill();
+        
+        // Wing details (feather lines)
+        ctx.strokeStyle = '#4A2C17';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        
+        if (frame === 0) {
+            // Wing up details
+            ctx.moveTo(15, 20);
+            ctx.lineTo(22, 18);
+            ctx.moveTo(16, 22);
+            ctx.lineTo(23, 20);
+            ctx.moveTo(17, 24);
+            ctx.lineTo(24, 22);
+        } else if (frame === 1) {
+            // Wing middle details
+            ctx.moveTo(15, 24);
+            ctx.lineTo(22, 23);
+            ctx.moveTo(16, 26);
+            ctx.lineTo(23, 25);
+            ctx.moveTo(17, 28);
+            ctx.lineTo(24, 27);
+        } else {
+            // Wing down details
+            ctx.moveTo(15, 26);
+            ctx.lineTo(22, 28);
+            ctx.moveTo(16, 28);
+            ctx.lineTo(23, 30);
+            ctx.moveTo(17, 30);
+            ctx.lineTo(24, 32);
+        }
+        ctx.stroke();
+        
+        // Tail feathers
+        ctx.fillStyle = '#654321';
+        ctx.beginPath();
+        ctx.ellipse(12, 25, 6, 3, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Tail feather details
+        ctx.strokeStyle = '#4A2C17';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(8, 23);
+        ctx.lineTo(15, 24);
+        ctx.moveTo(7, 25);
+        ctx.lineTo(14, 26);
+        ctx.moveTo(8, 27);
+        ctx.lineTo(15, 28);
+        ctx.stroke();
+        
+        // Small chest highlight
+        ctx.fillStyle = '#D2B48C';
+        ctx.beginPath();
+        ctx.ellipse(28, 28, 4, 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Feet (small orange lines)
+        ctx.strokeStyle = '#FFA500';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(25, 33);
+        ctx.lineTo(23, 37);
+        ctx.moveTo(25, 33);
+        ctx.lineTo(25, 37);
+        ctx.moveTo(25, 33);
+        ctx.lineTo(27, 37);
+        ctx.stroke();
     }
     
     createDefaultSounds() {
@@ -764,8 +869,8 @@ class FlappyBirdGame {
         this.bird = {
             x: this.canvas.width * 0.15,
             y: this.canvas.height / 2,
-            width: 40 * scale,
-            height: 30 * scale,
+            width: 50 * scale, // Updated to match new sprite
+            height: 40 * scale, // Updated to match new sprite
             velocity: 0,
             rotation: 0
         };
@@ -813,6 +918,28 @@ class FlappyBirdGame {
         this.gameLoop();
     }
     
+    updateBirdAnimation() {
+        // Animate wing flapping for default bird only
+        if (!this.audio.custom.birdImage && this.birdFrames) {
+            this.frameTimer++;
+            
+            // Flap faster when jumping, slower when falling
+            let animationSpeed = this.frameDelay;
+            if (this.bird.velocity < -2) {
+                // Flapping up - faster animation
+                animationSpeed = Math.max(4, this.frameDelay - 2);
+            } else if (this.bird.velocity > 2) {
+                // Falling - slower animation
+                animationSpeed = this.frameDelay + 3;
+            }
+            
+            if (this.frameTimer >= animationSpeed) {
+                this.currentFrame = (this.currentFrame + 1) % this.birdFrames.length;
+                this.frameTimer = 0;
+            }
+        }
+    }
+    
     update() {
         if (this.gameState !== 'playing') return;
         
@@ -842,6 +969,9 @@ class FlappyBirdGame {
         
         this.bird.x += currentBirdSpeed * smoothDelta;
         this.bird.rotation = Math.min(Math.max(this.bird.velocity * 0.05, -0.5), 0.5);
+        
+        // Update wing flapping animation
+        this.updateBirdAnimation();
         
         // Update camera
         this.camera.x = this.bird.x - this.canvas.width * 0.3;
@@ -1883,7 +2013,15 @@ class FlappyBirdGame {
         this.ctx.translate(this.bird.x + this.bird.width / 2, this.bird.y + this.bird.height / 2);
         this.ctx.rotate(this.bird.rotation);
         
-        const birdImage = this.audio.custom.birdImage || this.defaultBirdImage;
+        // Use custom image or animated default bird
+        let birdImage;
+        if (this.audio.custom.birdImage) {
+            birdImage = this.audio.custom.birdImage;
+        } else {
+            // Use animated frame for default bird
+            birdImage = this.birdFrames[this.currentFrame];
+        }
+        
         this.ctx.drawImage(
             birdImage,
             -this.bird.width / 2,
