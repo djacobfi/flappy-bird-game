@@ -2364,10 +2364,10 @@ class FlappyBirdGame {
         const groundHeight = 120;
         
         // Mountains (slowest)
-        this.drawMountains(-this.camera.x * 0.1);
+        this.drawMountains(-this.camera.x * 0.2); // Increased from 0.1
         
-        // Hills (medium)
-        this.drawHills(-this.camera.x * 0.3);
+        // Hills (medium-fast for more noticeable movement)
+        this.drawHills(-this.camera.x * 0.5); // Increased from 0.3
         
         // Vegetation (fast)
         this.drawVegetation(-this.camera.x * 0.7);
