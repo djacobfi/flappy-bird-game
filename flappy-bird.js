@@ -516,6 +516,9 @@ class FlappyBirdGame {
         document.getElementById('bestScore').textContent = this.bestScore;
         document.getElementById('toggleMusic').textContent = this.audio.enabled ? '🔊 Music' : '🔇 Music';
         
+        // Hide HUD initially (show only during gameplay)
+        document.getElementById('gameHUD').style.display = 'none';
+        
         this.updateScore();
         this.updateDifficulty();
     }
@@ -550,6 +553,9 @@ class FlappyBirdGame {
         this.gameState = 'playing';
         document.getElementById('startScreen').classList.add('hidden');
         document.getElementById('gameOverScreen').classList.add('hidden');
+        
+        // Show the in-game HUD
+        document.getElementById('gameHUD').style.display = 'block';
         
         if (!this.audio.playing) {
             this.startBackgroundMusic();
@@ -750,6 +756,9 @@ class FlappyBirdGame {
         document.getElementById('finalScore').textContent = this.score;
         document.getElementById('bestScore').textContent = this.bestScore;
         document.getElementById('gameOverScreen').classList.remove('hidden');
+        
+        // Hide the in-game HUD to prevent overlap
+        document.getElementById('gameHUD').style.display = 'none';
         
         this.updateGameOverCountdown();
     }
