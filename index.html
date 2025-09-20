@@ -91,14 +91,23 @@
                 
                 <!-- File Upload Controls -->
                 <div class="upload-controls">
-                    <input type="file" id="tapSoundUpload" accept="audio/*">
-                    <label for="tapSoundUpload" class="upload-btn">🔊 Upload Tap Sound</label>
+                    <div class="upload-group">
+                        <input type="file" id="tapSoundUpload" accept="audio/*">
+                        <label for="tapSoundUpload" class="upload-btn">🔊 Upload Tap Sound</label>
+                        <button id="removeTapSound" class="remove-btn" title="Remove custom tap sound">❌</button>
+                    </div>
                     
-                    <input type="file" id="crashSoundUpload" accept="audio/*">
-                    <label for="crashSoundUpload" class="upload-btn">💥 Upload Crash Sound</label>
+                    <div class="upload-group">
+                        <input type="file" id="crashSoundUpload" accept="audio/*">
+                        <label for="crashSoundUpload" class="upload-btn">💥 Upload Crash Sound</label>
+                        <button id="removeCrashSound" class="remove-btn" title="Remove custom crash sound">❌</button>
+                    </div>
                     
-                    <input type="file" id="bgMusicUpload" accept="audio/*">
-                    <label for="bgMusicUpload" class="upload-btn">🎵 Upload Background Music</label>
+                    <div class="upload-group">
+                        <input type="file" id="bgMusicUpload" accept="audio/*">
+                        <label for="bgMusicUpload" class="upload-btn">🎵 Upload Background Music</label>
+                        <button id="removeBgMusic" class="remove-btn" title="Remove custom background music">❌</button>
+                    </div>
                 </div>
             </div>
         </div>

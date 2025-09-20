@@ -685,9 +685,9 @@ class FlappyBirdGame {
                 
                 // EPIC melody line with POWER!
                 melodyInterval = setInterval(() => {
-                    if (this.audio.enabled && this.audio.volume > 0) {
+                    if (this.audio.enabled && this.getEffectiveVolume('music') > 0) {
                         const chordData = epicMelody[currentChord];
-                        const volume = this.audio.volume / 100 * 0.12; // Louder for EPIC feel!
+                        const volume = this.getEffectiveVolume('music') * 0.12; // Louder for EPIC feel!
                         
                         // Play POWERFUL melody note
                         const melodyOsc = this.audioContext.createOscillator();
@@ -750,9 +750,9 @@ class FlappyBirdGame {
                 
                 // POWERFUL bass line for EPIC foundation
                 bassInterval = setInterval(() => {
-                    if (this.audio.enabled && this.audio.volume > 0) {
+                    if (this.audio.enabled && this.getEffectiveVolume('music') > 0) {
                         const bassNote = epicMelody[Math.floor(currentChord / 2) % epicMelody.length].chord[0] / 4; // Two octaves down for POWER
-                        const volume = this.audio.volume / 100 * 0.1; // Strong bass
+                        const volume = this.getEffectiveVolume('music') * 0.1; // Strong bass
                         
                         const bassOsc = this.audioContext.createOscillator();
                         const bassGain = this.audioContext.createGain();
@@ -778,8 +778,8 @@ class FlappyBirdGame {
                 
                 // Add EPIC percussion for adrenaline rush!
                 percussionInterval = setInterval(() => {
-                    if (this.audio.enabled && this.audio.volume > 0) {
-                        const volume = this.audio.volume / 100 * 0.06;
+                    if (this.audio.enabled && this.getEffectiveVolume('music') > 0) {
+                        const volume = this.getEffectiveVolume('music') * 0.06;
                         
                         // Create kick drum effect
                         const kickOsc = this.audioContext.createOscillator();
@@ -855,7 +855,10 @@ class FlappyBirdGame {
             restartBtn: () => this.handleRestart(),
             toggleMusic: () => this.toggleMusic(),
             settingsBtn: () => this.toggleSettings(),
-            closeSettingsBtn: () => this.hideSettings()
+            closeSettingsBtn: () => this.hideSettings(),
+            removeTapSound: () => this.removeCustomSound('tap'),
+            removeCrashSound: () => this.removeCustomSound('crash'),
+            removeBgMusic: () => this.removeCustomSound('bgMusic')
         };
         
         // Setup volume sliders
@@ -931,6 +934,9 @@ class FlappyBirdGame {
         
         // Hide HUD initially (show only during gameplay)
         document.getElementById('gameHUD').style.display = 'none';
+        
+        // Initialize remove button states
+        this.updateAllRemoveButtonStates();
         
         this.updateScore();
         this.updateDifficulty();
@@ -1517,7 +1523,7 @@ class FlappyBirdGame {
         btn.textContent = this.audio.enabled ? '🔊 Music' : '🔇 Music';
         
         if (this.audio.custom.bgMusic) {
-            this.audio.custom.bgMusic.volume = this.audio.enabled ? this.audio.volume / 100 : 0;
+            this.audio.custom.bgMusic.volume = this.getEffectiveVolume('music');
         }
         
         if (!this.audio.enabled && !this.audio.custom.bgMusic) {
@@ -1831,6 +1837,54 @@ class FlappyBirdGame {
         }, 1500);
     }
     
+    removeCustomSound(soundType) {
+        // Clear the custom sound
+        if (soundType === 'tap') {
+            this.audio.custom.tapSound = null;
+            this.updateButtonText('tapSoundUpload', null);
+        } else if (soundType === 'crash') {
+            this.audio.custom.crashSound = null;
+            this.updateButtonText('crashSoundUpload', null);
+        } else if (soundType === 'bgMusic') {
+            // Stop current background music if it's playing
+            if (this.audio.custom.bgMusic) {
+                this.audio.custom.bgMusic.pause();
+                this.audio.custom.bgMusic = null;
+            }
+            this.updateButtonText('bgMusicUpload', null);
+            
+            // Restart default background music if audio is enabled
+            if (this.audio.enabled && this.audio.playing) {
+                this.startBackgroundMusic();
+            }
+        }
+        
+        // Update remove button state
+        this.updateRemoveButtonState(soundType);
+        
+        console.log(`✅ Removed custom ${soundType} sound, restored to default`);
+    }
+    
+    updateRemoveButtonState(soundType) {
+        const buttonId = soundType === 'bgMusic' ? 'removeBgMusic' : `remove${soundType.charAt(0).toUpperCase() + soundType.slice(1)}Sound`;
+        const button = document.getElementById(buttonId);
+        
+        if (button) {
+            const hasCustomSound = soundType === 'tap' ? this.audio.custom.tapSound :
+                                 soundType === 'crash' ? this.audio.custom.crashSound :
+                                 soundType === 'bgMusic' ? this.audio.custom.bgMusic : false;
+            
+            button.disabled = !hasCustomSound;
+            button.style.opacity = hasCustomSound ? '0.7' : '0.3';
+        }
+    }
+    
+    updateAllRemoveButtonStates() {
+        this.updateRemoveButtonState('tap');
+        this.updateRemoveButtonState('crash');
+        this.updateRemoveButtonState('bgMusic');
+    }
+    
     // File Upload Handlers
     handleBirdUpload(file) {
         if (file && file.type.startsWith('image/')) {
@@ -1860,7 +1914,7 @@ class FlappyBirdGame {
                     }
                     
                     audio.loop = true;
-                    audio.volume = this.audio.enabled ? this.audio.volume / 100 : 0;
+                    audio.volume = this.getEffectiveVolume('music');
                     this.audio.custom.bgMusic = audio;
                     
                     if (this.audio.playing) {
@@ -1873,6 +1927,9 @@ class FlappyBirdGame {
                 }
                 
                 this.updateButtonText(soundType === 'bgMusic' ? 'bgMusicUpload' : soundType + 'SoundUpload', file.name);
+                
+                // Enable the remove button for this sound type
+                this.updateRemoveButtonState(soundType);
             };
             reader.readAsDataURL(file);
         }
