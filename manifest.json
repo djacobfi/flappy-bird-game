@@ -1,0 +1,25 @@
+{
+  "name": "Flappy Bird Adventure",
+  "short_name": "Flappy Bird",
+  "description": "A modern take on the classic Flappy Bird game with power-ups and customization",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "theme_color": "#87CEEB",
+  "background_color": "#87CEEB",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23FFD700'/%3E%3Ccircle cx='35' cy='40' r='8' fill='%23000'/%3E%3Cpath d='M60 45 L75 50 L60 55 Z' fill='%23FF6B35'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23FFD700'/%3E%3Ccircle cx='35' cy='40' r='8' fill='%23000'/%3E%3Cpath d='M60 45 L75 50 L60 55 Z' fill='%23FF6B35'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "lang": "en",
+  "dir": "ltr"
+}

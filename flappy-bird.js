@@ -20,14 +20,8 @@ class FlappyBirdGame {
         this.bestScore = parseInt(localStorage.getItem('flappyBestScore')) || 0;
         
         // Game settings
-        this.settings = {
-            gravity: 0.4,
-            jumpPower: { min: -8, max: -15 },
-            birdSpeed: 2,
-            pipeSpeed: 1.5,
-            pipeGap: 250,
-            pipeWidth: 50
-        };
+        // Calculate responsive settings based on screen size
+        this.settings = this.calculateResponsiveSettings();
         
         // Progressive difficulty
         this.difficulty = {
@@ -37,7 +31,15 @@ class FlappyBirdGame {
         };
         
         // Game objects
-        this.bird = { x: 0, y: 0, width: 40, height: 30, velocity: 0, rotation: 0 };
+        // Initialize bird with responsive sizing (will be properly set in resizeCanvas)
+        this.bird = { 
+            x: 0, 
+            y: 0, 
+            width: 40 * this.settings.scaleFactor, 
+            height: 30 * this.settings.scaleFactor, 
+            velocity: 0, 
+            rotation: 0 
+        };
         this.pipes = [];
         this.camera = { x: 0, y: 0 };
         
@@ -124,6 +126,43 @@ class FlappyBirdGame {
         });
     }
     
+    calculateResponsiveSettings() {
+        // Get screen dimensions
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+        const isPortrait = screenHeight > screenWidth;
+        const isMobile = screenWidth < 768;
+        const isTablet = screenWidth >= 768 && screenWidth < 1024;
+        
+        // Base scaling factors
+        let scaleFactor = 1;
+        if (isMobile) {
+            scaleFactor = isPortrait ? 0.7 : 0.8;
+        } else if (isTablet) {
+            scaleFactor = 0.9;
+        }
+        
+        // Additional scaling based on screen size
+        const sizeScale = Math.min(screenWidth / 1200, screenHeight / 800);
+        scaleFactor *= Math.max(0.6, Math.min(1.2, sizeScale));
+        
+        return {
+            gravity: 0.4 * scaleFactor,
+            jumpPower: { 
+                min: -8 * scaleFactor, 
+                max: -15 * scaleFactor 
+            },
+            birdSpeed: 2 * scaleFactor,
+            pipeSpeed: 1.5 * scaleFactor,
+            pipeGap: Math.max(180, 250 * scaleFactor), // Ensure minimum gap for mobile
+            pipeWidth: Math.max(40, 50 * scaleFactor),
+            scaleFactor: scaleFactor, // Store for other uses
+            isMobile: isMobile,
+            isTablet: isTablet,
+            isPortrait: isPortrait
+        };
+    }
+
     init() {
         this.setupCanvas();
         this.createDefaultAssets();
@@ -137,25 +176,29 @@ class FlappyBirdGame {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
         
-        // Position bird
+        // Recalculate responsive settings on resize
+        this.settings = this.calculateResponsiveSettings();
+        
+        // Position bird with responsive sizing
         this.bird.x = this.canvas.width * 0.15;
         this.bird.y = this.canvas.height / 2;
+        this.bird.width = 40 * this.settings.scaleFactor;
+        this.bird.height = 30 * this.settings.scaleFactor;
         
-        // Scale for different screen sizes
-        const scale = Math.max(Math.min(this.canvas.width / 800, this.canvas.height / 600), 0.5);
-        this.bird.width = 40 * scale;
-        this.bird.height = 30 * scale;
-        this.settings.pipeWidth = Math.max(60 * scale, 40);
-        this.settings.pipeGap = Math.max(250 * scale, 180);
+        // Add touch optimization for mobile
+        if (this.settings.isMobile) {
+            this.canvas.style.touchAction = 'none';
+        }
         
         window.addEventListener('resize', () => this.setupCanvas());
     }
     
     createDefaultAssets() {
-        // Create default bird sprite
+        // Create default bird sprite with responsive sizing
         const birdCanvas = document.createElement('canvas');
-        birdCanvas.width = 40;
-        birdCanvas.height = 40;
+        const birdSize = Math.max(30, 40 * this.settings.scaleFactor);
+        birdCanvas.width = birdSize;
+        birdCanvas.height = birdSize;
         const ctx = birdCanvas.getContext('2d');
         
         // Bird body
@@ -602,14 +645,23 @@ class FlappyBirdGame {
         
         this.canvas.addEventListener('mousedown', () => this.handleJumpStart());
         this.canvas.addEventListener('mouseup', () => this.handleJumpEnd());
+        // Enhanced touch events for mobile with better responsiveness
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.handleJumpStart();
-        });
+        }, { passive: false });
+        
         this.canvas.addEventListener('touchend', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.handleJumpEnd();
-        });
+        }, { passive: false });
+        
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
         
         // UI buttons
         this.setupUIEventListeners();
@@ -714,13 +766,11 @@ class FlappyBirdGame {
     }
     
     resetGame() {
-        const scale = Math.max(Math.min(this.canvas.width / 800, this.canvas.height / 600), 0.5);
-        
         this.bird = {
             x: this.canvas.width * 0.15,
             y: this.canvas.height / 2,
-            width: 40 * scale,
-            height: 30 * scale,
+            width: 40 * this.settings.scaleFactor,
+            height: 30 * this.settings.scaleFactor,
             velocity: 0,
             rotation: 0
         };
@@ -1747,8 +1797,9 @@ class FlappyBirdGame {
             light: '#7DC46A'
         };
         
-        const capHeight = 24;
-        const capOverhang = 4;
+        // Scale cap size for mobile
+        const capHeight = Math.max(20, 24 * this.settings.scaleFactor);
+        const capOverhang = Math.max(3, 4 * this.settings.scaleFactor);
         
         // Top pipe
         this.ctx.fillStyle = colors.body;
