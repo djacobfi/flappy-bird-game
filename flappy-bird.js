@@ -166,20 +166,69 @@ class FlappyBirdGame {
                 this.audioContext.resume();
             }
             
-            const oscillator = this.audioContext.createOscillator();
+            // Create a more musical tap sound with harmonics
+            const fundamentalOsc = this.audioContext.createOscillator();
+            const harmonicOsc = this.audioContext.createOscillator();
+            const subOsc = this.audioContext.createOscillator();
+            
             const gainNode = this.audioContext.createGain();
+            const harmonicGain = this.audioContext.createGain();
+            const subGain = this.audioContext.createGain();
+            const masterGain = this.audioContext.createGain();
             
-            oscillator.connect(gainNode);
-            gainNode.connect(this.audioContext.destination);
+            // Add reverb-like effect with delay
+            const delayNode = this.audioContext.createDelay();
+            const delayGain = this.audioContext.createGain();
             
-            oscillator.frequency.value = frequency;
-            oscillator.type = 'sine';
+            delayNode.delayTime.setValueAtTime(0.1, this.audioContext.currentTime);
+            delayGain.gain.setValueAtTime(0.3, this.audioContext.currentTime);
             
-            gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+            // Fundamental frequency (main note)
+            fundamentalOsc.frequency.value = frequency;
+            fundamentalOsc.type = 'sine';
+            fundamentalOsc.connect(gainNode);
             
-            oscillator.start(this.audioContext.currentTime);
-            oscillator.stop(this.audioContext.currentTime + duration);
+            // Harmonic (octave up for brightness)
+            harmonicOsc.frequency.value = frequency * 2;
+            harmonicOsc.type = 'triangle';
+            harmonicOsc.connect(harmonicGain);
+            
+            // Sub harmonic (fifth down for richness)
+            subOsc.frequency.value = frequency * 0.75;
+            subOsc.type = 'sawtooth';
+            subOsc.connect(subGain);
+            
+            // Mix the oscillators
+            gainNode.gain.setValueAtTime(0.4, this.audioContext.currentTime);
+            harmonicGain.gain.setValueAtTime(0.15, this.audioContext.currentTime);
+            subGain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+            
+            // Connect to master gain with delay
+            gainNode.connect(masterGain);
+            harmonicGain.connect(masterGain);
+            subGain.connect(masterGain);
+            
+            gainNode.connect(delayNode);
+            delayNode.connect(delayGain);
+            delayGain.connect(masterGain);
+            
+            masterGain.connect(this.audioContext.destination);
+            
+            // Musical envelope - quick attack, sustain, gentle release
+            masterGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+            masterGain.gain.linearRampToValueAtTime(0.6, this.audioContext.currentTime + 0.02); // Quick attack
+            masterGain.gain.exponentialRampToValueAtTime(0.3, this.audioContext.currentTime + 0.1); // Sustain
+            masterGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration); // Release
+            
+            // Start all oscillators
+            const startTime = this.audioContext.currentTime;
+            fundamentalOsc.start(startTime);
+            harmonicOsc.start(startTime);
+            subOsc.start(startTime);
+            
+            fundamentalOsc.stop(startTime + duration);
+            harmonicOsc.stop(startTime + duration);
+            subOsc.stop(startTime + duration);
         };
     }
     
@@ -189,48 +238,103 @@ class FlappyBirdGame {
                 this.audioContext.resume();
             }
             
-            const bufferSize = this.audioContext.sampleRate * duration;
+            // Create a musical crash sound with descending tones
+            const crashOsc1 = this.audioContext.createOscillator();
+            const crashOsc2 = this.audioContext.createOscillator();
+            const crashOsc3 = this.audioContext.createOscillator();
+            
+            const gain1 = this.audioContext.createGain();
+            const gain2 = this.audioContext.createGain();
+            const gain3 = this.audioContext.createGain();
+            const masterGain = this.audioContext.createGain();
+            
+            // Add some filtered noise for texture
+            const bufferSize = this.audioContext.sampleRate * 0.3; // Short burst
             const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
             const output = buffer.getChannelData(0);
             
-            // Create filtered noise that's less harsh
             for (let i = 0; i < bufferSize; i++) {
-                // Use pink noise instead of white noise (less harsh)
-                output[i] = (Math.random() * 2 - 1) * 0.5; // Reduced amplitude
-                
-                // Apply simple low-pass filtering to make it softer
+                output[i] = (Math.random() * 2 - 1) * 0.2;
                 if (i > 0) {
-                    output[i] = output[i] * 0.7 + output[i - 1] * 0.3;
+                    output[i] = output[i] * 0.8 + output[i - 1] * 0.2;
                 }
             }
             
-            const source = this.audioContext.createBufferSource();
-            const gainNode = this.audioContext.createGain();
-            const filterNode = this.audioContext.createBiquadFilter();
+            const noiseSource = this.audioContext.createBufferSource();
+            const noiseGain = this.audioContext.createGain();
+            const noiseFilter = this.audioContext.createBiquadFilter();
             
-            // Add low-pass filter to make sound softer
-            filterNode.type = 'lowpass';
-            filterNode.frequency.setValueAtTime(800, this.audioContext.currentTime); // Cut harsh frequencies
-            filterNode.Q.setValueAtTime(1, this.audioContext.currentTime);
+            noiseFilter.type = 'lowpass';
+            noiseFilter.frequency.setValueAtTime(400, this.audioContext.currentTime);
             
-            source.buffer = buffer;
-            source.connect(filterNode);
-            filterNode.connect(gainNode);
-            gainNode.connect(this.audioContext.destination);
+            noiseSource.buffer = buffer;
+            noiseSource.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(masterGain);
             
-            // Softer envelope - starts quieter and fades more gradually
-            gainNode.gain.setValueAtTime(0.05, this.audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.02, this.audioContext.currentTime + 0.1);
-            gainNode.gain.exponentialRampToValueAtTime(0.005, this.audioContext.currentTime + duration);
+            // Descending tones for dramatic effect
+            crashOsc1.frequency.setValueAtTime(220, this.audioContext.currentTime); // A3
+            crashOsc1.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + duration); // A2
+            crashOsc1.type = 'sawtooth';
+            crashOsc1.connect(gain1);
             
-            source.start();
+            crashOsc2.frequency.setValueAtTime(165, this.audioContext.currentTime); // E3
+            crashOsc2.frequency.exponentialRampToValueAtTime(82.5, this.audioContext.currentTime + duration); // E2
+            crashOsc2.type = 'square';
+            crashOsc2.connect(gain2);
+            
+            crashOsc3.frequency.setValueAtTime(130, this.audioContext.currentTime); // C3
+            crashOsc3.frequency.exponentialRampToValueAtTime(65, this.audioContext.currentTime + duration); // C2
+            crashOsc3.type = 'triangle';
+            crashOsc3.connect(gain3);
+            
+            // Mix the oscillators
+            gain1.gain.setValueAtTime(0.15, this.audioContext.currentTime);
+            gain2.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+            gain3.gain.setValueAtTime(0.08, this.audioContext.currentTime);
+            noiseGain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+            
+            gain1.connect(masterGain);
+            gain2.connect(masterGain);
+            gain3.connect(masterGain);
+            
+            masterGain.connect(this.audioContext.destination);
+            
+            // Dramatic envelope - quick spike then fade
+            masterGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+            masterGain.gain.linearRampToValueAtTime(0.8, this.audioContext.currentTime + 0.05); // Quick spike
+            masterGain.gain.exponentialRampToValueAtTime(0.2, this.audioContext.currentTime + 0.3); // Drop
+            masterGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration); // Fade out
+            
+            // Start all sounds
+            const startTime = this.audioContext.currentTime;
+            crashOsc1.start(startTime);
+            crashOsc2.start(startTime);
+            crashOsc3.start(startTime);
+            noiseSource.start(startTime);
+            
+            crashOsc1.stop(startTime + duration);
+            crashOsc2.stop(startTime + duration);
+            crashOsc3.stop(startTime + duration);
         };
     }
     
     createMelodySound() {
-        const melody = [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50]; // C major scale
-        let currentNote = 0;
+        // Enhanced melody with chord progressions
+        const melody = [
+            { note: 523.25, chord: [523.25, 659.25, 783.99] }, // C major
+            { note: 587.33, chord: [587.33, 698.46, 880.00] }, // D minor
+            { note: 659.25, chord: [659.25, 783.99, 987.77] }, // E minor
+            { note: 523.25, chord: [523.25, 659.25, 783.99] }, // C major
+            { note: 698.46, chord: [698.46, 880.00, 1046.50] }, // F major
+            { note: 659.25, chord: [659.25, 783.99, 987.77] }, // E minor
+            { note: 587.33, chord: [587.33, 698.46, 880.00] }, // D minor
+            { note: 523.25, chord: [523.25, 659.25, 783.99] }  // C major
+        ];
+        
+        let currentChord = 0;
         let melodyInterval;
+        let bassInterval;
         
         return {
             start: () => {
@@ -238,30 +342,91 @@ class FlappyBirdGame {
                     this.audioContext.resume();
                 }
                 
+                // Main melody line
                 melodyInterval = setInterval(() => {
                     if (this.audio.enabled && this.audio.volume > 0) {
-                        const oscillator = this.audioContext.createOscillator();
-                        const gainNode = this.audioContext.createGain();
+                        const chordData = melody[currentChord];
+                        const volume = this.audio.volume / 100 * 0.08;
                         
-                        oscillator.connect(gainNode);
-                        gainNode.connect(this.audioContext.destination);
+                        // Play melody note
+                        const melodyOsc = this.audioContext.createOscillator();
+                        const melodyGain = this.audioContext.createGain();
+                        const melodyFilter = this.audioContext.createBiquadFilter();
                         
-                        oscillator.frequency.value = melody[currentNote];
-                        oscillator.type = 'sine';
+                        melodyFilter.type = 'lowpass';
+                        melodyFilter.frequency.setValueAtTime(2000, this.audioContext.currentTime);
                         
-                        gainNode.gain.setValueAtTime(this.audio.volume / 100 * 0.1, this.audioContext.currentTime);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
+                        melodyOsc.frequency.value = chordData.note;
+                        melodyOsc.type = 'triangle';
+                        melodyOsc.connect(melodyFilter);
+                        melodyFilter.connect(melodyGain);
+                        melodyGain.connect(this.audioContext.destination);
                         
-                        oscillator.start(this.audioContext.currentTime);
-                        oscillator.stop(this.audioContext.currentTime + 0.4);
+                        melodyGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                        melodyGain.gain.linearRampToValueAtTime(volume * 1.5, this.audioContext.currentTime + 0.02);
+                        melodyGain.gain.exponentialRampToValueAtTime(volume, this.audioContext.currentTime + 0.1);
+                        melodyGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8);
                         
-                        currentNote = (currentNote + 1) % melody.length;
+                        melodyOsc.start(this.audioContext.currentTime);
+                        melodyOsc.stop(this.audioContext.currentTime + 0.8);
+                        
+                        // Play harmony (every other beat)
+                        if (currentChord % 2 === 0) {
+                            chordData.chord.forEach((freq, index) => {
+                                if (index > 0) { // Skip root note (already playing)
+                                    setTimeout(() => {
+                                        const harmonyOsc = this.audioContext.createOscillator();
+                                        const harmonyGain = this.audioContext.createGain();
+                                        
+                                        harmonyOsc.frequency.value = freq;
+                                        harmonyOsc.type = 'sine';
+                                        harmonyOsc.connect(harmonyGain);
+                                        harmonyGain.connect(this.audioContext.destination);
+                                        
+                                        harmonyGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                                        harmonyGain.gain.linearRampToValueAtTime(volume * 0.3, this.audioContext.currentTime + 0.05);
+                                        harmonyGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.6);
+                                        
+                                        harmonyOsc.start(this.audioContext.currentTime);
+                                        harmonyOsc.stop(this.audioContext.currentTime + 0.6);
+                                    }, index * 50); // Slight delay for arpeggio effect
+                                }
+                            });
+                        }
+                        
+                        currentChord = (currentChord + 1) % melody.length;
                     }
-                }, 500);
+                }, 600);
+                
+                // Bass line (slower rhythm)
+                bassInterval = setInterval(() => {
+                    if (this.audio.enabled && this.audio.volume > 0) {
+                        const bassNote = melody[Math.floor(currentChord / 2) % melody.length].chord[0] / 2; // Octave down
+                        const volume = this.audio.volume / 100 * 0.06;
+                        
+                        const bassOsc = this.audioContext.createOscillator();
+                        const bassGain = this.audioContext.createGain();
+                        
+                        bassOsc.frequency.value = bassNote;
+                        bassOsc.type = 'sawtooth';
+                        bassOsc.connect(bassGain);
+                        bassGain.connect(this.audioContext.destination);
+                        
+                        bassGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                        bassGain.gain.linearRampToValueAtTime(volume, this.audioContext.currentTime + 0.05);
+                        bassGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 1.0);
+                        
+                        bassOsc.start(this.audioContext.currentTime);
+                        bassOsc.stop(this.audioContext.currentTime + 1.0);
+                    }
+                }, 1200); // Half the speed of melody
             },
             stop: () => {
                 if (melodyInterval) {
                     clearInterval(melodyInterval);
+                }
+                if (bassInterval) {
+                    clearInterval(bassInterval);
                 }
             }
         };
