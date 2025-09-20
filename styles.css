@@ -146,27 +146,29 @@ html, body {
 
 .score-display {
     position: absolute;
-    top: 2rem;
+    top: 1.5rem;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 3.5rem;
+    font-size: 3rem;
     font-weight: bold;
     color: white;
     text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+    z-index: 20;
 }
 
 .difficulty-display {
     position: absolute;
-    top: 6rem;
+    top: 5.5rem;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: bold;
     color: #27ae60;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-    background: rgba(0, 0, 0, 0.4);
-    padding: 0.5rem 1.5rem;
-    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 0.4rem 1.2rem;
+    border-radius: 15px;
+    z-index: 20;
 }
 
 .score-number {
@@ -360,13 +362,14 @@ input[type="file"] {
     }
     
     .score-display {
-        font-size: 2.5rem;
-        top: 1.5rem;
+        font-size: 2.2rem;
+        top: 1rem;
     }
     
     .difficulty-display {
-        top: 4.5rem;
-        font-size: 1rem;
+        top: 4rem;
+        font-size: 0.9rem;
+        padding: 0.3rem 1rem;
     }
     
     .settings-btn {
@@ -405,13 +408,14 @@ input[type="file"] {
     }
     
     .score-display {
-        font-size: 2rem;
-        top: 1rem;
+        font-size: 1.8rem;
+        top: 0.8rem;
     }
     
     .difficulty-display {
-        top: 3.5rem;
-        font-size: 0.9rem;
+        top: 3.2rem;
+        font-size: 0.8rem;
+        padding: 0.2rem 0.8rem;
     }
     
     .settings-panel {
