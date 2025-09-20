@@ -776,9 +776,12 @@ class FlappyBirdGame {
         // Update easter eggs
         this.updateEasterEggs();
         
-        // Check power-up expiration
+        // Check power-up expiration (only end when safe)
         if (this.powerUp.active && Date.now() - this.powerUp.startTime > this.powerUp.duration) {
-            this.deactivatePowerUp();
+            if (this.isBirdInSafeArea()) {
+                this.deactivatePowerUp();
+            }
+            // If not safe, power-up continues until bird reaches safe area
         }
         
         // Check collisions (skip pipe collision if phasing through)
@@ -845,6 +848,33 @@ class FlappyBirdGame {
             rotation: 0,
             pulseScale: 1
         });
+    }
+    
+    isBirdInSafeArea() {
+        // Check if bird is safely away from all pipes
+        const birdLeft = this.bird.x;
+        const birdRight = this.bird.x + this.bird.width;
+        const birdTop = this.bird.y;
+        const birdBottom = this.bird.y + this.bird.height;
+        
+        const safeMargin = 20; // Extra safety margin
+        
+        for (const pipe of this.pipes) {
+            const pipeLeft = pipe.x - safeMargin;
+            const pipeRight = pipe.x + this.settings.pipeWidth + safeMargin;
+            const topPipeBottom = pipe.topHeight + safeMargin;
+            const bottomPipeTop = pipe.bottomY - safeMargin;
+            
+            // Check if bird overlaps with pipe area (including safety margin)
+            if (birdRight > pipeLeft && birdLeft < pipeRight) {
+                // Check if bird is in the danger zones
+                if (birdTop < topPipeBottom || birdBottom > bottomPipeTop) {
+                    return false; // Not safe - bird is near/in pipe area
+                }
+            }
+        }
+        
+        return true; // Safe - bird is clear of all pipes
     }
     
     updateEasterEggs() {
@@ -1760,14 +1790,26 @@ class FlappyBirdGame {
         this.ctx.fillStyle = `rgba(255, 255, 0, ${flashIntensity})`;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Power-up timer display
+        // Power-up timer display with safety indicator
         const timeRemaining = this.powerUp.duration - timeInPowerUp;
         const secondsLeft = Math.ceil(timeRemaining / 1000);
         
         this.ctx.fillStyle = '#FFD700';
         this.ctx.font = 'bold 24px Arial';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText(`GOTTA GO FAST! ${secondsLeft}s`, this.canvas.width / 2, 100);
+        
+        if (timeRemaining <= 0) {
+            // Power-up time expired but waiting for safe area
+            if (!this.isBirdInSafeArea()) {
+                this.ctx.fillStyle = '#FF6B6B';
+                this.ctx.fillText('GOTTA GO FAST! (Finding safe exit...)', this.canvas.width / 2, 100);
+            } else {
+                this.ctx.fillText(`GOTTA GO FAST! ${secondsLeft}s`, this.canvas.width / 2, 100);
+            }
+        } else {
+            this.ctx.fillText(`GOTTA GO FAST! ${secondsLeft}s`, this.canvas.width / 2, 100);
+        }
+        
         this.ctx.textAlign = 'left';
     }
     
