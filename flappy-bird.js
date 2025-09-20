@@ -1795,12 +1795,7 @@ class FlappyBirdGame {
         // Bottom pipe outline
         this.ctx.strokeRect(pipe.x - 2, pipe.bottomY, this.settings.pipeWidth + 4, this.canvas.height - pipe.bottomY);
         
-        // Add "SAFE" text in the gap
-        this.ctx.fillStyle = '#00FF00';
-        this.ctx.font = 'bold 16px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('SAFE', pipe.x + this.settings.pipeWidth / 2, pipe.topHeight + this.settings.pipeGap / 2);
-        this.ctx.textAlign = 'left';
+        // No text - just the glow effect
         
         this.ctx.globalAlpha = 1.0; // Reset alpha
     }
