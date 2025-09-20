@@ -23,6 +23,18 @@ class GlobalLeaderboard {
         // Local leaderboard fallback
         this.localScores = JSON.parse(localStorage.getItem('flappyLocalLeaderboard')) || [];
         
+        // Add some demo scores if completely empty
+        if (this.localScores.length === 0) {
+            this.localScores = [
+                { name: 'FlappyMaster', score: 42, timestamp: Date.now() - 86400000 },
+                { name: 'SkyDancer', score: 38, timestamp: Date.now() - 172800000 },
+                { name: 'WingCommander', score: 35, timestamp: Date.now() - 259200000 },
+                { name: 'AirAce', score: 31, timestamp: Date.now() - 345600000 },
+                { name: 'BirdBrain', score: 28, timestamp: Date.now() - 432000000 }
+            ];
+            localStorage.setItem('flappyLocalLeaderboard', JSON.stringify(this.localScores));
+        }
+        
         this.initializeFirebase();
     }
     
@@ -39,13 +51,30 @@ class GlobalLeaderboard {
         try {
             // Check if Firebase is available (from CDN)
             if (typeof firebase !== 'undefined') {
-                // Initialize Firebase
-                firebase.initializeApp(this.firebaseConfig);
-                this.db = firebase.database();
-                this.isConnected = true;
-                console.log('🔥 Firebase connected successfully!');
+                console.log('🔥 Firebase SDK detected, attempting connection...');
                 
-                // Test connection
+                // Try to initialize Firebase with timeout
+                const initPromise = new Promise((resolve, reject) => {
+                    try {
+                        firebase.initializeApp(this.firebaseConfig);
+                        this.db = firebase.database();
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
+                });
+                
+                // 3-second timeout for Firebase initialization
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Firebase initialization timeout')), 3000);
+                });
+                
+                await Promise.race([initPromise, timeoutPromise]);
+                
+                this.isConnected = true;
+                console.log('✅ Firebase connected successfully!');
+                
+                // Test connection with timeout
                 await this.testConnection();
             } else {
                 console.warn('⚠️ Firebase not available, using local storage only');
@@ -132,24 +161,37 @@ class GlobalLeaderboard {
     }
     
     async getGlobalLeaderboard(limit = 10) {
+        // Always return local leaderboard immediately if not connected
         if (!this.isConnected) {
+            console.log('💾 Using local leaderboard (not connected to Firebase)');
             return this.getLocalLeaderboard(limit);
         }
         
         try {
-            const snapshot = await this.db.ref('leaderboard')
+            // Add timeout to Firebase query
+            const queryPromise = this.db.ref('leaderboard')
                 .orderByChild('score')
                 .limitToLast(limit)
                 .once('value');
+            
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Firebase query timeout')), 5000);
+            });
+            
+            const snapshot = await Promise.race([queryPromise, timeoutPromise]);
             
             const scores = [];
             snapshot.forEach(child => {
                 scores.push(child.val());
             });
             
+            console.log(`✅ Loaded ${scores.length} scores from Firebase`);
             return scores.sort((a, b) => b.score - a.score);
+            
         } catch (error) {
             console.error('❌ Failed to fetch global leaderboard:', error);
+            console.log('💾 Falling back to local leaderboard');
+            this.isConnected = false; // Mark as disconnected for future calls
             return this.getLocalLeaderboard(limit);
         }
     }

@@ -2285,14 +2285,56 @@ class FlappyBirdGame {
         
         try {
             statusElement.textContent = '🔄 Loading...';
-            const scores = await this.leaderboard.getGlobalLeaderboard(10);
+            leaderboardList.innerHTML = '<li>Loading scores...</li>';
+            
+            // Add timeout to prevent hanging
+            const loadPromise = this.leaderboard.getGlobalLeaderboard(10);
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Leaderboard load timeout')), 8000);
+            });
+            
+            const scores = await Promise.race([loadPromise, timeoutPromise]);
             
             leaderboardList.innerHTML = '';
             
             if (scores.length === 0) {
-                leaderboardList.innerHTML = '<li>No scores yet - be the first!</li>';
+                leaderboardList.innerHTML = '<li><span class="player-name">No scores yet</span><span class="player-score">Be the first!</span></li>';
             } else {
                 scores.forEach((entry, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span class="player-name">${index + 1}. ${entry.name || 'Anonymous'}</span>
+                        <span class="player-score">${entry.score || 0}</span>
+                    `;
+                    leaderboardList.appendChild(li);
+                });
+            }
+            
+            // Update status and player count
+            try {
+                const totalPlayers = await this.leaderboard.getTotalPlayers();
+                document.getElementById('playerCount').textContent = totalPlayers;
+                document.getElementById('totalPlayers').style.display = 'inline';
+            } catch (e) {
+                console.log('Could not get total players:', e);
+                document.getElementById('totalPlayers').style.display = 'none';
+            }
+            
+            statusElement.textContent = this.leaderboard.isConnected ? 
+                '🌐 Global Leaderboard' : '💾 Local Leaderboard';
+                
+        } catch (error) {
+            console.error('Failed to refresh leaderboard:', error);
+            statusElement.textContent = '❌ Using local scores';
+            
+            // Show local scores as fallback
+            const localScores = this.leaderboard.getLocalLeaderboard(10);
+            leaderboardList.innerHTML = '';
+            
+            if (localScores.length === 0) {
+                leaderboardList.innerHTML = '<li><span class="player-name">No local scores</span><span class="player-score">Play to add!</span></li>';
+            } else {
+                localScores.forEach((entry, index) => {
                     const li = document.createElement('li');
                     li.innerHTML = `
                         <span class="player-name">${index + 1}. ${entry.name}</span>
@@ -2301,18 +2343,6 @@ class FlappyBirdGame {
                     leaderboardList.appendChild(li);
                 });
             }
-            
-            // Update status and player count
-            const totalPlayers = await this.leaderboard.getTotalPlayers();
-            document.getElementById('playerCount').textContent = totalPlayers;
-            document.getElementById('totalPlayers').style.display = 'inline';
-            
-            statusElement.textContent = this.leaderboard.isConnected ? 
-                '🌐 Global Leaderboard' : '💾 Local Leaderboard';
-                
-        } catch (error) {
-            console.error('Failed to refresh leaderboard:', error);
-            statusElement.textContent = '❌ Connection failed';
         }
     }
     
