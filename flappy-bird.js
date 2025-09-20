@@ -92,7 +92,12 @@ class FlappyBirdGame {
             speedMultiplier: 6,
             canPhaseThrough: true,
             gracePipeAllowed: false, // Allow passing through first pipe after power-up ends
-            gracePipeUsed: false
+            gracePipeUsed: false,
+            // Gradual slowdown system
+            slowdownActive: false,
+            slowdownStartTime: 0,
+            slowdownDuration: 3000, // 3 seconds to return to normal speed
+            currentSpeedMultiplier: 1
         };
         
         this.easterEggs = [];
@@ -1004,6 +1009,8 @@ class FlappyBirdGame {
         }
         this.powerUp.gracePipeAllowed = false;
         this.powerUp.gracePipeUsed = false;
+        this.powerUp.slowdownActive = false;
+        this.powerUp.currentSpeedMultiplier = 1;
         
         // Reset world state
         this.world.totalPipesPassed = 0;
@@ -1074,6 +1081,36 @@ class FlappyBirdGame {
         }
     }
     
+    updatePowerUpSpeed() {
+        const now = Date.now();
+        
+        if (this.powerUp.active) {
+            // During power-up: full speed
+            this.powerUp.currentSpeedMultiplier = this.powerUp.speedMultiplier;
+        } else if (this.powerUp.slowdownActive) {
+            // During slowdown: gradually reduce speed
+            const slowdownElapsed = now - this.powerUp.slowdownStartTime;
+            const slowdownProgress = Math.min(slowdownElapsed / this.powerUp.slowdownDuration, 1);
+            
+            // Smooth easing function for natural deceleration
+            const easeOut = 1 - Math.pow(1 - slowdownProgress, 3);
+            
+            // Interpolate from max speed to normal speed
+            this.powerUp.currentSpeedMultiplier = this.powerUp.speedMultiplier - 
+                (this.powerUp.speedMultiplier - 1) * easeOut;
+            
+            // End slowdown when we reach normal speed
+            if (slowdownProgress >= 1) {
+                this.powerUp.slowdownActive = false;
+                this.powerUp.currentSpeedMultiplier = 1;
+                console.log('🐦 Bird returned to normal speed');
+            }
+        } else {
+            // Normal state: standard speed
+            this.powerUp.currentSpeedMultiplier = 1;
+        }
+    }
+    
     update() {
         if (this.gameState !== 'playing') return;
         
@@ -1096,10 +1133,9 @@ class FlappyBirdGame {
         
         this.bird.y += this.bird.velocity * smoothDelta;
         
-        // Apply power-up speed multiplier with delta time for smooth movement
-        const currentBirdSpeed = this.powerUp.active ? 
-            this.settings.birdSpeed * this.powerUp.speedMultiplier : 
-            this.settings.birdSpeed;
+        // Apply power-up speed multiplier with gradual slowdown
+        this.updatePowerUpSpeed();
+        const currentBirdSpeed = this.settings.birdSpeed * this.powerUp.currentSpeedMultiplier;
         
         this.bird.x += currentBirdSpeed * smoothDelta;
         this.bird.rotation = Math.min(Math.max(this.bird.velocity * 0.05, -0.5), 0.5);
@@ -1345,7 +1381,11 @@ class FlappyBirdGame {
         this.powerUp.gracePipeAllowed = true; // Enable grace pipe
         this.powerUp.gracePipeUsed = false; // Reset grace pipe usage
         
-        console.log('🛡️ Power-up ended - Grace pipe activated for safe transition!');
+        // Start gradual slowdown
+        this.powerUp.slowdownActive = true;
+        this.powerUp.slowdownStartTime = Date.now();
+        
+        console.log('🛡️ Power-up ended - Starting gradual slowdown and grace pipe activated!');
         
         // Stop Sonic music and resume background music
         if (this.sonicMusic) {
@@ -1369,8 +1409,8 @@ class FlappyBirdGame {
         const birdCenterX = this.bird.x + this.bird.width / 2;
         const birdCenterY = this.bird.y + this.bird.height / 2;
         
-        // Ground and ceiling collision
-        if (birdTop <= pipeMargin || birdBottom >= this.canvas.height - pipeMargin) {
+        // Ground and ceiling collision (skip during power-up invincibility)
+        if (!this.powerUp.active && (birdTop <= pipeMargin || birdBottom >= this.canvas.height - pipeMargin)) {
             this.gameOver();
             return;
         }
@@ -2122,6 +2162,8 @@ class FlappyBirdGame {
             // Draw power-up effects overlay
             if (this.powerUp.active) {
                 this.drawFunnyPowerUpEffects();
+            } else if (this.powerUp.slowdownActive) {
+                this.drawSlowdownEffects();
             }
         }
         
@@ -2659,6 +2701,56 @@ class FlappyBirdGame {
         this.ctx.closePath();
         this.ctx.fill();
         this.ctx.restore();
+    }
+    
+    drawSlowdownEffects() {
+        const slowdownProgress = Math.min((Date.now() - this.powerUp.slowdownStartTime) / this.powerUp.slowdownDuration, 1);
+        const intensity = 1 - slowdownProgress; // Fade out as we slow down
+        
+        // Fading speed lines to show deceleration
+        this.ctx.globalAlpha = intensity * 0.6;
+        this.ctx.strokeStyle = '#FFD700';
+        this.ctx.lineWidth = 2;
+        
+        for (let i = 0; i < 10; i++) {
+            const y = (Date.now() * 0.05 + i * 50) % this.canvas.height;
+            const length = 30 * intensity + Math.sin(Date.now() * 0.003 + i) * 10;
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.canvas.width, y);
+            this.ctx.lineTo(this.canvas.width - length, y);
+            this.ctx.stroke();
+        }
+        
+        // Speed indicator text
+        this.ctx.globalAlpha = intensity * 0.8;
+        this.ctx.font = 'bold 20px Arial';
+        this.ctx.textAlign = 'center';
+        
+        const speedPercent = Math.round(this.powerUp.currentSpeedMultiplier * 100);
+        const slowdownText = `⚡ ${speedPercent}% Speed`;
+        
+        // Text outline
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeText(slowdownText, this.canvas.width / 2, 80);
+        
+        // Text fill with color based on speed
+        const speedColor = speedPercent > 300 ? '#FF0000' : 
+                          speedPercent > 200 ? '#FFA500' : 
+                          speedPercent > 150 ? '#FFFF00' : '#00FF00';
+        this.ctx.fillStyle = speedColor;
+        this.ctx.fillText(slowdownText, this.canvas.width / 2, 80);
+        
+        // Invincibility indicator (fading)
+        if (intensity > 0.5) {
+            this.ctx.globalAlpha = (intensity - 0.5) * 2 * 0.7;
+            this.ctx.fillStyle = '#00FFFF';
+            this.ctx.fillText('🛡️ INVINCIBLE', this.canvas.width / 2, 120);
+        }
+        
+        this.ctx.globalAlpha = 1.0;
+        this.ctx.textAlign = 'left';
     }
     
     drawBird() {
