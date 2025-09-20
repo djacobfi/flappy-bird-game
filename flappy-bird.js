@@ -77,7 +77,30 @@ class FlappyBirdGame {
         this.gameOverTime = 0;
         this.gameOverDelay = 1000; // 1 second
         
+        // Easter egg power-up system
+        this.powerUp = {
+            active: false,
+            startTime: 0,
+            duration: 8000, // 8 seconds of EPIC power
+            speedMultiplier: 6,
+            canPhaseThrough: true
+        };
+        
+        this.easterEggs = [];
+        this.easterEggSpawnChance = 0.12; // 12% chance per pipe
+        
+        // Sonic power-up music
+        this.sonicMusic = null;
+        this.loadSonicMusic();
+        
         this.init();
+    }
+    
+    loadSonicMusic() {
+        // Load the Sonic "Gotta Go Fast" music
+        this.sonicMusic = new Audio('/Users/damienjacob/Flappy/Gotta Go Fast (Sonic Theme) - MLG Sound Effect (HD) ( 160kbps ).mp3');
+        this.sonicMusic.volume = 0.7;
+        this.sonicMusic.loop = false; // Play once during power-up
     }
     
     init() {
@@ -650,8 +673,14 @@ class FlappyBirdGame {
         };
         
         this.pipes = [];
+        this.easterEggs = [];
         this.score = 0;
         this.camera = { x: 0, y: 0 };
+        
+        // Reset power-up
+        if (this.powerUp.active) {
+            this.deactivatePowerUp();
+        }
         
         // Reset world state
         this.world.totalPipesPassed = 0;
@@ -704,7 +733,13 @@ class FlappyBirdGame {
         }
         
         this.bird.y += this.bird.velocity;
-        this.bird.x += this.settings.birdSpeed;
+        
+        // Apply power-up speed multiplier
+        const currentBirdSpeed = this.powerUp.active ? 
+            this.settings.birdSpeed * this.powerUp.speedMultiplier : 
+            this.settings.birdSpeed;
+        
+        this.bird.x += currentBirdSpeed;
         this.bird.rotation = Math.min(Math.max(this.bird.velocity * 0.05, -0.5), 0.5);
         
         // Update camera
@@ -719,7 +754,15 @@ class FlappyBirdGame {
         // Update pipes
         this.updatePipes();
         
-        // Check collisions
+        // Update easter eggs
+        this.updateEasterEggs();
+        
+        // Check power-up expiration
+        if (this.powerUp.active && Date.now() - this.powerUp.startTime > this.powerUp.duration) {
+            this.deactivatePowerUp();
+        }
+        
+        // Check collisions (skip pipe collision if phasing through)
         this.checkCollisions();
     }
     
@@ -766,6 +809,90 @@ class FlappyBirdGame {
             bottomY: topHeight + this.settings.pipeGap,
             scored: false
         });
+        
+        // Spawn easter egg with chance (only if power-up not active)
+        if (Math.random() < this.easterEggSpawnChance && !this.powerUp.active) {
+            this.spawnEasterEgg(pipeX + this.settings.pipeWidth + 100);
+        }
+    }
+    
+    spawnEasterEgg(x) {
+        this.easterEggs.push({
+            x: x,
+            y: this.canvas.height / 2 + (Math.random() - 0.5) * 200,
+            width: 30,
+            height: 30,
+            collected: false,
+            rotation: 0,
+            pulseScale: 1
+        });
+    }
+    
+    updateEasterEggs() {
+        for (let i = this.easterEggs.length - 1; i >= 0; i--) {
+            const egg = this.easterEggs[i];
+            
+            // Animate the easter egg
+            egg.rotation += 0.1;
+            egg.pulseScale = 1 + Math.sin(Date.now() * 0.01 + i) * 0.2;
+            
+            // Remove off-screen eggs
+            if (egg.x + egg.width < this.camera.x - 100) {
+                this.easterEggs.splice(i, 1);
+                continue;
+            }
+            
+            // Check collection
+            if (!egg.collected && 
+                this.bird.x < egg.x + egg.width &&
+                this.bird.x + this.bird.width > egg.x &&
+                this.bird.y < egg.y + egg.height &&
+                this.bird.y + this.bird.height > egg.y) {
+                
+                this.collectEasterEgg(i);
+            }
+        }
+    }
+    
+    collectEasterEgg(index) {
+        this.easterEggs.splice(index, 1);
+        this.activatePowerUp();
+    }
+    
+    activatePowerUp() {
+        this.powerUp.active = true;
+        this.powerUp.startTime = Date.now();
+        
+        // Stop background music and play Sonic theme
+        if (this.audio.custom.bgMusic) {
+            this.audio.custom.bgMusic.pause();
+        } else {
+            this.audio.sounds.bgMusic.stop();
+        }
+        
+        if (this.sonicMusic) {
+            this.sonicMusic.currentTime = 0;
+            this.sonicMusic.volume = this.audio.enabled ? (this.audio.volume / 100 * 0.8) : 0;
+            this.sonicMusic.play();
+        }
+        
+        // Auto-deactivate after duration
+        setTimeout(() => {
+            this.deactivatePowerUp();
+        }, this.powerUp.duration);
+    }
+    
+    deactivatePowerUp() {
+        this.powerUp.active = false;
+        
+        // Stop Sonic music and resume background music
+        if (this.sonicMusic) {
+            this.sonicMusic.pause();
+        }
+        
+        if (this.audio.enabled) {
+            this.startBackgroundMusic();
+        }
     }
     
     checkCollisions() {
@@ -786,22 +913,24 @@ class FlappyBirdGame {
             return;
         }
         
-        // Pipe collision with safe corners
-        for (const pipe of this.pipes) {
-            const pipeLeft = pipe.x + pipeMargin;
-            const pipeRight = pipe.x + this.settings.pipeWidth - pipeMargin;
-            const topPipeBottom = pipe.topHeight - pipeMargin;
-            const bottomPipeTop = pipe.bottomY + pipeMargin;
-            
-            if (birdRight > pipeLeft && birdLeft < pipeRight) {
-                // Check safe corner zones
-                const inTopSafeZone = this.isInSafeZone(birdCenterX, birdCenterY, pipe.x, pipe.topHeight, cornerSafeZone, 'top');
-                const inBottomSafeZone = this.isInSafeZone(birdCenterX, birdCenterY, pipe.x, pipe.bottomY, cornerSafeZone, 'bottom');
+        // Pipe collision with safe corners (skip if power-up allows phasing)
+        if (!this.powerUp.active || !this.powerUp.canPhaseThrough) {
+            for (const pipe of this.pipes) {
+                const pipeLeft = pipe.x + pipeMargin;
+                const pipeRight = pipe.x + this.settings.pipeWidth - pipeMargin;
+                const topPipeBottom = pipe.topHeight - pipeMargin;
+                const bottomPipeTop = pipe.bottomY + pipeMargin;
                 
-                if (!inTopSafeZone && !inBottomSafeZone) {
-                    if (birdTop < topPipeBottom || birdBottom > bottomPipeTop) {
-                        this.gameOver();
-                        return;
+                if (birdRight > pipeLeft && birdLeft < pipeRight) {
+                    // Check safe corner zones
+                    const inTopSafeZone = this.isInSafeZone(birdCenterX, birdCenterY, pipe.x, pipe.topHeight, cornerSafeZone, 'top');
+                    const inBottomSafeZone = this.isInSafeZone(birdCenterX, birdCenterY, pipe.x, pipe.bottomY, cornerSafeZone, 'bottom');
+                    
+                    if (!inTopSafeZone && !inBottomSafeZone) {
+                        if (birdTop < topPipeBottom || birdBottom > bottomPipeTop) {
+                            this.gameOver();
+                            return;
+                        }
                     }
                 }
             }
@@ -1103,9 +1232,15 @@ class FlappyBirdGame {
             this.ctx.translate(-this.camera.x, -this.camera.y);
             
             this.drawPipes();
+            this.drawEasterEggs();
             this.drawBird();
             
             this.ctx.restore();
+            
+            // Draw power-up effects overlay
+            if (this.powerUp.active) {
+                this.drawPowerUpEffects();
+            }
         }
     }
     
@@ -1487,6 +1622,73 @@ class FlappyBirdGame {
         );
         
         this.ctx.restore();
+    }
+    
+    drawEasterEggs() {
+        for (const egg of this.easterEggs) {
+            if (egg.x + egg.width >= this.camera.x && egg.x <= this.camera.x + this.canvas.width) {
+                this.ctx.save();
+                this.ctx.translate(egg.x + egg.width / 2, egg.y + egg.height / 2);
+                this.ctx.rotate(egg.rotation);
+                this.ctx.scale(egg.pulseScale, egg.pulseScale);
+                
+                // Draw glowing easter egg
+                const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
+                gradient.addColorStop(0, '#FFD700');
+                gradient.addColorStop(0.7, '#FFA500');
+                gradient.addColorStop(1, 'rgba(255, 165, 0, 0.3)');
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.beginPath();
+                this.ctx.ellipse(0, 0, 15, 18, 0, 0, 2 * Math.PI);
+                this.ctx.fill();
+                
+                // Add sparkle effect
+                this.ctx.fillStyle = '#FFFFFF';
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI) / 3 + egg.rotation;
+                    const x = Math.cos(angle) * 8;
+                    const y = Math.sin(angle) * 8;
+                    this.ctx.fillRect(x - 1, y - 1, 2, 2);
+                }
+                
+                this.ctx.restore();
+            }
+        }
+    }
+    
+    drawPowerUpEffects() {
+        // Speed lines effect
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        this.ctx.lineWidth = 3;
+        
+        for (let i = 0; i < 20; i++) {
+            const x = (this.camera.x + i * 50) % this.canvas.width;
+            const y = Math.random() * this.canvas.height;
+            const length = 40 + Math.random() * 60;
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, y);
+            this.ctx.lineTo(x - length, y);
+            this.ctx.stroke();
+        }
+        
+        // Screen flash effect
+        const timeInPowerUp = Date.now() - this.powerUp.startTime;
+        const flashIntensity = Math.sin(timeInPowerUp * 0.02) * 0.1 + 0.05;
+        
+        this.ctx.fillStyle = `rgba(255, 255, 0, ${flashIntensity})`;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Power-up timer display
+        const timeRemaining = this.powerUp.duration - timeInPowerUp;
+        const secondsLeft = Math.ceil(timeRemaining / 1000);
+        
+        this.ctx.fillStyle = '#FFD700';
+        this.ctx.font = 'bold 24px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(`GOTTA GO FAST! ${secondsLeft}s`, this.canvas.width / 2, 100);
+        this.ctx.textAlign = 'left';
     }
     
     // Helper drawing methods
