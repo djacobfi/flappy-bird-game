@@ -102,6 +102,10 @@ class FlappyBirdGame {
         this.sonicMusic = null;
         this.loadSonicMusic();
         
+        // Volume preview system
+        this.volumePreviewTimeout = null;
+        this.volumePreviewAudio = null;
+        
         this.init();
     }
     
@@ -871,11 +875,15 @@ class FlappyBirdGame {
             }
         });
         
-        // Add volume slider event listeners
+        // Add volume slider event listeners with audio preview
         Object.entries(volumeSliders).forEach(([id, handler]) => {
             const element = document.getElementById(id);
             if (element) {
-                element.addEventListener('input', handler);
+                element.addEventListener('input', (e) => {
+                    handler(e);
+                    // Play audio preview after volume change
+                    this.playVolumePreview(id, parseInt(e.target.value));
+                });
             }
         });
     }
@@ -1573,6 +1581,254 @@ class FlappyBirdGame {
                 displayElement.textContent = `${this.audio.volumes[type]}%`;
             }
         });
+    }
+    
+    playVolumePreview(sliderId, volume) {
+        // Extract the audio type from slider ID (e.g., "tapVolumeSlider" -> "tap")
+        const audioType = sliderId.replace('VolumeSlider', '').toLowerCase();
+        
+        // Don't preview master volume - it affects all others
+        if (audioType === 'master') return;
+        
+        // Stop any existing preview
+        if (this.volumePreviewTimeout) {
+            clearTimeout(this.volumePreviewTimeout);
+        }
+        
+        if (this.volumePreviewAudio) {
+            this.volumePreviewAudio.pause();
+            this.volumePreviewAudio = null;
+        }
+        
+        // Don't play preview if volume is 0
+        if (volume === 0) return;
+        
+        switch (audioType) {
+            case 'tap':
+                this.playTapPreview();
+                break;
+            case 'crash':
+                this.playCrashPreview();
+                break;
+            case 'music':
+                this.playMusicPreview();
+                break;
+            case 'powerup':
+                this.playPowerupPreview();
+                break;
+        }
+    }
+    
+    playTapPreview() {
+        if (this.audio.custom.tapSound) {
+            // Use custom tap sound
+            const previewAudio = this.audio.custom.tapSound.cloneNode();
+            previewAudio.volume = this.getEffectiveVolume('tap');
+            previewAudio.play().catch(e => console.log('Tap preview failed:', e));
+            
+            this.volumePreviewAudio = previewAudio;
+            this.volumePreviewTimeout = setTimeout(() => {
+                previewAudio.pause();
+                this.volumePreviewAudio = null;
+            }, 1500);
+        } else if (this.audio.sounds.tap) {
+            // Use default Mario laugh - it handles its own timing
+            this.audio.sounds.tap();
+        }
+    }
+    
+    playCrashPreview() {
+        if (this.audio.custom.crashSound) {
+            // Use custom crash sound
+            const previewAudio = this.audio.custom.crashSound.cloneNode();
+            previewAudio.volume = this.getEffectiveVolume('crash');
+            previewAudio.currentTime = 0;
+            previewAudio.play().catch(e => console.log('Crash preview failed:', e));
+            
+            this.volumePreviewAudio = previewAudio;
+            this.volumePreviewTimeout = setTimeout(() => {
+                previewAudio.pause();
+                this.volumePreviewAudio = null;
+            }, 1500);
+        } else if (this.audio.sounds.crash) {
+            // Use default crash sound - synthesized, so create a preview version
+            this.playDefaultCrashPreview();
+        }
+    }
+    
+    playDefaultCrashPreview() {
+        // Create a shorter version of the crash sound for preview
+        const audioContext = this.audioContext;
+        if (!audioContext) return;
+        
+        const duration = 1.5; // 1.5 seconds
+        const sampleRate = audioContext.sampleRate;
+        const frameCount = sampleRate * duration;
+        
+        const buffer = audioContext.createBuffer(1, frameCount, sampleRate);
+        const channelData = buffer.getChannelData(0);
+        
+        // Generate epic crash sound preview
+        for (let i = 0; i < frameCount; i++) {
+            const t = i / sampleRate;
+            const decay = Math.exp(-t * 3); // Faster decay for preview
+            
+            // Multiple oscillators for epic sound
+            const freq1 = 100 * Math.exp(-t * 2);
+            const freq2 = 200 * Math.exp(-t * 1.5);
+            const freq3 = 50 * Math.exp(-t * 1);
+            
+            let sample = 0;
+            sample += Math.sin(2 * Math.PI * freq1 * t) * 0.3;
+            sample += Math.sin(2 * Math.PI * freq2 * t) * 0.2;
+            sample += Math.sin(2 * Math.PI * freq3 * t) * 0.4;
+            
+            // Add noise burst
+            const noiseBurst = (Math.random() * 2 - 1) * Math.exp(-t * 8) * 0.3;
+            sample += noiseBurst;
+            
+            channelData[i] = sample * decay * this.getEffectiveVolume('crash');
+        }
+        
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.start();
+        
+        this.volumePreviewTimeout = setTimeout(() => {
+            source.stop();
+        }, 1500);
+    }
+    
+    playMusicPreview() {
+        if (this.audio.custom.bgMusic) {
+            // Use custom background music
+            const previewAudio = this.audio.custom.bgMusic.cloneNode();
+            previewAudio.volume = this.getEffectiveVolume('music');
+            previewAudio.currentTime = 0;
+            previewAudio.play().catch(e => console.log('Music preview failed:', e));
+            
+            this.volumePreviewAudio = previewAudio;
+            this.volumePreviewTimeout = setTimeout(() => {
+                previewAudio.pause();
+                this.volumePreviewAudio = null;
+            }, 1500);
+        } else if (this.audio.sounds.bgMusic) {
+            // Use default background music - create a preview version
+            this.playDefaultMusicPreview();
+        }
+    }
+    
+    playDefaultMusicPreview() {
+        // Create a 1.5-second preview of the epic adventure music
+        const audioContext = this.audioContext;
+        if (!audioContext) return;
+        
+        const duration = 1.5;
+        const sampleRate = audioContext.sampleRate;
+        const frameCount = sampleRate * duration;
+        
+        const buffer = audioContext.createBuffer(2, frameCount, sampleRate);
+        
+        for (let channel = 0; channel < 2; channel++) {
+            const channelData = buffer.getChannelData(channel);
+            
+            for (let i = 0; i < frameCount; i++) {
+                const t = i / sampleRate;
+                
+                // Epic chord progression preview
+                const chord1 = [261.63, 329.63, 392.00]; // C major
+                const chord2 = [293.66, 369.99, 440.00]; // D major
+                
+                let sample = 0;
+                const currentChord = (Math.floor(t * 2) % 2 === 0) ? chord1 : chord2;
+                
+                currentChord.forEach((freq, idx) => {
+                    sample += Math.sin(2 * Math.PI * freq * t) * 0.15;
+                    // Add harmony
+                    sample += Math.sin(2 * Math.PI * freq * 1.5 * t) * 0.1;
+                });
+                
+                // Add bass line
+                const bassFreq = currentChord[0] * 0.5;
+                sample += Math.sin(2 * Math.PI * bassFreq * t) * 0.2;
+                
+                // Gentle envelope
+                const envelope = Math.sin(Math.PI * t / duration) * 0.8;
+                
+                channelData[i] = sample * envelope * this.getEffectiveVolume('music');
+            }
+        }
+        
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.start();
+        
+        this.volumePreviewTimeout = setTimeout(() => {
+            source.stop();
+        }, 1500);
+    }
+    
+    playPowerupPreview() {
+        if (this.sonicMusic && this.sonicMusic.readyState >= 2) {
+            // Use Sonic "Gotta Go Fast" music
+            const previewAudio = this.sonicMusic.cloneNode();
+            previewAudio.volume = this.getEffectiveVolume('powerup');
+            previewAudio.currentTime = 0;
+            previewAudio.play().catch(e => console.log('Powerup preview failed:', e));
+            
+            this.volumePreviewAudio = previewAudio;
+            this.volumePreviewTimeout = setTimeout(() => {
+                previewAudio.pause();
+                this.volumePreviewAudio = null;
+            }, 1500);
+        } else {
+            // Fallback to epic power-up sound
+            this.playDefaultPowerupPreview();
+        }
+    }
+    
+    playDefaultPowerupPreview() {
+        // Create an epic power-up sound preview
+        const audioContext = this.audioContext;
+        if (!audioContext) return;
+        
+        const duration = 1.5;
+        const sampleRate = audioContext.sampleRate;
+        const frameCount = sampleRate * duration;
+        
+        const buffer = audioContext.createBuffer(1, frameCount, sampleRate);
+        const channelData = buffer.getChannelData(0);
+        
+        for (let i = 0; i < frameCount; i++) {
+            const t = i / sampleRate;
+            
+            // Rapid-fire epic notes
+            const noteFreq = 440 + Math.sin(t * 20) * 200; // Varying frequency
+            const powerChord = Math.sin(2 * Math.PI * noteFreq * t);
+            const harmonics = Math.sin(2 * Math.PI * noteFreq * 2 * t) * 0.3;
+            const bass = Math.sin(2 * Math.PI * noteFreq * 0.5 * t) * 0.4;
+            
+            // Epic envelope with rapid attack
+            const envelope = Math.exp(-t * 0.5) * Math.sin(Math.PI * t / duration);
+            
+            let sample = (powerChord + harmonics + bass) * envelope;
+            
+            // Add excitement with tremolo
+            sample *= (1 + Math.sin(t * 15) * 0.3);
+            
+            channelData[i] = sample * this.getEffectiveVolume('powerup');
+        }
+        
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.start();
+        
+        this.volumePreviewTimeout = setTimeout(() => {
+            source.stop();
+        }, 1500);
     }
     
     // File Upload Handlers
