@@ -16,11 +16,12 @@ class FlappyBirdGame {
         
         // Game state
         this.gameState = 'menu'; // 'menu', 'playing', 'gameOver'
+        this.lastGameState = null; // For render optimization
         this.score = 0;
         this.bestScore = parseInt(localStorage.getItem('flappyBestScore')) || 0;
         
-        // Game settings (will be adjusted for mobile)
-        this.baseSettings = {
+        // Game settings
+        this.settings = {
             gravity: 0.4,
             jumpPower: { min: -8, max: -15 },
             birdSpeed: 2,
@@ -28,10 +29,6 @@ class FlappyBirdGame {
             pipeGap: 250,
             pipeWidth: 50
         };
-        
-        // Device detection
-        this.deviceInfo = this.detectDevice();
-        this.settings = this.calculateResponsiveSettings();
         
         // Progressive difficulty
         this.difficulty = {
@@ -128,156 +125,81 @@ class FlappyBirdGame {
         });
     }
     
-    detectDevice() {
-        const userAgent = navigator.userAgent.toLowerCase();
-        const screenWidth = window.innerWidth;
-        const screenHeight = window.innerHeight;
-        const isPortrait = screenHeight > screenWidth;
-        const pixelRatio = window.devicePixelRatio || 1;
-        
-        // Device type detection
-        const isMobile = screenWidth <= 768 || /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-        const isTablet = screenWidth > 768 && screenWidth <= 1024;
-        const isDesktop = screenWidth > 1024;
-        
-        // Touch capability
-        const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-        
-        // Performance tier estimation
-        const isLowEnd = pixelRatio < 2 && (screenWidth * screenHeight) < (1280 * 720);
-        const isHighEnd = pixelRatio >= 3 && (screenWidth * screenHeight) >= (1920 * 1080);
-        
-        return {
-            isMobile,
-            isTablet,
-            isDesktop,
-            isPortrait,
-            hasTouch,
-            isLowEnd,
-            isHighEnd,
-            screenWidth,
-            screenHeight,
-            pixelRatio,
-            aspectRatio: screenWidth / screenHeight
-        };
-    }
-    
-    calculateResponsiveSettings() {
-        const device = this.deviceInfo;
-        const base = this.baseSettings;
-        
-        // Base scale factor
-        let scaleFactor = 1;
-        let uiScale = 1;
-        
-        if (device.isMobile) {
-            // Mobile scaling
-            scaleFactor = device.isPortrait ? 0.7 : 0.8;
-            uiScale = device.isPortrait ? 1.2 : 1.0;
-            
-            // Adjust for very small screens
-            if (device.screenWidth < 375) {
-                scaleFactor *= 0.8;
-                uiScale *= 1.1;
-            }
-            
-            // Adjust for very large mobile screens
-            if (device.screenWidth > 428) {
-                scaleFactor *= 1.1;
-                uiScale *= 0.9;
-            }
-        } else if (device.isTablet) {
-            scaleFactor = 0.9;
-            uiScale = 1.0;
-        }
-        
-        // Performance-based adjustments
-        if (device.isLowEnd) {
-            scaleFactor *= 0.8; // Smaller elements for better performance
-        } else if (device.isHighEnd) {
-            scaleFactor *= 1.1; // Larger elements on high-end devices
-        }
-        
-        // Aspect ratio adjustments
-        if (device.aspectRatio < 0.6) { // Very tall screens
-            scaleFactor *= 0.9;
-            uiScale *= 1.1;
-        } else if (device.aspectRatio > 2.0) { // Very wide screens
-            scaleFactor *= 1.1;
-            uiScale *= 0.9;
-        }
-        
-        // Calculate responsive settings
-        return {
-            gravity: base.gravity * scaleFactor,
-            jumpPower: {
-                min: base.jumpPower.min * scaleFactor,
-                max: base.jumpPower.max * scaleFactor
-            },
-            birdSpeed: base.birdSpeed * scaleFactor,
-            pipeSpeed: base.pipeSpeed * scaleFactor,
-            pipeGap: Math.max(180, base.pipeGap * scaleFactor), // Minimum gap for playability
-            pipeWidth: Math.max(40, base.pipeWidth * scaleFactor),
-            scaleFactor,
-            uiScale,
-            // UI-specific settings
-            buttonSize: 50 * uiScale,
-            fontSize: {
-                small: 14 * uiScale,
-                medium: 18 * uiScale,
-                large: 24 * uiScale,
-                xlarge: 32 * uiScale
-            },
-            padding: 20 * uiScale,
-            borderRadius: 10 * uiScale
-        };
-    }
-    
     init() {
         this.setupCanvas();
         this.createDefaultAssets();
         this.setupEventListeners();
         this.initializeUI();
+        this.optimizeForDevice();
         this.startGameLoop();
         this.startBackgroundMusic();
+    }
+    
+    optimizeForDevice() {
+        // Detect device performance and optimize accordingly
+        const screenWidth = window.innerWidth;
+        const pixelRatio = window.devicePixelRatio || 1;
+        const isMobile = screenWidth <= 768 || /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase());
+        const isLowEnd = pixelRatio < 2 && (screenWidth * window.innerHeight) < (1280 * 720);
+        
+        // Performance optimizations for different devices
+        if (isMobile) {
+            // Mobile optimizations
+            this.canvas.style.touchAction = 'manipulation';
+            
+            if (isLowEnd) {
+                // Low-end device optimizations
+                this.canvas.style.imageRendering = 'pixelated';
+                this.settings.gravity *= 0.9; // Slightly easier physics
+                this.settings.pipeSpeed *= 0.9; // Slightly slower pipes
+            }
+        }
+        
+        // Reduce frame rate for very low-end devices
+        if (isLowEnd && pixelRatio < 1.5) {
+            this.targetFPS = 45; // Reduce from default 60 FPS
+        } else {
+            this.targetFPS = 60;
+        }
+        
+        // Set up frame rate limiting
+        this.frameInterval = 1000 / this.targetFPS;
+        this.lastFrameTime = 0;
+        
+        // Store optimization flags for later use
+        this.deviceOptimization = {
+            isMobile,
+            isLowEnd,
+            reduceDetails: isLowEnd,
+            simplifyBackground: isLowEnd && pixelRatio < 1.5
+        };
+        
+        console.log(`🎮 Device optimized: Mobile=${isMobile}, LowEnd=${isLowEnd}, FPS=${this.targetFPS}`);
     }
     
     setupCanvas() {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
         
-        // Recalculate device info and settings on resize
-        this.deviceInfo = this.detectDevice();
-        this.settings = this.calculateResponsiveSettings();
+        // Position bird
+        this.bird.x = this.canvas.width * 0.15;
+        this.bird.y = this.canvas.height / 2;
         
-        // Position bird with responsive positioning
-        if (this.bird) {
-            this.bird.x = this.canvas.width * 0.15;
-            this.bird.y = this.canvas.height / 2;
-            this.bird.width = 40 * this.settings.scaleFactor;
-            this.bird.height = 30 * this.settings.scaleFactor;
-        }
-        
-        // Mobile-specific optimizations
-        if (this.deviceInfo.isMobile) {
-            // Prevent zoom on double tap
-            this.canvas.style.touchAction = 'manipulation';
-            
-            // Optimize for mobile performance
-            if (this.deviceInfo.isLowEnd) {
-                this.canvas.style.imageRendering = 'pixelated';
-            }
-        }
+        // Scale for different screen sizes
+        const scale = Math.max(Math.min(this.canvas.width / 800, this.canvas.height / 600), 0.5);
+        this.bird.width = 40 * scale;
+        this.bird.height = 30 * scale;
+        this.settings.pipeWidth = Math.max(60 * scale, 40);
+        this.settings.pipeGap = Math.max(250 * scale, 180);
         
         window.addEventListener('resize', () => this.setupCanvas());
     }
     
     createDefaultAssets() {
-        // Create default bird sprite with responsive sizing
+        // Create default bird sprite
         const birdCanvas = document.createElement('canvas');
-        const birdSize = Math.max(30, 40 * this.settings.scaleFactor);
-        birdCanvas.width = birdSize;
-        birdCanvas.height = birdSize;
+        birdCanvas.width = 40;
+        birdCanvas.height = 40;
         const ctx = birdCanvas.getContext('2d');
         
         // Bird body
@@ -724,28 +646,13 @@ class FlappyBirdGame {
         
         this.canvas.addEventListener('mousedown', () => this.handleJumpStart());
         this.canvas.addEventListener('mouseup', () => this.handleJumpEnd());
-        // Enhanced touch events for mobile
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            e.stopPropagation();
             this.handleJumpStart();
-        }, { passive: false });
-        
+        });
         this.canvas.addEventListener('touchend', (e) => {
             e.preventDefault();
-            e.stopPropagation();
             this.handleJumpEnd();
-        }, { passive: false });
-        
-        // Prevent scrolling and zooming on mobile
-        this.canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        }, { passive: false });
-        
-        // Prevent context menu on long press
-        this.canvas.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
         });
         
         // UI buttons
@@ -851,11 +758,13 @@ class FlappyBirdGame {
     }
     
     resetGame() {
+        const scale = Math.max(Math.min(this.canvas.width / 800, this.canvas.height / 600), 0.5);
+        
         this.bird = {
             x: this.canvas.width * 0.15,
             y: this.canvas.height / 2,
-            width: 40 * this.settings.scaleFactor,
-            height: 30 * this.settings.scaleFactor,
+            width: 40 * scale,
+            height: 30 * scale,
             velocity: 0,
             rotation: 0
         };
@@ -1521,6 +1430,11 @@ class FlappyBirdGame {
     
     // Rendering System
     render() {
+        // Only clear and redraw if game is active (performance optimization)
+        if (this.gameState === 'menu' && this.lastGameState === 'menu') {
+            return; // Skip rendering if menu hasn't changed
+        }
+        
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
         this.drawBackground();
@@ -1540,6 +1454,8 @@ class FlappyBirdGame {
                 this.drawPowerUpEffects();
             }
         }
+        
+        this.lastGameState = this.gameState;
     }
     
     drawBackground() {
@@ -1572,11 +1488,31 @@ class FlappyBirdGame {
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Draw parallax layers
-        this.drawParallaxLayers();
+        // Draw parallax layers (simplified for low-end devices)
+        if (this.deviceOptimization && this.deviceOptimization.simplifyBackground) {
+            // Simple background for performance
+            this.drawSimpleBackground();
+        } else {
+            this.drawParallaxLayers();
+        }
         
-        // Draw holiday decorations
-        this.drawHolidayDecorations(holidayTheme);
+        // Draw holiday decorations (reduced on low-end devices)
+        if (!this.deviceOptimization || !this.deviceOptimization.reduceDetails) {
+            this.drawHolidayDecorations(holidayTheme);
+        }
+    }
+    
+    drawSimpleBackground() {
+        // Simplified background for low-end devices
+        const groundHeight = 120;
+        
+        // Simple ground
+        this.ctx.fillStyle = '#8B4513';
+        this.ctx.fillRect(0, this.canvas.height - groundHeight, this.canvas.width, groundHeight);
+        
+        // Simple grass line
+        this.ctx.fillStyle = '#228B22';
+        this.ctx.fillRect(0, this.canvas.height - groundHeight, this.canvas.width, 20);
     }
     
     drawParallaxLayers() {
@@ -1930,7 +1866,12 @@ class FlappyBirdGame {
         // Bottom pipe outline
         this.ctx.strokeRect(pipe.x - 2, pipe.bottomY, this.settings.pipeWidth + 4, this.canvas.height - pipe.bottomY);
         
-        // No text - just the glow effect
+        // Add "SAFE" text in the gap
+        this.ctx.fillStyle = '#00FF00';
+        this.ctx.font = 'bold 16px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('SAFE', pipe.x + this.settings.pipeWidth / 2, pipe.topHeight + this.settings.pipeGap / 2);
+        this.ctx.textAlign = 'left';
         
         this.ctx.globalAlpha = 1.0; // Reset alpha
     }
@@ -2076,8 +2017,15 @@ class FlappyBirdGame {
     }
     
     gameLoop() {
-        this.update();
-        this.render();
+        const currentTime = performance.now();
+        
+        // Frame rate limiting for performance
+        if (currentTime - this.lastFrameTime >= this.frameInterval) {
+            this.update();
+            this.render();
+            this.lastFrameTime = currentTime;
+        }
+        
         requestAnimationFrame(() => this.gameLoop());
     }
 }
