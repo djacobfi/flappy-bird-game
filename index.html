@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird - Full Screen Adventure</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Full Screen Game Container -->
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- Game UI Overlay -->
+        <div class="game-ui">
+            <!-- Start Screen -->
+            <div id="startScreen" class="screen">
+                <h1>🐦 Flappy Bird Adventure</h1>
+                <p>Journey through changing seasons and holidays!</p>
+                <p class="controls-text">Click anywhere, press Space, or tap to fly</p>
+                <div class="menu-buttons">
+                    <button id="startBtn" class="game-btn primary">🚀 Start Adventure</button>
+                    <button id="toggleMusic" class="game-btn secondary">🔊 Music</button>
+                </div>
+            </div>
+            
+            <!-- Game Over Screen -->
+            <div id="gameOverScreen" class="screen hidden">
+                <h2>🏁 Adventure Complete!</h2>
+                <div class="score-display">
+                    <p>Score: <span id="finalScore" class="score-number">0</span></p>
+                    <p>Best: <span id="bestScore" class="score-number">0</span></p>
+                </div>
+                <button id="restartBtn" class="game-btn primary">🔄 New Adventure</button>
+            </div>
+            
+            <!-- In-Game HUD -->
+            <div id="gameHUD" class="hud">
+                <div id="score" class="score-display">0</div>
+                <div id="difficulty" class="difficulty-display">Easy Mode</div>
+            </div>
+        </div>
+        
+        <!-- Settings Panel -->
+        <div id="settingsPanel" class="settings-panel hidden">
+            <div class="panel-header">
+                <h3>🎮 Game Settings</h3>
+                <button id="closeSettingsBtn" class="close-btn">&times;</button>
+            </div>
+            
+            <!-- Bird Customization -->
+            <div class="setting-section">
+                <h4>🐦 Bird Sprite</h4>
+                <input type="file" id="birdUpload" accept="image/*">
+                <label for="birdUpload" class="upload-btn">Upload Bird Sprite</label>
+            </div>
+            
+            <!-- Audio Settings -->
+            <div class="setting-section">
+                <h4>🔊 Audio Settings</h4>
+                
+                <div class="volume-control">
+                    <label for="volumeSlider">Music Volume: <span id="volumeDisplay">30%</span></label>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="30" class="volume-slider">
+                </div>
+                
+                <input type="file" id="tapSoundUpload" accept="audio/*">
+                <label for="tapSoundUpload" class="upload-btn">🔊 Tap Sound</label>
+                
+                <input type="file" id="crashSoundUpload" accept="audio/*">
+                <label for="crashSoundUpload" class="upload-btn">💥 Crash Sound</label>
+                
+                <input type="file" id="bgMusicUpload" accept="audio/*">
+                <label for="bgMusicUpload" class="upload-btn">🎵 Background Music</label>
+            </div>
+        </div>
+        
+        <!-- Settings Button -->
+        <button id="settingsBtn" class="settings-btn" title="Game Settings">⚙️</button>
+    </div>
+
+    <script src="flappy-bird.js"></script>
+</body>
+</html>
