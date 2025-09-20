@@ -468,36 +468,69 @@ class FlappyBirdGame {
     }
     
     loadMarioTapSound() {
-        // Load Super Mario laugh sound
+        // Load Super Mario laugh sound with mobile-specific handling
         const marioLaugh = new Audio('Super mario laugh Sound Effects.mp3');
         marioLaugh.volume = 0.6; // Pleasant volume
         
-        // Set up the Mario laugh as tap sound
+        // Mobile-specific audio settings
+        marioLaugh.preload = 'auto'; // Ensure it preloads on mobile
+        marioLaugh.crossOrigin = 'anonymous'; // Handle CORS issues
+        
+        // Track loading state for mobile debugging
+        let isLoaded = false;
+        let loadAttempts = 0;
+        const maxLoadAttempts = 3;
+        
+        // Set up the Mario laugh as tap sound with better mobile support
         this.audio.sounds.tap = () => {
-            if (marioLaugh.readyState >= 2) { // Audio is loaded
+            if (isLoaded && marioLaugh.readyState >= 2) { // Audio is fully loaded
                 marioLaugh.volume = this.getEffectiveVolume('tap');
                 marioLaugh.currentTime = 0;
-                marioLaugh.play().catch(error => {
-                    console.log('Mario laugh failed, using fallback:', error);
-                    // Fallback to synthesized sound if Mario sound fails
-                    this.createBeepSound(800, 3.0)();
+                
+                // Clone the audio for mobile compatibility (prevents conflicts)
+                const marioClone = marioLaugh.cloneNode();
+                marioClone.volume = this.getEffectiveVolume('tap');
+                marioClone.play().catch(error => {
+                    console.log('Mario laugh clone failed, trying original:', error);
+                    marioLaugh.play().catch(error2 => {
+                        console.log('Mario laugh original failed, using fallback:', error2);
+                        this.createBeepSound(800, 3.0)();
+                    });
                 });
+            } else if (loadAttempts < maxLoadAttempts) {
+                // Try to reload the audio
+                loadAttempts++;
+                console.log(`🔄 Attempting to reload Mario laugh (attempt ${loadAttempts})`);
+                marioLaugh.load();
+                // Use fallback for this tap
+                this.createBeepSound(800, 3.0)();
             } else {
-                // Fallback if not loaded yet
+                // Fallback if loading keeps failing
+                console.log('⚠️ Mario laugh loading failed, using synthesized sound');
                 this.createBeepSound(800, 3.0)();
             }
         };
         
-        // Add error handling
+        // Enhanced error handling for mobile
         marioLaugh.addEventListener('error', (e) => {
             console.error('❌ Mario laugh failed to load:', e);
-            // Fallback to synthesized sound
-            this.audio.sounds.tap = this.createBeepSound(800, 3.0);
+            isLoaded = false;
+            // Don't immediately fallback - let the retry logic handle it
         });
         
         marioLaugh.addEventListener('canplaythrough', () => {
-            console.log('✅ Mario laugh loaded successfully!');
+            console.log('✅ Mario laugh loaded successfully on this platform!');
+            isLoaded = true;
+            loadAttempts = 0; // Reset attempts on successful load
         });
+        
+        marioLaugh.addEventListener('loadeddata', () => {
+            console.log('📁 Mario laugh data loaded');
+            isLoaded = true;
+        });
+        
+        // Force load attempt
+        marioLaugh.load();
     }
     
     createBeepSound(frequency, duration) {
@@ -1271,9 +1304,14 @@ class FlappyBirdGame {
         const maxHeight = this.canvas.height - this.settings.pipeGap - minHeight;
         const topHeight = Math.random() * (maxHeight - minHeight) + minHeight;
         
+        // Random pipe spacing for varied gameplay
+        const baseSpacing = Math.max(this.canvas.width * 0.5, 400);
+        const spacingVariation = baseSpacing * 0.4; // 40% variation
+        const randomSpacing = baseSpacing + (Math.random() - 0.5) * spacingVariation;
+        
         const pipeX = this.pipes.length === 0 ? 
             this.bird.x + this.canvas.width * 0.8 : 
-            this.pipes[this.pipes.length - 1].x + Math.max(this.canvas.width * 0.5, 400);
+            this.pipes[this.pipes.length - 1].x + randomSpacing;
         
         this.pipes.push({
             x: pipeX,
@@ -2673,12 +2711,7 @@ class FlappyBirdGame {
         // Bottom pipe outline
         this.ctx.strokeRect(pipe.x - 2, pipe.bottomY, this.settings.pipeWidth + 4, this.canvas.height - pipe.bottomY);
         
-        // Add "SAFE" text in the gap
-        this.ctx.fillStyle = '#00FF00';
-        this.ctx.font = 'bold 16px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('SAFE', pipe.x + this.settings.pipeWidth / 2, pipe.topHeight + this.settings.pipeGap / 2);
-        this.ctx.textAlign = 'left';
+       
         
         this.ctx.globalAlpha = 1.0; // Reset alpha
     }
