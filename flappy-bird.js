@@ -115,6 +115,9 @@ class FlappyBirdGame {
         this.volumePreviewTimeout = null;
         this.volumePreviewAudio = null;
         
+        // Global leaderboard system
+        this.leaderboard = new GlobalLeaderboard();
+        
         this.init();
     }
     
@@ -149,6 +152,7 @@ class FlappyBirdGame {
         this.createDefaultAssets();
         this.setupEventListeners();
         this.initializeUI();
+        this.initializeLeaderboard();
         this.optimizeForDevice();
         this.startGameLoop();
         this.startBackgroundMusic();
@@ -955,7 +959,9 @@ class FlappyBirdGame {
             closeSettingsBtn: () => this.hideSettings(),
             removeTapSound: () => this.removeCustomSound('tap'),
             removeCrashSound: () => this.removeCustomSound('crash'),
-            removeBgMusic: () => this.removeCustomSound('bgMusic')
+            removeBgMusic: () => this.removeCustomSound('bgMusic'),
+            saveNameBtn: () => this.savePlayerName(),
+            refreshLeaderboard: () => this.refreshLeaderboard()
         };
         
         // Setup volume sliders
@@ -1741,6 +1747,10 @@ class FlappyBirdGame {
         // Hide the in-game HUD to prevent overlap
         document.getElementById('gameHUD').style.display = 'none';
         
+        // Submit score to leaderboard and refresh display
+        this.submitScoreToLeaderboard();
+        this.refreshLeaderboard();
+        
         this.updateGameOverCountdown();
     }
     
@@ -2230,6 +2240,103 @@ class FlappyBirdGame {
         this.updateRemoveButtonState('tap');
         this.updateRemoveButtonState('crash');
         this.updateRemoveButtonState('bgMusic');
+    }
+    
+    // Leaderboard Methods
+    async savePlayerName() {
+        const nameInput = document.getElementById('playerNameInput');
+        const name = nameInput.value.trim();
+        
+        if (name.length < 2) {
+            alert('Please enter a name with at least 2 characters');
+            return;
+        }
+        
+        this.leaderboard.setPlayerName(name);
+        nameInput.style.background = 'rgba(39, 174, 96, 0.2)';
+        
+        // Submit current score if game just ended
+        if (this.gameState === 'gameOver' && this.score > 0) {
+            await this.submitScoreToLeaderboard();
+        }
+        
+        setTimeout(() => {
+            nameInput.style.background = '';
+        }, 2000);
+    }
+    
+    async submitScoreToLeaderboard() {
+        if (this.score > 0) {
+            const submitted = await this.leaderboard.submitScore(this.score);
+            
+            if (submitted) {
+                document.getElementById('leaderboardStatus').textContent = '🏆 Score submitted!';
+                await this.refreshLeaderboard();
+                await this.updatePlayerRank();
+            } else {
+                document.getElementById('leaderboardStatus').textContent = '💾 Saved locally';
+            }
+        }
+    }
+    
+    async refreshLeaderboard() {
+        const leaderboardList = document.getElementById('leaderboardList');
+        const statusElement = document.getElementById('leaderboardStatus');
+        
+        try {
+            statusElement.textContent = '🔄 Loading...';
+            const scores = await this.leaderboard.getGlobalLeaderboard(10);
+            
+            leaderboardList.innerHTML = '';
+            
+            if (scores.length === 0) {
+                leaderboardList.innerHTML = '<li>No scores yet - be the first!</li>';
+            } else {
+                scores.forEach((entry, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span class="player-name">${index + 1}. ${entry.name}</span>
+                        <span class="player-score">${entry.score}</span>
+                    `;
+                    leaderboardList.appendChild(li);
+                });
+            }
+            
+            // Update status and player count
+            const totalPlayers = await this.leaderboard.getTotalPlayers();
+            document.getElementById('playerCount').textContent = totalPlayers;
+            document.getElementById('totalPlayers').style.display = 'inline';
+            
+            statusElement.textContent = this.leaderboard.isConnected ? 
+                '🌐 Global Leaderboard' : '💾 Local Leaderboard';
+                
+        } catch (error) {
+            console.error('Failed to refresh leaderboard:', error);
+            statusElement.textContent = '❌ Connection failed';
+        }
+    }
+    
+    async updatePlayerRank() {
+        if (this.score > 0) {
+            try {
+                const rank = await this.leaderboard.getPlayerRank(this.score);
+                if (rank) {
+                    document.getElementById('rankNumber').textContent = rank;
+                    document.getElementById('globalRank').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Failed to get player rank:', error);
+            }
+        }
+    }
+    
+    initializeLeaderboard() {
+        // Set initial player name
+        const nameInput = document.getElementById('playerNameInput');
+        nameInput.value = this.leaderboard.getPlayerName();
+        
+        // Load initial leaderboard
+        this.refreshLeaderboard();
     }
     
     // File Upload Handlers

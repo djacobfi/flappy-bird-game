@@ -30,7 +30,29 @@
                 <div class="score-display">
                     <p>Score: <span id="finalScore" class="score-number">0</span></p>
                     <p>Best: <span id="bestScore" class="score-number">0</span></p>
+                    <p id="globalRank" class="rank-display" style="display: none;">Global Rank: #<span id="rankNumber">-</span></p>
                 </div>
+                
+                <!-- Player Name Input -->
+                <div class="player-name-section">
+                    <label for="playerNameInput">👤 Player Name:</label>
+                    <input type="text" id="playerNameInput" class="name-input" maxlength="20" placeholder="Enter your name">
+                    <button id="saveNameBtn" class="save-name-btn">💾</button>
+                </div>
+                
+                <!-- Leaderboard Display -->
+                <div class="leaderboard-section">
+                    <h3>🏆 Global Leaderboard</h3>
+                    <div class="leaderboard-status">
+                        <span id="leaderboardStatus">📡 Connecting...</span>
+                        <span id="totalPlayers" style="display: none;">👥 Total Players: <span id="playerCount">0</span></span>
+                    </div>
+                    <ol id="leaderboardList" class="leaderboard-list">
+                        <li>Loading...</li>
+                    </ol>
+                    <button id="refreshLeaderboard" class="refresh-btn">🔄 Refresh</button>
+                </div>
+                
                 <button id="restartBtn" class="game-btn primary">🔄 New Adventure</button>
             </div>
             
@@ -119,6 +141,12 @@
         <div class="version-number">v3.0.0</div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <!-- Leaderboard System -->
+    <script src="leaderboard.js"></script>
     <script src="flappy-bird.js"></script>
 </body>
 </html>
