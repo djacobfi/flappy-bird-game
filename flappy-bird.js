@@ -83,7 +83,9 @@ class FlappyBirdGame {
             startTime: 0,
             duration: 8000, // 8 seconds of EPIC power
             speedMultiplier: 6,
-            canPhaseThrough: true
+            canPhaseThrough: true,
+            gracePipeAllowed: false, // Allow passing through first pipe after power-up ends
+            gracePipeUsed: false
         };
         
         this.easterEggs = [];
@@ -732,6 +734,8 @@ class FlappyBirdGame {
         if (this.powerUp.active) {
             this.deactivatePowerUp();
         }
+        this.powerUp.gracePipeAllowed = false;
+        this.powerUp.gracePipeUsed = false;
         
         // Reset world state
         this.world.totalPipesPassed = 0;
@@ -943,6 +947,8 @@ class FlappyBirdGame {
     activatePowerUp() {
         this.powerUp.active = true;
         this.powerUp.startTime = Date.now();
+        this.powerUp.gracePipeAllowed = false; // Reset grace pipe for new power-up
+        this.powerUp.gracePipeUsed = false;
         
         console.log('🚀 POWER-UP ACTIVATED! GOTTA GO FAST!');
         
@@ -1026,6 +1032,10 @@ class FlappyBirdGame {
     
     deactivatePowerUp() {
         this.powerUp.active = false;
+        this.powerUp.gracePipeAllowed = true; // Enable grace pipe
+        this.powerUp.gracePipeUsed = false; // Reset grace pipe usage
+        
+        console.log('🛡️ Power-up ended - Grace pipe activated for safe transition!');
         
         // Stop Sonic music and resume background music
         if (this.sonicMusic) {
@@ -1055,7 +1065,7 @@ class FlappyBirdGame {
             return;
         }
         
-        // Pipe collision with safe corners (skip if power-up allows phasing)
+        // Pipe collision with safe corners (skip if power-up allows phasing or grace pipe)
         if (!this.powerUp.active || !this.powerUp.canPhaseThrough) {
             for (const pipe of this.pipes) {
                 const pipeLeft = pipe.x + pipeMargin;
@@ -1064,6 +1074,15 @@ class FlappyBirdGame {
                 const bottomPipeTop = pipe.bottomY + pipeMargin;
                 
                 if (birdRight > pipeLeft && birdLeft < pipeRight) {
+                    // Check if this is the grace pipe (first pipe after power-up)
+                    if (this.powerUp.gracePipeAllowed && !this.powerUp.gracePipeUsed) {
+                        // Mark grace pipe as used and allow passage
+                        this.powerUp.gracePipeUsed = true;
+                        this.powerUp.gracePipeAllowed = false;
+                        console.log('🛡️ Grace pipe used - safe passage granted!');
+                        continue; // Skip collision for this pipe
+                    }
+                    
                     // Check safe corner zones
                     const inTopSafeZone = this.isInSafeZone(birdCenterX, birdCenterY, pipe.x, pipe.topHeight, cornerSafeZone, 'top');
                     const inBottomSafeZone = this.isInSafeZone(birdCenterX, birdCenterY, pipe.x, pipe.bottomY, cornerSafeZone, 'bottom');
@@ -1708,6 +1727,15 @@ class FlappyBirdGame {
         for (const pipe of this.pipes) {
             if (pipe.x + this.settings.pipeWidth >= this.camera.x && pipe.x <= this.camera.x + this.canvas.width) {
                 this.drawPipe(pipe);
+                
+                // Highlight the grace pipe if available
+                if (this.powerUp.gracePipeAllowed && !this.powerUp.gracePipeUsed) {
+                    // Check if this is the first pipe the bird will encounter
+                    if (pipe.x > this.bird.x) {
+                        this.drawGracePipeIndicator(pipe);
+                        break; // Only highlight the first upcoming pipe
+                    }
+                }
             }
         }
     }
@@ -1749,6 +1777,32 @@ class FlappyBirdGame {
         // Bottom pipe cap
         this.ctx.fillStyle = colors.body;
         this.ctx.fillRect(pipe.x - capOverhang, pipe.bottomY, this.settings.pipeWidth + (capOverhang * 2), capHeight);
+    }
+    
+    drawGracePipeIndicator(pipe) {
+        // Draw glowing outline around the grace pipe
+        this.ctx.strokeStyle = '#00FF00';
+        this.ctx.lineWidth = 4;
+        this.ctx.globalAlpha = 0.8;
+        
+        // Animate the glow
+        const glowIntensity = Math.sin(Date.now() * 0.01) * 0.3 + 0.7;
+        this.ctx.globalAlpha = glowIntensity;
+        
+        // Top pipe outline
+        this.ctx.strokeRect(pipe.x - 2, 0, this.settings.pipeWidth + 4, pipe.topHeight);
+        
+        // Bottom pipe outline
+        this.ctx.strokeRect(pipe.x - 2, pipe.bottomY, this.settings.pipeWidth + 4, this.canvas.height - pipe.bottomY);
+        
+        // Add "SAFE" text in the gap
+        this.ctx.fillStyle = '#00FF00';
+        this.ctx.font = 'bold 16px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('SAFE', pipe.x + this.settings.pipeWidth / 2, pipe.topHeight + this.settings.pipeGap / 2);
+        this.ctx.textAlign = 'left';
+        
+        this.ctx.globalAlpha = 1.0; // Reset alpha
     }
     
     drawBird() {
