@@ -1,0 +1,426 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Arial', sans-serif;
+    background: #4EC0CA;
+    user-select: none;
+}
+
+/* Game Container */
+.game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Canvas */
+#gameCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #4EC0CA;
+    cursor: pointer;
+}
+
+/* Game UI Overlay */
+.game-ui {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Screen Overlays */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    text-align: center;
+    pointer-events: all;
+    backdrop-filter: blur(5px);
+}
+
+.screen.hidden {
+    display: none;
+}
+
+.screen h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    color: #f39c12;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+.screen h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: #e74c3c;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.screen p {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.controls-text {
+    color: #bdc3c7;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+}
+
+@keyframes glow {
+    from { text-shadow: 3px 3px 6px rgba(243, 156, 18, 0.8), 0 0 20px rgba(243, 156, 18, 0.3); }
+    to { text-shadow: 3px 3px 6px rgba(243, 156, 18, 0.8), 0 0 30px rgba(243, 156, 18, 0.6); }
+}
+
+/* Buttons */
+.menu-buttons {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.game-btn {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    min-width: 160px;
+}
+
+.game-btn.primary {
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+    color: white;
+}
+
+.game-btn.secondary {
+    background: linear-gradient(45deg, #27ae60, #2ecc71);
+    color: white;
+}
+
+.game-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.game-btn:active {
+    transform: translateY(-1px);
+}
+
+/* In-Game HUD */
+.hud {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+    z-index: 15;
+}
+
+.score-display {
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 3.5rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+}
+
+.difficulty-display {
+    position: absolute;
+    top: 6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #27ae60;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.4);
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+}
+
+.score-number {
+    color: #f39c12;
+    font-size: 1.2em;
+}
+
+/* Settings Button */
+.settings-btn {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 30;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.settings-btn:hover {
+    background: linear-gradient(45deg, #2980b9, #3498db);
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Settings Panel */
+.settings-panel {
+    position: fixed;
+    top: 7rem;
+    right: -350px;
+    width: 320px;
+    max-width: calc(100vw - 2rem);
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 15px;
+    padding: 1.5rem;
+    z-index: 25;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    transition: right 0.3s ease;
+    max-height: calc(100vh - 9rem);
+    overflow-y: auto;
+}
+
+.settings-panel:not(.hidden) {
+    right: 2rem;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    color: white;
+}
+
+.panel-header h3 {
+    font-size: 1.2rem;
+    color: #f39c12;
+}
+
+.close-btn {
+    background: transparent;
+    color: #e74c3c;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    background: rgba(231, 76, 60, 0.2);
+    transform: rotate(90deg);
+}
+
+/* Setting Sections */
+.setting-section {
+    margin-bottom: 1.5rem;
+    color: white;
+}
+
+.setting-section h4 {
+    margin-bottom: 1rem;
+    color: #3498db;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 0.5rem;
+}
+
+/* Upload Buttons */
+.upload-btn {
+    display: block;
+    width: 100%;
+    padding: 0.8rem;
+    margin: 0.5rem 0;
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.upload-btn:hover {
+    background: linear-gradient(45deg, #2980b9, #3498db);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+input[type="file"] {
+    display: none;
+}
+
+/* Volume Control */
+.volume-control {
+    margin: 1rem 0;
+    padding: 1rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.volume-control label {
+    display: block;
+    color: #3498db;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.volume-slider {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    outline: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.volume-slider:hover::-webkit-slider-thumb {
+    background: linear-gradient(45deg, #2980b9, #3498db);
+    transform: scale(1.2);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .screen h1 {
+        font-size: 2.5rem;
+    }
+    
+    .screen h2 {
+        font-size: 2rem;
+    }
+    
+    .score-display {
+        font-size: 2.5rem;
+        top: 1.5rem;
+    }
+    
+    .difficulty-display {
+        top: 4.5rem;
+        font-size: 1rem;
+    }
+    
+    .settings-btn {
+        top: 1.5rem;
+        right: 1.5rem;
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .settings-panel {
+        top: 5rem;
+        right: -340px;
+        width: 280px;
+        max-height: calc(100vh - 6rem);
+    }
+    
+    .settings-panel:not(.hidden) {
+        right: 1rem;
+    }
+    
+    .menu-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .game-btn {
+        width: 200px;
+        margin: 0.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .screen h1 {
+        font-size: 2rem;
+    }
+    
+    .score-display {
+        font-size: 2rem;
+        top: 1rem;
+    }
+    
+    .difficulty-display {
+        top: 3.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .settings-panel {
+        width: 260px;
+        top: 4rem;
+        right: -280px;
+    }
+    
+    .settings-panel:not(.hidden) {
+        right: 0.5rem;
+    }
+}
