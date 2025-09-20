@@ -377,23 +377,6 @@ input[type="file"] {
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
-    /* Safe area handling for notched devices */
-    .game-container {
-        padding-top: max(env(safe-area-inset-top), 10px);
-        padding-bottom: max(env(safe-area-inset-bottom), 10px);
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
-    }
-    
-    /* Prevent zooming and scrolling on mobile */
-    body {
-        touch-action: manipulation;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -webkit-tap-highlight-color: transparent;
-        overscroll-behavior: none;
-    }
-    
     .screen h1 {
         font-size: 2.5rem;
     }
@@ -481,5 +464,125 @@ input[type="file"] {
         right: 0.5rem;
         font-size: 0.6rem;
         padding: 0.15rem 0.5rem;
+    }
+}
+
+/* PWA Specific Styles */
+.pwa-mode {
+    /* Hide browser UI elements when running as PWA */
+}
+
+.pwa-mode .version-number {
+    bottom: 0.5rem; /* Adjust for PWA mode */
+}
+
+/* Install Button Hover Effects */
+.install-btn:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4) !important;
+}
+
+/* Mobile PWA Optimizations */
+@media (max-width: 768px) {
+    .pwa-mode .game-container {
+        /* Optimize for mobile PWA */
+        height: 100vh;
+        height: 100dvh; /* Dynamic viewport height */
+    }
+    
+    .pwa-mode .settings-btn {
+        /* Larger touch target for PWA */
+        width: 3.5rem;
+        height: 3.5rem;
+        font-size: 1.2rem;
+    }
+    
+    .pwa-mode .game-btn {
+        /* Better touch targets */
+        min-height: 3rem;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+    }
+    
+    .pwa-mode .upload-btn {
+        /* Mobile-friendly upload buttons */
+        min-height: 2.5rem;
+        padding: 0.8rem 1.5rem;
+    }
+    
+    .pwa-mode .volume-slider {
+        /* Easier to use on mobile */
+        height: 2rem;
+    }
+    
+    /* Safe area handling for notched devices */
+    .pwa-mode .game-ui {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+    
+    .pwa-mode .settings-btn {
+        top: calc(1rem + env(safe-area-inset-top));
+        right: calc(1rem + env(safe-area-inset-right));
+    }
+    
+    .pwa-mode .version-number {
+        bottom: calc(0.5rem + env(safe-area-inset-bottom));
+        right: calc(0.5rem + env(safe-area-inset-right));
+    }
+}
+
+/* High DPI Display Optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .game-btn, .upload-btn, .settings-btn {
+        /* Crisp text on high DPI displays */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* Landscape Mobile Optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+    .pwa-mode .screen h1 {
+        font-size: 2rem; /* Smaller title in landscape */
+        margin-bottom: 0.5rem;
+    }
+    
+    .pwa-mode .screen p {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .pwa-mode .menu-buttons {
+        gap: 1rem; /* Tighter spacing */
+    }
+    
+    .pwa-mode .settings-panel {
+        max-height: 85vh; /* Prevent overflow */
+        overflow-y: auto;
+    }
+}
+
+/* Dark Mode Support (system preference) */
+@media (prefers-color-scheme: dark) {
+    .game-container {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    }
+    
+    .screen {
+        background: rgba(20, 20, 40, 0.95);
+        color: #e0e0e0;
+    }
+    
+    .settings-panel {
+        background: rgba(20, 20, 40, 0.95);
+        color: #e0e0e0;
+    }
+    
+    .game-btn.secondary {
+        background: rgba(60, 60, 80, 0.8);
+        color: #e0e0e0;
     }
 }

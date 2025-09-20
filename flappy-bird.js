@@ -19,8 +19,18 @@ class FlappyBirdGame {
         this.score = 0;
         this.bestScore = parseInt(localStorage.getItem('flappyBestScore')) || 0;
         
-        // Game settings
-        // Calculate responsive settings based on screen size
+        // Game settings (will be adjusted for mobile)
+        this.baseSettings = {
+            gravity: 0.4,
+            jumpPower: { min: -8, max: -15 },
+            birdSpeed: 2,
+            pipeSpeed: 1.5,
+            pipeGap: 250,
+            pipeWidth: 50
+        };
+        
+        // Device detection
+        this.deviceInfo = this.detectDevice();
         this.settings = this.calculateResponsiveSettings();
         
         // Progressive difficulty
@@ -31,15 +41,7 @@ class FlappyBirdGame {
         };
         
         // Game objects
-        // Initialize bird with responsive sizing (will be properly set in resizeCanvas)
-        this.bird = { 
-            x: 0, 
-            y: 0, 
-            width: 40 * this.settings.scaleFactor, 
-            height: 30 * this.settings.scaleFactor, 
-            velocity: 0, 
-            rotation: 0 
-        };
+        this.bird = { x: 0, y: 0, width: 40, height: 30, velocity: 0, rotation: 0 };
         this.pipes = [];
         this.camera = { x: 0, y: 0 };
         
@@ -126,43 +128,111 @@ class FlappyBirdGame {
         });
     }
     
-    calculateResponsiveSettings() {
-        // Get screen dimensions
+    detectDevice() {
+        const userAgent = navigator.userAgent.toLowerCase();
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
         const isPortrait = screenHeight > screenWidth;
-        const isMobile = screenWidth < 768;
-        const isTablet = screenWidth >= 768 && screenWidth < 1024;
+        const pixelRatio = window.devicePixelRatio || 1;
         
-        // Base scaling factors
-        let scaleFactor = 1;
-        if (isMobile) {
-            scaleFactor = isPortrait ? 0.7 : 0.8;
-        } else if (isTablet) {
-            scaleFactor = 0.9;
-        }
+        // Device type detection
+        const isMobile = screenWidth <= 768 || /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+        const isTablet = screenWidth > 768 && screenWidth <= 1024;
+        const isDesktop = screenWidth > 1024;
         
-        // Additional scaling based on screen size
-        const sizeScale = Math.min(screenWidth / 1200, screenHeight / 800);
-        scaleFactor *= Math.max(0.6, Math.min(1.2, sizeScale));
+        // Touch capability
+        const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        
+        // Performance tier estimation
+        const isLowEnd = pixelRatio < 2 && (screenWidth * screenHeight) < (1280 * 720);
+        const isHighEnd = pixelRatio >= 3 && (screenWidth * screenHeight) >= (1920 * 1080);
         
         return {
-            gravity: 0.4 * scaleFactor,
-            jumpPower: { 
-                min: -8 * scaleFactor, 
-                max: -15 * scaleFactor 
-            },
-            birdSpeed: 2 * scaleFactor,
-            pipeSpeed: 1.5 * scaleFactor,
-            pipeGap: Math.max(180, 250 * scaleFactor), // Ensure minimum gap for mobile
-            pipeWidth: Math.max(40, 50 * scaleFactor),
-            scaleFactor: scaleFactor, // Store for other uses
-            isMobile: isMobile,
-            isTablet: isTablet,
-            isPortrait: isPortrait
+            isMobile,
+            isTablet,
+            isDesktop,
+            isPortrait,
+            hasTouch,
+            isLowEnd,
+            isHighEnd,
+            screenWidth,
+            screenHeight,
+            pixelRatio,
+            aspectRatio: screenWidth / screenHeight
         };
     }
-
+    
+    calculateResponsiveSettings() {
+        const device = this.deviceInfo;
+        const base = this.baseSettings;
+        
+        // Base scale factor
+        let scaleFactor = 1;
+        let uiScale = 1;
+        
+        if (device.isMobile) {
+            // Mobile scaling
+            scaleFactor = device.isPortrait ? 0.7 : 0.8;
+            uiScale = device.isPortrait ? 1.2 : 1.0;
+            
+            // Adjust for very small screens
+            if (device.screenWidth < 375) {
+                scaleFactor *= 0.8;
+                uiScale *= 1.1;
+            }
+            
+            // Adjust for very large mobile screens
+            if (device.screenWidth > 428) {
+                scaleFactor *= 1.1;
+                uiScale *= 0.9;
+            }
+        } else if (device.isTablet) {
+            scaleFactor = 0.9;
+            uiScale = 1.0;
+        }
+        
+        // Performance-based adjustments
+        if (device.isLowEnd) {
+            scaleFactor *= 0.8; // Smaller elements for better performance
+        } else if (device.isHighEnd) {
+            scaleFactor *= 1.1; // Larger elements on high-end devices
+        }
+        
+        // Aspect ratio adjustments
+        if (device.aspectRatio < 0.6) { // Very tall screens
+            scaleFactor *= 0.9;
+            uiScale *= 1.1;
+        } else if (device.aspectRatio > 2.0) { // Very wide screens
+            scaleFactor *= 1.1;
+            uiScale *= 0.9;
+        }
+        
+        // Calculate responsive settings
+        return {
+            gravity: base.gravity * scaleFactor,
+            jumpPower: {
+                min: base.jumpPower.min * scaleFactor,
+                max: base.jumpPower.max * scaleFactor
+            },
+            birdSpeed: base.birdSpeed * scaleFactor,
+            pipeSpeed: base.pipeSpeed * scaleFactor,
+            pipeGap: Math.max(180, base.pipeGap * scaleFactor), // Minimum gap for playability
+            pipeWidth: Math.max(40, base.pipeWidth * scaleFactor),
+            scaleFactor,
+            uiScale,
+            // UI-specific settings
+            buttonSize: 50 * uiScale,
+            fontSize: {
+                small: 14 * uiScale,
+                medium: 18 * uiScale,
+                large: 24 * uiScale,
+                xlarge: 32 * uiScale
+            },
+            padding: 20 * uiScale,
+            borderRadius: 10 * uiScale
+        };
+    }
+    
     init() {
         this.setupCanvas();
         this.createDefaultAssets();
@@ -176,18 +246,27 @@ class FlappyBirdGame {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
         
-        // Recalculate responsive settings on resize
+        // Recalculate device info and settings on resize
+        this.deviceInfo = this.detectDevice();
         this.settings = this.calculateResponsiveSettings();
         
-        // Position bird with responsive sizing
-        this.bird.x = this.canvas.width * 0.15;
-        this.bird.y = this.canvas.height / 2;
-        this.bird.width = 40 * this.settings.scaleFactor;
-        this.bird.height = 30 * this.settings.scaleFactor;
+        // Position bird with responsive positioning
+        if (this.bird) {
+            this.bird.x = this.canvas.width * 0.15;
+            this.bird.y = this.canvas.height / 2;
+            this.bird.width = 40 * this.settings.scaleFactor;
+            this.bird.height = 30 * this.settings.scaleFactor;
+        }
         
-        // Add touch optimization for mobile
-        if (this.settings.isMobile) {
-            this.canvas.style.touchAction = 'none';
+        // Mobile-specific optimizations
+        if (this.deviceInfo.isMobile) {
+            // Prevent zoom on double tap
+            this.canvas.style.touchAction = 'manipulation';
+            
+            // Optimize for mobile performance
+            if (this.deviceInfo.isLowEnd) {
+                this.canvas.style.imageRendering = 'pixelated';
+            }
         }
         
         window.addEventListener('resize', () => this.setupCanvas());
@@ -645,7 +724,7 @@ class FlappyBirdGame {
         
         this.canvas.addEventListener('mousedown', () => this.handleJumpStart());
         this.canvas.addEventListener('mouseup', () => this.handleJumpEnd());
-        // Enhanced touch events for mobile with better responsiveness
+        // Enhanced touch events for mobile
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -658,10 +737,16 @@ class FlappyBirdGame {
             this.handleJumpEnd();
         }, { passive: false });
         
+        // Prevent scrolling and zooming on mobile
         this.canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
             e.stopPropagation();
         }, { passive: false });
+        
+        // Prevent context menu on long press
+        this.canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
         
         // UI buttons
         this.setupUIEventListeners();
@@ -1797,9 +1882,8 @@ class FlappyBirdGame {
             light: '#7DC46A'
         };
         
-        // Scale cap size for mobile
-        const capHeight = Math.max(20, 24 * this.settings.scaleFactor);
-        const capOverhang = Math.max(3, 4 * this.settings.scaleFactor);
+        const capHeight = 24;
+        const capOverhang = 4;
         
         // Top pipe
         this.ctx.fillStyle = colors.body;
