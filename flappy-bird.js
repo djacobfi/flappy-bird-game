@@ -153,7 +153,7 @@ class FlappyBirdGame {
         // Create default bird sprite
         const birdCanvas = document.createElement('canvas');
         birdCanvas.width = 40;
-        birdCanvas.height = 30;
+        birdCanvas.height = 40;
         const ctx = birdCanvas.getContext('2d');
         
         // Bird body
