@@ -976,17 +976,13 @@ class FlappyBirdGame {
     
     updateDifficulty() {
         const element = document.getElementById('difficulty');
-        const speedIncrease = this.score * 0.08;
-        const maxSpeedIncrease = this.settings.pipeSpeed * 2;
-        const currentPipeSpeed = this.settings.pipeSpeed + Math.min(speedIncrease, maxSpeedIncrease);
-        const speedMultiplier = Math.round((currentPipeSpeed / this.settings.pipeSpeed) * 100);
         
         const levels = [
-            { max: 5, text: `Easy Mode (${speedMultiplier}%)`, color: '#27ae60' },
-            { max: 10, text: `Getting Harder... (${speedMultiplier}%)`, color: '#f39c12' },
-            { max: 20, text: `Medium Mode (${speedMultiplier}%)`, color: '#e67e22' },
-            { max: 30, text: `Hard Mode (${speedMultiplier}%)`, color: '#e74c3c' },
-            { max: Infinity, text: `Expert Mode (${speedMultiplier}%)`, color: '#8e44ad' }
+            { max: 5, text: 'Easy Mode', color: '#27ae60' },
+            { max: 10, text: 'Getting Harder...', color: '#f39c12' },
+            { max: 20, text: 'Medium Mode', color: '#e67e22' },
+            { max: 30, text: 'Hard Mode', color: '#e74c3c' },
+            { max: Infinity, text: 'Expert Mode', color: '#8e44ad' }
         ];
         
         const level = levels.find(l => this.score < l.max);
