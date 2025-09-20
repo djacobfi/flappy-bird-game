@@ -49,10 +49,16 @@ class FlappyBirdGame {
             maxHoldTime: 300
         };
         
-        // Audio system
+        // Audio system with individual volume controls
         this.audio = {
             enabled: true,
-            volume: parseFloat(localStorage.getItem('flappyMusicVolume')) || 30,
+            volumes: {
+                master: parseFloat(localStorage.getItem('flappyMasterVolume')) || 100,
+                music: parseFloat(localStorage.getItem('flappyMusicVolume')) || 30,
+                tap: parseFloat(localStorage.getItem('flappyTapVolume')) || 70,
+                crash: parseFloat(localStorage.getItem('flappyCrashVolume')) || 80,
+                powerup: parseFloat(localStorage.getItem('flappyPowerupVolume')) || 60
+            },
             playing: false,
             sounds: { tap: null, crash: null, bgMusic: null },
             custom: { birdImage: null, tapSound: null, crashSound: null, bgMusic: null },
@@ -432,6 +438,7 @@ class FlappyBirdGame {
         // Set up the Mario laugh as tap sound
         this.audio.sounds.tap = () => {
             if (marioLaugh.readyState >= 2) { // Audio is loaded
+                marioLaugh.volume = this.getEffectiveVolume('tap');
                 marioLaugh.currentTime = 0;
                 marioLaugh.play().catch(error => {
                     console.log('Mario laugh failed, using fallback:', error);
@@ -844,18 +851,31 @@ class FlappyBirdGame {
             restartBtn: () => this.handleRestart(),
             toggleMusic: () => this.toggleMusic(),
             settingsBtn: () => this.toggleSettings(),
-            closeSettingsBtn: () => this.hideSettings(),
-            volumeSlider: (e) => this.updateVolume(parseInt(e.target.value))
+            closeSettingsBtn: () => this.hideSettings()
         };
         
+        // Setup volume sliders
+        const volumeSliders = {
+            masterVolumeSlider: (e) => this.updateVolume('master', parseInt(e.target.value)),
+            musicVolumeSlider: (e) => this.updateVolume('music', parseInt(e.target.value)),
+            tapVolumeSlider: (e) => this.updateVolume('tap', parseInt(e.target.value)),
+            crashVolumeSlider: (e) => this.updateVolume('crash', parseInt(e.target.value)),
+            powerupVolumeSlider: (e) => this.updateVolume('powerup', parseInt(e.target.value))
+        };
+        
+        // Add click event listeners
         Object.entries(elements).forEach(([id, handler]) => {
             const element = document.getElementById(id);
             if (element) {
-                if (id === 'volumeSlider') {
-                    element.addEventListener('input', handler);
-                } else {
-                    element.addEventListener('click', handler);
-                }
+                element.addEventListener('click', handler);
+            }
+        });
+        
+        // Add volume slider event listeners
+        Object.entries(volumeSliders).forEach(([id, handler]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('input', handler);
             }
         });
     }
@@ -881,9 +901,23 @@ class FlappyBirdGame {
     }
     
     initializeUI() {
-        // Set initial button states
-        document.getElementById('volumeSlider').value = this.audio.volume;
-        document.getElementById('volumeDisplay').textContent = `${this.audio.volume}%`;
+        // Set initial volume slider values and displays
+        Object.keys(this.audio.volumes).forEach(type => {
+            const sliderId = `${type}VolumeSlider`;
+            const displayId = `${type}VolumeDisplay`;
+            
+            const slider = document.getElementById(sliderId);
+            const display = document.getElementById(displayId);
+            
+            if (slider) {
+                slider.value = this.audio.volumes[type];
+            }
+            if (display) {
+                display.textContent = `${this.audio.volumes[type]}%`;
+            }
+        });
+        
+        // Set other UI elements
         document.getElementById('bestScore').textContent = this.bestScore;
         document.getElementById('toggleMusic').textContent = this.audio.enabled ? '🔊 Music' : '🔇 Music';
         
@@ -1424,7 +1458,7 @@ class FlappyBirdGame {
                 }
                 
                 const tapAudio = this.audio.custom.tapSound.cloneNode();
-                tapAudio.volume = 0.5;
+                tapAudio.volume = this.getEffectiveVolume('tap');
                 tapAudio.play();
                 
                 this.audio.state.currentTapAudio = tapAudio;
@@ -1445,6 +1479,7 @@ class FlappyBirdGame {
             this.audio.state.crashLastPlayed = now;
             
             if (this.audio.custom.crashSound) {
+                this.audio.custom.crashSound.volume = this.getEffectiveVolume('crash');
                 this.audio.custom.crashSound.currentTime = 0;
                 this.audio.custom.crashSound.play();
                 
@@ -1460,7 +1495,7 @@ class FlappyBirdGame {
     
     startBackgroundMusic() {
         if (this.audio.custom.bgMusic) {
-            this.audio.custom.bgMusic.volume = this.audio.enabled ? this.audio.volume / 100 : 0;
+            this.audio.custom.bgMusic.volume = this.getEffectiveVolume('music');
             this.audio.custom.bgMusic.play();
         } else if (!this.audio.custom.bgMusic) {
             this.audio.sounds.bgMusic.start();
@@ -1485,15 +1520,59 @@ class FlappyBirdGame {
         }
     }
     
-    updateVolume(volume) {
-        this.audio.volume = volume;
-        document.getElementById('volumeDisplay').textContent = `${volume}%`;
+    updateVolume(type, volume) {
+        this.audio.volumes[type] = volume;
         
-        if (this.audio.custom.bgMusic) {
-            this.audio.custom.bgMusic.volume = this.audio.enabled ? volume / 100 : 0;
+        // Update display
+        const displayId = `${type}VolumeDisplay`;
+        const displayElement = document.getElementById(displayId);
+        if (displayElement) {
+            displayElement.textContent = `${volume}%`;
         }
         
-        localStorage.setItem('flappyMusicVolume', volume);
+        // Save to localStorage
+        localStorage.setItem(`flappy${type.charAt(0).toUpperCase() + type.slice(1)}Volume`, volume);
+        
+        // Apply volume changes immediately
+        this.applyVolumeSettings();
+        
+        // Special handling for master volume - update all other volumes
+        if (type === 'master') {
+            this.updateAllVolumeDisplays();
+        }
+    }
+    
+    applyVolumeSettings() {
+        const masterMultiplier = this.audio.volumes.master / 100;
+        
+        // Update background music volume
+        if (this.audio.custom.bgMusic) {
+            this.audio.custom.bgMusic.volume = this.audio.enabled ? 
+                (this.audio.volumes.music / 100) * masterMultiplier : 0;
+        }
+        
+        // Update sonic music volume
+        if (this.sonicMusic) {
+            this.sonicMusic.volume = this.audio.enabled ? 
+                (this.audio.volumes.powerup / 100) * masterMultiplier : 0;
+        }
+        
+        // Note: Tap and crash sounds are applied when they play
+    }
+    
+    getEffectiveVolume(type) {
+        if (!this.audio.enabled) return 0;
+        return (this.audio.volumes[type] / 100) * (this.audio.volumes.master / 100);
+    }
+    
+    updateAllVolumeDisplays() {
+        Object.keys(this.audio.volumes).forEach(type => {
+            const displayId = `${type}VolumeDisplay`;
+            const displayElement = document.getElementById(displayId);
+            if (displayElement) {
+                displayElement.textContent = `${this.audio.volumes[type]}%`;
+            }
+        });
     }
     
     // File Upload Handlers
