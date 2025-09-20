@@ -249,11 +249,11 @@ class FlappyBirdGame {
             osc3.connect(gain3);
             osc4.connect(gain4);
             
-            // Mix for MAXIMUM IMPACT
-            gain1.gain.setValueAtTime(0.5, this.audioContext.currentTime); // Strong root
-            gain2.gain.setValueAtTime(0.3, this.audioContext.currentTime); // Punchy fifth
-            gain3.gain.setValueAtTime(0.2, this.audioContext.currentTime); // Bright top
-            gain4.gain.setValueAtTime(0.4, this.audioContext.currentTime); // POWERFUL bass
+            // Mix for pleasant impact (reduced volume)
+            gain1.gain.setValueAtTime(0.2, this.audioContext.currentTime); // Reduced root
+            gain2.gain.setValueAtTime(0.12, this.audioContext.currentTime); // Reduced fifth
+            gain3.gain.setValueAtTime(0.08, this.audioContext.currentTime); // Reduced top
+            gain4.gain.setValueAtTime(0.15, this.audioContext.currentTime); // Reduced bass
             
             // Connect to master with epic reverb
             gain1.connect(masterGain);
@@ -270,12 +270,12 @@ class FlappyBirdGame {
             
             masterGain.connect(this.audioContext.destination);
             
-            // EXPLOSIVE envelope for adrenaline rush!
+            // Pleasant envelope for musical feedback
             masterGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-            masterGain.gain.linearRampToValueAtTime(1.0, this.audioContext.currentTime + 0.01); // INSTANT ATTACK!
-            masterGain.gain.exponentialRampToValueAtTime(0.6, this.audioContext.currentTime + 0.05); // Quick sustain
-            masterGain.gain.exponentialRampToValueAtTime(0.3, this.audioContext.currentTime + 0.2); // Maintain energy
-            masterGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration); // Epic fade
+            masterGain.gain.linearRampToValueAtTime(0.4, this.audioContext.currentTime + 0.02); // Gentler attack
+            masterGain.gain.exponentialRampToValueAtTime(0.25, this.audioContext.currentTime + 0.08); // Moderate sustain
+            masterGain.gain.exponentialRampToValueAtTime(0.15, this.audioContext.currentTime + 0.3); // Maintain presence
+            masterGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration); // Smooth fade
             
             // Launch all oscillators for MAXIMUM IMPACT!
             const startTime = this.audioContext.currentTime;
