@@ -59,19 +59,47 @@
             <div class="setting-section">
                 <h4>🔊 Audio Settings</h4>
                 
+                <!-- Background Music Controls -->
                 <div class="volume-control">
-                    <label for="volumeSlider">Music Volume: <span id="volumeDisplay">30%</span></label>
-                    <input type="range" id="volumeSlider" min="0" max="100" value="30" class="volume-slider">
+                    <label for="musicVolumeSlider">🎵 Background Music: <span id="musicVolumeDisplay">30%</span></label>
+                    <input type="range" id="musicVolumeSlider" min="0" max="100" value="30" class="volume-slider">
                 </div>
                 
-                <input type="file" id="tapSoundUpload" accept="audio/*">
-                <label for="tapSoundUpload" class="upload-btn">🔊 Tap Sound</label>
+                <!-- Tap Sound Controls -->
+                <div class="volume-control">
+                    <label for="tapVolumeSlider">🔊 Tap Sound: <span id="tapVolumeDisplay">70%</span></label>
+                    <input type="range" id="tapVolumeSlider" min="0" max="100" value="70" class="volume-slider">
+                </div>
                 
-                <input type="file" id="crashSoundUpload" accept="audio/*">
-                <label for="crashSoundUpload" class="upload-btn">💥 Crash Sound</label>
+                <!-- Crash Sound Controls -->
+                <div class="volume-control">
+                    <label for="crashVolumeSlider">💥 Crash Sound: <span id="crashVolumeDisplay">80%</span></label>
+                    <input type="range" id="crashVolumeSlider" min="0" max="100" value="80" class="volume-slider">
+                </div>
                 
-                <input type="file" id="bgMusicUpload" accept="audio/*">
-                <label for="bgMusicUpload" class="upload-btn">🎵 Background Music</label>
+                <!-- Power-up Music Controls -->
+                <div class="volume-control">
+                    <label for="powerupVolumeSlider">🚀 Power-up Music: <span id="powerupVolumeDisplay">60%</span></label>
+                    <input type="range" id="powerupVolumeSlider" min="0" max="100" value="60" class="volume-slider">
+                </div>
+                
+                <!-- Master Volume Controls -->
+                <div class="volume-control master-volume">
+                    <label for="masterVolumeSlider">🎛️ Master Volume: <span id="masterVolumeDisplay">100%</span></label>
+                    <input type="range" id="masterVolumeSlider" min="0" max="100" value="100" class="volume-slider master-slider">
+                </div>
+                
+                <!-- File Upload Controls -->
+                <div class="upload-controls">
+                    <input type="file" id="tapSoundUpload" accept="audio/*">
+                    <label for="tapSoundUpload" class="upload-btn">🔊 Upload Tap Sound</label>
+                    
+                    <input type="file" id="crashSoundUpload" accept="audio/*">
+                    <label for="crashSoundUpload" class="upload-btn">💥 Upload Crash Sound</label>
+                    
+                    <input type="file" id="bgMusicUpload" accept="audio/*">
+                    <label for="bgMusicUpload" class="upload-btn">🎵 Upload Background Music</label>
+                </div>
             </div>
         </div>
         
