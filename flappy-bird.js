@@ -1508,11 +1508,33 @@ class FlappyBirdGame {
     }
     
     startBackgroundMusic() {
+        console.log('🎵 Starting background music...', {
+            customMusic: !!this.audio.custom.bgMusic,
+            defaultMusic: !!this.audio.sounds.bgMusic,
+            enabled: this.audio.enabled,
+            volume: this.getEffectiveVolume('music')
+        });
+        
         if (this.audio.custom.bgMusic) {
             this.audio.custom.bgMusic.volume = this.getEffectiveVolume('music');
-            this.audio.custom.bgMusic.play();
-        } else if (!this.audio.custom.bgMusic) {
-            this.audio.sounds.bgMusic.start();
+            this.audio.custom.bgMusic.play().catch(e => {
+                console.log('Custom music failed to play:', e);
+            });
+        } else if (this.audio.sounds.bgMusic) {
+            try {
+                // Ensure audio context is resumed
+                if (this.audioContext && this.audioContext.state === 'suspended') {
+                    this.audioContext.resume().then(() => {
+                        this.audio.sounds.bgMusic.start();
+                    });
+                } else {
+                    this.audio.sounds.bgMusic.start();
+                }
+            } catch (e) {
+                console.log('Default music failed to start:', e);
+            }
+        } else {
+            console.warn('No background music available (neither custom nor default)');
         }
         this.audio.playing = true;
     }
@@ -1842,9 +1864,15 @@ class FlappyBirdGame {
         if (soundType === 'tap') {
             this.audio.custom.tapSound = null;
             this.updateButtonText('tapSoundUpload', null);
+            // Clear file input
+            const fileInput = document.getElementById('tapSoundUpload');
+            if (fileInput) fileInput.value = '';
         } else if (soundType === 'crash') {
             this.audio.custom.crashSound = null;
             this.updateButtonText('crashSoundUpload', null);
+            // Clear file input
+            const fileInput = document.getElementById('crashSoundUpload');
+            if (fileInput) fileInput.value = '';
         } else if (soundType === 'bgMusic') {
             // Stop current background music if it's playing
             if (this.audio.custom.bgMusic) {
@@ -1852,10 +1880,17 @@ class FlappyBirdGame {
                 this.audio.custom.bgMusic = null;
             }
             this.updateButtonText('bgMusicUpload', null);
+            // Clear file input
+            const fileInput = document.getElementById('bgMusicUpload');
+            if (fileInput) fileInput.value = '';
             
             // Restart default background music if audio is enabled
-            if (this.audio.enabled && this.audio.playing) {
-                this.startBackgroundMusic();
+            if (this.audio.enabled) {
+                console.log('🎵 Restarting default background music...');
+                // Small delay to ensure cleanup is complete
+                setTimeout(() => {
+                    this.startBackgroundMusic();
+                }, 100);
             }
         }
         
@@ -1938,23 +1973,49 @@ class FlappyBirdGame {
     updateButtonText(uploadId, fileName) {
         const label = document.querySelector(`label[for="${uploadId}"]`);
         if (label) {
-            const displayName = fileName.length > 15 ? fileName.substring(0, 12) + '...' : fileName;
-            
-            const icons = {
-                birdUpload: '🐦',
-                tapSoundUpload: '🔊',
-                crashSoundUpload: '💥',
-                bgMusicUpload: '🎵'
+            if (fileName) {
+                // Show uploaded file name
+                const displayName = fileName.length > 15 ? fileName.substring(0, 12) + '...' : fileName;
+                
+                const icons = {
+                    birdUpload: '🐦',
+                    tapSoundUpload: '🔊',
+                    crashSoundUpload: '💥',
+                    bgMusicUpload: '🎵'
+                };
+                
+                label.textContent = `${icons[uploadId]} ${displayName}`;
+                label.style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
+                label.title = `Current: ${fileName}\nRight-click to reset to default`;
+                
+                label.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    this.resetToDefault(uploadId);
+                });
+            } else {
+                // Reset to default appearance
+                this.resetButtonToDefault(uploadId);
+            }
+        }
+    }
+    
+    resetButtonToDefault(uploadId) {
+        const label = document.querySelector(`label[for="${uploadId}"]`);
+        if (label) {
+            const defaults = {
+                birdUpload: '🐦 Upload Bird Sprite',
+                tapSoundUpload: '🔊 Upload Tap Sound',
+                crashSoundUpload: '💥 Upload Crash Sound',
+                bgMusicUpload: '🎵 Upload Background Music'
             };
             
-            label.textContent = `${icons[uploadId]} ${displayName}`;
-            label.style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
-            label.title = `Current: ${fileName}\nRight-click to reset to default`;
+            label.textContent = defaults[uploadId];
+            label.style.background = '';
+            label.title = '';
             
-            label.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                this.resetToDefault(uploadId);
-            });
+            // Remove any existing contextmenu listeners
+            const newLabel = label.cloneNode(true);
+            label.parentNode.replaceChild(newLabel, label);
         }
     }
     
