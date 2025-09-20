@@ -1314,7 +1314,51 @@ class FlappyBirdGame {
     createPipe() {
         const minHeight = 50;
         const maxHeight = this.canvas.height - this.settings.pipeGap - minHeight;
-        const topHeight = Math.random() * (maxHeight - minHeight) + minHeight;
+        
+        // Enhanced random positioning with pattern variations
+        let topHeight;
+        
+        // Create different pipe positioning patterns for variety
+        const pattern = Math.random();
+        
+        if (pattern < 0.3) {
+            // High pipes (30% chance) - gap in upper area
+            const upperRange = (maxHeight - minHeight) * 0.3;
+            topHeight = minHeight + Math.random() * upperRange;
+        } else if (pattern < 0.6) {
+            // Low pipes (30% chance) - gap in lower area  
+            const lowerRange = (maxHeight - minHeight) * 0.3;
+            topHeight = maxHeight - lowerRange + Math.random() * lowerRange;
+        } else if (pattern < 0.8) {
+            // Middle pipes (20% chance) - gap in center area
+            const centerY = (minHeight + maxHeight) / 2;
+            const centerRange = (maxHeight - minHeight) * 0.3;
+            topHeight = centerY - centerRange/2 + Math.random() * centerRange;
+        } else {
+            // Completely random (20% chance) - anywhere
+            topHeight = minHeight + Math.random() * (maxHeight - minHeight);
+        }
+        
+        // Add some influence from previous pipe to create flowing patterns
+        if (this.pipes.length > 0) {
+            const lastPipe = this.pipes[this.pipes.length - 1];
+            
+            // Adjust influence based on difficulty - harder = more erratic
+            const difficultyFactor = Math.min(this.score / 20, 1); // 0 to 1 based on score
+            const influence = 0.3 - (difficultyFactor * 0.1); // Less influence = more erratic
+            const randomness = 0.7 + (difficultyFactor * 0.2); // More randomness = more erratic
+            
+            topHeight = topHeight * randomness + lastPipe.topHeight * influence;
+            
+            // Add difficulty-based extreme positions
+            if (this.score > 10 && Math.random() < 0.1) {
+                // 10% chance for extreme positions after score 10
+                topHeight = Math.random() < 0.5 ? minHeight + 20 : maxHeight - 20;
+            }
+            
+            // Ensure we stay within bounds
+            topHeight = Math.max(minHeight, Math.min(maxHeight, topHeight));
+        }
         
         // Random pipe spacing for varied gameplay
         const baseSpacing = Math.max(this.canvas.width * 0.5, 400);
