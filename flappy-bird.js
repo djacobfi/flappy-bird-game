@@ -24,7 +24,7 @@ class FlappyBirdGame {
         this.settings = {
             gravity: 0.4,
             jumpPower: { min: -8, max: -15 },
-            birdSpeed: 2,
+            birdSpeed: 4, // Increased from 2 for better responsiveness
             pipeSpeed: 1.5,
             pipeGap: 250,
             pipeWidth: 50
@@ -155,9 +155,9 @@ class FlappyBirdGame {
             }
         }
         
-        // Reduce frame rate for very low-end devices
+        // Reduce frame rate for very low-end devices (but not too much)
         if (isLowEnd && pixelRatio < 1.5) {
-            this.targetFPS = 45; // Reduce from default 60 FPS
+            this.targetFPS = 50; // Increased from 45 for smoother movement
         } else {
             this.targetFPS = 60;
         }
@@ -165,6 +165,7 @@ class FlappyBirdGame {
         // Set up frame rate limiting
         this.frameInterval = 1000 / this.targetFPS;
         this.lastFrameTime = 0;
+        this.deltaTime = 0;
         
         // Store optimization flags for later use
         this.deviceOptimization = {
@@ -820,25 +821,26 @@ class FlappyBirdGame {
         this.settings.pipeSpeed = this.difficulty.basePipeSpeed + (this.score * 0.05);
         this.settings.pipeGap = Math.max(this.difficulty.basePipeGap - (this.score * 2), 120);
         
-        // Update bird physics
-        this.bird.velocity += this.settings.gravity;
+        // Update bird physics with delta time
+        const smoothDelta = Math.max(0.5, Math.min(2.0, this.deltaTime || 1)); // Clamp delta
+        this.bird.velocity += this.settings.gravity * smoothDelta;
         
         // Continuous jump boost while held
         if (this.jumpState.isPressed) {
             const holdTime = Date.now() - this.jumpState.pressTime;
             if (holdTime < this.jumpState.maxHoldTime) {
-                this.bird.velocity -= 0.3;
+                this.bird.velocity -= 0.3 * smoothDelta;
             }
         }
         
-        this.bird.y += this.bird.velocity;
+        this.bird.y += this.bird.velocity * smoothDelta;
         
-        // Apply power-up speed multiplier
+        // Apply power-up speed multiplier with delta time for smooth movement
         const currentBirdSpeed = this.powerUp.active ? 
             this.settings.birdSpeed * this.powerUp.speedMultiplier : 
             this.settings.birdSpeed;
         
-        this.bird.x += currentBirdSpeed;
+        this.bird.x += currentBirdSpeed * smoothDelta;
         this.bird.rotation = Math.min(Math.max(this.bird.velocity * 0.05, -0.5), 0.5);
         
         // Update camera
@@ -2019,7 +2021,10 @@ class FlappyBirdGame {
     gameLoop() {
         const currentTime = performance.now();
         
-        // Frame rate limiting for performance
+        // Calculate delta time for smooth movement
+        this.deltaTime = (currentTime - this.lastFrameTime) / 16.67; // Normalize to 60fps
+        
+        // Frame rate limiting for performance (but smoother)
         if (currentTime - this.lastFrameTime >= this.frameInterval) {
             this.update();
             this.render();
