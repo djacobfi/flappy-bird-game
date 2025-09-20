@@ -98,9 +98,28 @@ class FlappyBirdGame {
     
     loadSonicMusic() {
         // Load the Sonic "Gotta Go Fast" music
-        this.sonicMusic = new Audio('/Users/damienjacob/Flappy/Gotta Go Fast (Sonic Theme) - MLG Sound Effect (HD) ( 160kbps ).mp3');
+        this.sonicMusic = new Audio('Gotta Go Fast (Sonic Theme) - MLG Sound Effect (HD) ( 160kbps ).mp3');
         this.sonicMusic.volume = 0.7;
         this.sonicMusic.loop = false; // Play once during power-up
+        
+        // Add comprehensive error handling and debugging
+        this.sonicMusic.addEventListener('error', (e) => {
+            console.error('❌ Sonic music failed to load:', e);
+            console.log('Trying to load from:', this.sonicMusic.src);
+            this.sonicMusic = null;
+        });
+        
+        this.sonicMusic.addEventListener('canplaythrough', () => {
+            console.log('✅ Sonic music loaded successfully!');
+        });
+        
+        this.sonicMusic.addEventListener('loadstart', () => {
+            console.log('🔄 Started loading Sonic music...');
+        });
+        
+        this.sonicMusic.addEventListener('loadeddata', () => {
+            console.log('📁 Sonic music data loaded');
+        });
     }
     
     init() {
@@ -863,6 +882,8 @@ class FlappyBirdGame {
         this.powerUp.active = true;
         this.powerUp.startTime = Date.now();
         
+        console.log('🚀 POWER-UP ACTIVATED! GOTTA GO FAST!');
+        
         // Stop background music and play Sonic theme
         if (this.audio.custom.bgMusic) {
             this.audio.custom.bgMusic.pause();
@@ -870,16 +891,75 @@ class FlappyBirdGame {
             this.audio.sounds.bgMusic.stop();
         }
         
-        if (this.sonicMusic) {
-            this.sonicMusic.currentTime = 0;
-            this.sonicMusic.volume = this.audio.enabled ? (this.audio.volume / 100 * 0.8) : 0;
-            this.sonicMusic.play();
+        // Play Sonic music with enhanced error handling
+        if (this.sonicMusic && this.audio.enabled) {
+            try {
+                this.sonicMusic.currentTime = 0;
+                this.sonicMusic.volume = this.audio.volume / 100 * 0.8;
+                
+                // Ensure audio context is active
+                if (this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+                
+                console.log('🎵 Attempting to play Sonic music...');
+                const playPromise = this.sonicMusic.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log('✅ SONIC MUSIC PLAYING! GOTTA GO FAST!');
+                    }).catch((error) => {
+                        console.error('❌ Sonic music play failed:', error);
+                        this.playEpicPowerUpSound();
+                    });
+                } else {
+                    console.log('🎵 Sonic music playing (no promise)');
+                }
+            } catch (error) {
+                console.error('❌ Error playing Sonic music:', error);
+                this.playEpicPowerUpSound();
+            }
+        } else {
+            console.log('🔄 Using fallback epic power-up sound');
+            this.playEpicPowerUpSound();
         }
         
         // Auto-deactivate after duration
         setTimeout(() => {
             this.deactivatePowerUp();
         }, this.powerUp.duration);
+    }
+    
+    playEpicPowerUpSound() {
+        // Fallback epic power-up sound if Sonic music fails
+        console.log('🎵 Playing fallback epic power-up sound!');
+        
+        const powerUpInterval = setInterval(() => {
+            if (this.powerUp.active && this.audio.enabled) {
+                // Create rapid-fire epic notes
+                const frequencies = [880, 1046.5, 1318.5, 1760]; // A-C-E-A progression
+                frequencies.forEach((freq, index) => {
+                    setTimeout(() => {
+                        const osc = this.audioContext.createOscillator();
+                        const gain = this.audioContext.createGain();
+                        
+                        osc.frequency.value = freq;
+                        osc.type = 'sawtooth';
+                        osc.connect(gain);
+                        gain.connect(this.audioContext.destination);
+                        
+                        gain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                        gain.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+                        
+                        osc.start(this.audioContext.currentTime);
+                        osc.stop(this.audioContext.currentTime + 0.2);
+                    }, index * 50);
+                });
+            } else {
+                clearInterval(powerUpInterval);
+            }
+        }, 200); // Fast, energetic rhythm
     }
     
     deactivatePowerUp() {
