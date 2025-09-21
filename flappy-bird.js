@@ -2365,6 +2365,15 @@ class FlappyBirdGame {
         const nameInput = document.getElementById('playerNameInput');
         nameInput.value = this.leaderboard.getPlayerName();
         
+        // Check if we need to recover the user's best score
+        if (this.bestScore > 0) {
+            const hasScoreInLeaderboard = this.leaderboard.localScores.some(entry => entry.score === this.bestScore);
+            if (!hasScoreInLeaderboard) {
+                console.log(`🔄 Recovering your best score: ${this.bestScore}`);
+                this.leaderboard.addManualScore(this.leaderboard.getPlayerName(), this.bestScore);
+            }
+        }
+        
         // Load initial leaderboard
         this.refreshLeaderboard();
     }
