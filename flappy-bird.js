@@ -104,7 +104,11 @@ class FlappyBirdGame {
             // Extended invincibility system
             extendedInvincibility: false,
             invincibilityPipesLeft: 0,
-            invincibilityPipesTotal: 2 // 2 pipes of extended invincibility
+            invincibilityPipesTotal: 2, // 2 pipes of extended invincibility
+            // Safe zone system for post-power-up
+            safeZoneActive: false,
+            safeZoneStartTime: 0,
+            safeZoneDuration: 3000 // 3 seconds of no new pipes after power-up
         };
         
         this.easterEggs = [];
@@ -1125,6 +1129,7 @@ class FlappyBirdGame {
         this.powerUp.currentSpeedMultiplier = 1;
         this.powerUp.extendedInvincibility = false;
         this.powerUp.invincibilityPipesLeft = 0;
+        this.powerUp.safeZoneActive = false;
         
         // Reset world state
         this.world.totalPipesPassed = 0;
@@ -1225,6 +1230,18 @@ class FlappyBirdGame {
         }
     }
     
+    updateSafeZone() {
+        // Check if safe zone should end
+        if (this.powerUp.safeZoneActive) {
+            const safeZoneElapsed = Date.now() - this.powerUp.safeZoneStartTime;
+            
+            if (safeZoneElapsed >= this.powerUp.safeZoneDuration) {
+                this.powerUp.safeZoneActive = false;
+                console.log('🛡️ Safe zone ended - pipe generation resumed');
+            }
+        }
+    }
+    
     update() {
         if (this.gameState !== 'playing') return;
         
@@ -1267,10 +1284,16 @@ class FlappyBirdGame {
         // Update camera
         this.camera.x = this.bird.x - this.canvas.width * 0.3;
         
-        // Generate pipes
+        // Generate pipes (respect safe zone after power-up)
+        this.updateSafeZone();
+        
         const pipeSpacing = Math.max(this.canvas.width * 0.5, 400);
-        if (this.pipes.length === 0 || this.pipes[this.pipes.length - 1].x < this.bird.x + this.canvas.width) {
+        const shouldCreatePipe = this.pipes.length === 0 || this.pipes[this.pipes.length - 1].x < this.bird.x + this.canvas.width;
+        
+        if (shouldCreatePipe && !this.powerUp.safeZoneActive) {
             this.createPipe();
+        } else if (shouldCreatePipe && this.powerUp.safeZoneActive) {
+            console.log('🛡️ Safe zone active - skipping pipe generation');
         }
         
         // Update pipes
@@ -1343,13 +1366,27 @@ class FlappyBirdGame {
         const minHeight = 50;
         const maxHeight = this.canvas.height - this.settings.pipeGap - minHeight;
         
-        // Random pipe spacing for varied gameplay
-        const baseSpacing = Math.max(this.canvas.width * 0.5, 400);
-        const spacingVariation = baseSpacing * 0.4; // 40% variation
+        // Smart pipe spacing - more generous after power-ups
+        let baseSpacing = Math.max(this.canvas.width * 0.5, 400);
+        
+        // Increase spacing significantly if we just had a power-up recently
+        const timeSinceLastPowerUp = Date.now() - (this.powerUp.slowdownStartTime || 0);
+        if (timeSinceLastPowerUp < 10000) { // Within 10 seconds of power-up end
+            baseSpacing *= 1.8; // 80% more space for recovery
+            console.log('🛡️ Post-power-up spacing - extra room for control recovery');
+        }
+        
+        // Mobile-friendly spacing adjustments
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            baseSpacing *= 1.3; // 30% more space on mobile for easier control
+        }
+        
+        const spacingVariation = baseSpacing * 0.3; // Reduced variation for more predictable spacing
         const randomSpacing = baseSpacing + (Math.random() - 0.5) * spacingVariation;
         
-        // For grouped pipes, space them closer together
-        const groupSpacing = groupSize > 1 ? baseSpacing * 0.6 : randomSpacing;
+        // For grouped pipes, space them more generously
+        const groupSpacing = groupSize > 1 ? baseSpacing * 0.8 : randomSpacing; // Increased from 0.6
         const pipeSpacing = pipeIndex === 0 ? randomSpacing : groupSpacing;
         
         const pipeX = this.pipes.length === 0 ? 
@@ -1627,7 +1664,11 @@ class FlappyBirdGame {
         this.powerUp.extendedInvincibility = true;
         this.powerUp.invincibilityPipesLeft = this.powerUp.invincibilityPipesTotal;
         
-        console.log(`🛡️ Power-up ended - Starting gradual slowdown, grace pipe, and extended invincibility for ${this.powerUp.invincibilityPipesTotal} pipes!`);
+        // Start safe zone - no new pipes for 3 seconds
+        this.powerUp.safeZoneActive = true;
+        this.powerUp.safeZoneStartTime = Date.now();
+        
+        console.log(`🛡️ Power-up ended - Starting gradual slowdown, grace pipe, extended invincibility for ${this.powerUp.invincibilityPipesTotal} pipes, and 3-second safe zone!`);
         console.log(`🛡️ Extended invincibility state: active=${this.powerUp.extendedInvincibility}, pipesLeft=${this.powerUp.invincibilityPipesLeft}`);
         
         // Stop Sonic music and resume background music
@@ -2599,6 +2640,8 @@ class FlappyBirdGame {
                 this.drawSlowdownEffects();
             } else if (this.powerUp.extendedInvincibility) {
                 this.drawExtendedInvincibilityEffects();
+            } else if (this.powerUp.safeZoneActive) {
+                this.drawSafeZoneEffects();
             }
         }
         
@@ -3223,6 +3266,65 @@ class FlappyBirdGame {
         this.ctx.beginPath();
         this.ctx.arc(this.canvas.width * 0.15, this.canvas.height / 2, 40, 0, Math.PI * 2);
         this.ctx.stroke();
+        
+        this.ctx.globalAlpha = 1.0;
+        this.ctx.textAlign = 'left';
+    }
+    
+    drawSafeZoneEffects() {
+        const safeZoneElapsed = Date.now() - this.powerUp.safeZoneStartTime;
+        const safeZoneProgress = Math.min(safeZoneElapsed / this.powerUp.safeZoneDuration, 1);
+        const timeLeft = Math.ceil((this.powerUp.safeZoneDuration - safeZoneElapsed) / 1000);
+        
+        // Gentle pulsing background to indicate safe zone
+        this.ctx.globalAlpha = 0.1 + Math.sin(Date.now() * 0.01) * 0.05;
+        this.ctx.fillStyle = '#00FF88';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Safe zone indicator text
+        this.ctx.globalAlpha = 0.9;
+        this.ctx.font = 'bold 24px Arial';
+        this.ctx.textAlign = 'center';
+        
+        // Text outline
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 4;
+        this.ctx.strokeText('🛡️ SAFE ZONE', this.canvas.width / 2, 100);
+        
+        // Text fill
+        this.ctx.fillStyle = '#00FF88';
+        this.ctx.fillText('🛡️ SAFE ZONE', this.canvas.width / 2, 100);
+        
+        // Countdown timer
+        this.ctx.font = 'bold 18px Arial';
+        this.ctx.strokeText(`${timeLeft}s until pipes resume`, this.canvas.width / 2, 130);
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.fillText(`${timeLeft}s until pipes resume`, this.canvas.width / 2, 130);
+        
+        // Mobile-specific control reminder
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            this.ctx.font = 'bold 16px Arial';
+            this.ctx.strokeText('📱 Get ready to control!', this.canvas.width / 2, 160);
+            this.ctx.fillStyle = '#FFD700';
+            this.ctx.fillText('📱 Get ready to control!', this.canvas.width / 2, 160);
+        }
+        
+        // Progress bar
+        const barWidth = this.canvas.width * 0.6;
+        const barHeight = 8;
+        const barX = (this.canvas.width - barWidth) / 2;
+        const barY = 180;
+        
+        // Background bar
+        this.ctx.globalAlpha = 0.3;
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.fillRect(barX, barY, barWidth, barHeight);
+        
+        // Progress bar
+        this.ctx.globalAlpha = 0.8;
+        this.ctx.fillStyle = '#00FF88';
+        this.ctx.fillRect(barX, barY, barWidth * (1 - safeZoneProgress), barHeight);
         
         this.ctx.globalAlpha = 1.0;
         this.ctx.textAlign = 'left';
