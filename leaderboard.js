@@ -23,8 +23,12 @@ class GlobalLeaderboard {
         // Local leaderboard fallback
         this.localScores = JSON.parse(localStorage.getItem('flappyLocalLeaderboard')) || [];
         
-        // Add some demo scores if completely empty
-        if (this.localScores.length === 0) {
+        // Check for backup scores first
+        this.checkForBackupScores();
+        
+        // Add demo scores only if truly no scores exist (first time users)
+        if (this.localScores.length === 0 && !localStorage.getItem('flappyBestScore')) {
+            console.log('🎮 First time player detected, adding demo scores');
             this.localScores = [
                 { name: 'FlappyMaster', score: 42, timestamp: Date.now() - 86400000 },
                 { name: 'SkyDancer', score: 38, timestamp: Date.now() - 172800000 },
@@ -45,6 +49,57 @@ class GlobalLeaderboard {
         const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
         const randomNum = Math.floor(Math.random() * 999) + 1;
         return `${randomAdj}${randomNoun}${randomNum}`;
+    }
+    
+    checkForBackupScores() {
+        // Try to recover scores from different possible keys or backups
+        const possibleKeys = [
+            'flappyLocalLeaderboard',
+            'flappyLocalLeaderboard_backup',
+            'flappy-scores',
+            'flappyBirdScores'
+        ];
+        
+        let recoveredScores = [];
+        
+        for (const key of possibleKeys) {
+            try {
+                const scores = JSON.parse(localStorage.getItem(key));
+                if (scores && Array.isArray(scores) && scores.length > 0) {
+                    console.log(`🔄 Found backup scores in ${key}:`, scores.length);
+                    recoveredScores = recoveredScores.concat(scores);
+                }
+            } catch (e) {
+                // Ignore invalid JSON
+            }
+        }
+        
+        // Check if we have a best score but no leaderboard (data loss scenario)
+        const bestScore = parseInt(localStorage.getItem('flappyBestScore'));
+        const playerName = this.playerName;
+        
+        if (bestScore > 0 && this.localScores.length === 0 && recoveredScores.length === 0) {
+            console.log(`🔄 Recovering lost score: ${playerName} - ${bestScore}`);
+            recoveredScores.push({
+                name: playerName,
+                score: bestScore,
+                timestamp: Date.now() - 3600000, // 1 hour ago
+                recovered: true
+            });
+        }
+        
+        // Merge recovered scores with existing
+        if (recoveredScores.length > 0) {
+            this.localScores = this.localScores.concat(recoveredScores);
+            this.localScores.sort((a, b) => b.score - a.score);
+            this.localScores = this.localScores.slice(0, 20); // Keep top 20
+            
+            // Save the merged scores
+            localStorage.setItem('flappyLocalLeaderboard', JSON.stringify(this.localScores));
+            localStorage.setItem('flappyLocalLeaderboard_backup', JSON.stringify(this.localScores));
+            
+            console.log(`✅ Recovered ${recoveredScores.length} scores, total: ${this.localScores.length}`);
+        }
     }
     
     async initializeFirebase() {
@@ -131,9 +186,16 @@ class GlobalLeaderboard {
     saveToLocalStorage(scoreEntry) {
         this.localScores.push(scoreEntry);
         this.localScores.sort((a, b) => b.score - a.score);
-        this.localScores = this.localScores.slice(0, 10); // Keep top 10
+        this.localScores = this.localScores.slice(0, 20); // Keep top 20 (increased from 10)
+        
+        // Save to primary and backup locations
         localStorage.setItem('flappyLocalLeaderboard', JSON.stringify(this.localScores));
-        console.log('💾 Score saved to local leaderboard');
+        localStorage.setItem('flappyLocalLeaderboard_backup', JSON.stringify(this.localScores));
+        
+        // Also save timestamp of last save
+        localStorage.setItem('flappyLeaderboardLastSave', Date.now().toString());
+        
+        console.log(`💾 Score saved to local leaderboard (${this.localScores.length} total scores)`);
     }
     
     async saveToFirebase(scoreEntry) {
@@ -244,6 +306,58 @@ class GlobalLeaderboard {
             console.error('❌ Failed to get total players:', error);
             return this.localScores.length;
         }
+    }
+    
+    // Manual score recovery methods
+    addManualScore(name, score) {
+        const scoreEntry = {
+            name: name,
+            score: parseInt(score),
+            timestamp: Date.now(),
+            manual: true
+        };
+        
+        this.saveToLocalStorage(scoreEntry);
+        console.log(`✅ Manually added score: ${name} - ${score}`);
+    }
+    
+    exportScores() {
+        const exportData = {
+            localScores: this.localScores,
+            bestScore: localStorage.getItem('flappyBestScore'),
+            playerName: this.playerName,
+            exportDate: new Date().toISOString()
+        };
+        
+        console.log('📤 Score export:', exportData);
+        return JSON.stringify(exportData, null, 2);
+    }
+    
+    importScores(importDataString) {
+        try {
+            const importData = JSON.parse(importDataString);
+            
+            if (importData.localScores && Array.isArray(importData.localScores)) {
+                this.localScores = importData.localScores;
+                localStorage.setItem('flappyLocalLeaderboard', JSON.stringify(this.localScores));
+                localStorage.setItem('flappyLocalLeaderboard_backup', JSON.stringify(this.localScores));
+                
+                console.log(`✅ Imported ${this.localScores.length} scores`);
+                return true;
+            }
+        } catch (error) {
+            console.error('❌ Failed to import scores:', error);
+        }
+        
+        return false;
+    }
+    
+    clearAllScores() {
+        this.localScores = [];
+        localStorage.removeItem('flappyLocalLeaderboard');
+        localStorage.removeItem('flappyLocalLeaderboard_backup');
+        localStorage.removeItem('flappyLeaderboardLastSave');
+        console.log('🗑️ All local scores cleared');
     }
 }
 
