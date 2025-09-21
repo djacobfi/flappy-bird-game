@@ -216,10 +216,17 @@ class FlappyBirdGame {
         this.bird.x = this.canvas.width * 0.15;
         this.bird.y = this.canvas.height / 2;
         
-        // Scale for different screen sizes
+        // Scale for different screen sizes with mobile-specific bird scaling
         const scale = Math.max(Math.min(this.canvas.width / 800, this.canvas.height / 600), 0.5);
-        this.bird.width = 50 * scale; // Updated to match new sprite
-        this.bird.height = 40 * scale; // Updated to match new sprite
+        
+        // Mobile gets 2x bigger bird for better visibility and touch control
+        const isMobile = window.innerWidth <= 768;
+        const birdScale = isMobile ? scale * 2 : scale;
+        
+        this.bird.width = 50 * birdScale; // 2x bigger on mobile
+        this.bird.height = 40 * birdScale; // 2x bigger on mobile
+        
+        console.log(`🐦 Bird size: ${Math.round(this.bird.width)}x${Math.round(this.bird.height)} (Mobile: ${isMobile}, Scale: ${birdScale.toFixed(2)})`);
         this.settings.pipeWidth = Math.max(60 * scale, 40);
         this.settings.pipeGap = Math.max(250 * scale, 180);
         
@@ -1102,14 +1109,18 @@ class FlappyBirdGame {
     resetGame() {
         const scale = Math.max(Math.min(this.canvas.width / 800, this.canvas.height / 600), 0.5);
         
+        // Mobile gets 2x bigger bird for better visibility and touch control
+        const isMobile = window.innerWidth <= 768;
+        const birdScale = isMobile ? scale * 2 : scale;
+        
         // Reset score submission tracking for new game
         this.currentGameSubmitted = false;
         
         this.bird = {
             x: this.canvas.width * 0.15,
             y: this.canvas.height / 2,
-            width: 50 * scale, // Updated to match new sprite
-            height: 40 * scale, // Updated to match new sprite
+            width: 50 * birdScale, // 2x bigger on mobile
+            height: 40 * birdScale, // 2x bigger on mobile
             velocity: 0,
             rotation: 0
         };
