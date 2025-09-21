@@ -84,6 +84,9 @@ class FlappyBirdGame {
         this.gameOverTime = 0;
         this.gameOverDelay = 1000; // 1 second
         
+        // Score submission tracking
+        this.currentGameSubmitted = false;
+        
         // Easter egg power-up system
         this.powerUp = {
             active: false,
@@ -1094,6 +1097,9 @@ class FlappyBirdGame {
     
     resetGame() {
         const scale = Math.max(Math.min(this.canvas.width / 800, this.canvas.height / 600), 0.5);
+        
+        // Reset score submission tracking for new game
+        this.currentGameSubmitted = false;
         
         this.bird = {
             x: this.canvas.width * 0.15,
@@ -2255,9 +2261,12 @@ class FlappyBirdGame {
         this.leaderboard.setPlayerName(name);
         nameInput.style.background = 'rgba(39, 174, 96, 0.2)';
         
-        // Submit current score if game just ended
-        if (this.gameState === 'gameOver' && this.score > 0) {
+        // Submit current score if game just ended and not already submitted
+        if (this.gameState === 'gameOver' && this.score > 0 && !this.currentGameSubmitted) {
             await this.submitScoreToLeaderboard();
+        } else if (this.currentGameSubmitted) {
+            console.log('ℹ️ Score already submitted for this game');
+            document.getElementById('leaderboardStatus').textContent = '✅ Already submitted';
         }
         
         setTimeout(() => {
@@ -2266,7 +2275,9 @@ class FlappyBirdGame {
     }
     
     async submitScoreToLeaderboard() {
-        if (this.score > 0) {
+        if (this.score > 0 && !this.currentGameSubmitted) {
+            this.currentGameSubmitted = true; // Mark as submitted to prevent duplicates
+            
             const submitted = await this.leaderboard.submitScore(this.score);
             
             if (submitted) {
@@ -2276,6 +2287,9 @@ class FlappyBirdGame {
             } else {
                 document.getElementById('leaderboardStatus').textContent = '💾 Saved locally';
             }
+        } else if (this.currentGameSubmitted) {
+            console.log('ℹ️ Score already submitted for this game session');
+            document.getElementById('leaderboardStatus').textContent = '✅ Already submitted';
         }
     }
     
