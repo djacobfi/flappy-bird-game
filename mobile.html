@@ -4,95 +4,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Flappy Bird Adventure - Mobile</title>
-    <meta name="description" content="Epic Flappy Bird adventure game optimized for mobile devices">
+    <meta name="description" content="Mobile-optimized Flappy Bird with hilarious bird, power-ups, and global leaderboards">
     
     <!-- Mobile-specific meta tags -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#4EC0CA">
+    <meta name="theme-color" content="#667eea">
+    
+    <!-- Prevent zoom and selection -->
+    <meta name="format-detection" content="telephone=no">
+    <style>
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
     
     <link rel="stylesheet" href="mobile-styles.css">
 </head>
 <body>
-    <!-- Platform Selection Screen -->
-    <div id="platformSelection" class="platform-screen">
-        <div class="platform-container">
-            <h1>🎮 Flappy Bird Adventure</h1>
-            <p>Choose your platform for the best experience:</p>
-            
-            <div class="platform-options">
-                <button id="selectMobile" class="platform-btn mobile-btn">
-                    📱 Mobile Optimized
-                    <span class="platform-desc">Touch controls, mobile UI, optimized performance</span>
-                </button>
-                
-                <button id="selectDesktop" class="platform-btn desktop-btn">
-                    🖥️ Desktop Version
-                    <span class="platform-desc">Full features, keyboard controls, advanced UI</span>
-                </button>
-            </div>
-            
-            <div class="auto-detect">
-                <p>🤖 Auto-detected: <span id="detectedPlatform">...</span></p>
-                <button id="autoSelect" class="auto-btn">Use Recommended</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Mobile Game Container -->
-    <div id="mobileGame" class="mobile-game-container hidden">
+    <div class="mobile-game-container">
+        <!-- Game Canvas -->
+        <canvas id="gameCanvas" class="mobile-canvas"></canvas>
+        
+        <!-- Mobile UI Overlay -->
         <div class="mobile-ui">
             <!-- Start Screen -->
-            <div id="startScreen" class="screen">
-                <h1>🐦 Flappy Adventure</h1>
-                <p>📱 Mobile Edition</p>
-                <div class="controls">
-                    <button id="startBtn" class="game-btn primary">🚀 Start</button>
-                    <button id="toggleMusic" class="game-btn secondary">🔊 Music</button>
-                    <button id="backToPlatform" class="game-btn tertiary">⬅️ Platform</button>
+            <div id="startScreen" class="mobile-screen">
+                <div class="mobile-header">
+                    <h1>🐦 Flappy Adventure</h1>
+                    <p>Mobile Edition</p>
+                </div>
+                <div class="mobile-controls-info">
+                    <p>👆 Tap anywhere to fly!</p>
+                    <p>🎯 Navigate through pipes</p>
+                    <p>🚀 Collect power-ups for super speed!</p>
+                </div>
+                <div class="mobile-buttons">
+                    <button id="startBtn" class="mobile-btn primary">🚀 Start Flying</button>
+                    <button id="toggleMusic" class="mobile-btn secondary">🔊 Music</button>
                 </div>
             </div>
             
             <!-- Game Over Screen -->
-            <div id="gameOverScreen" class="screen hidden">
-                <h2>🏁 Game Complete!</h2>
-                <div class="score-display">
+            <div id="gameOverScreen" class="mobile-screen hidden">
+                <h2>🏁 Flight Complete!</h2>
+                <div class="mobile-score-display">
                     <p>Score: <span id="finalScore" class="score-number">0</span></p>
                     <p>Best: <span id="bestScore" class="score-number">0</span></p>
                     <p id="globalRank" class="rank-display" style="display: none;">Rank: #<span id="rankNumber">-</span></p>
                 </div>
                 
-                <!-- Mobile Player Name Input -->
+                <!-- Mobile Name Input -->
                 <div class="mobile-name-section">
-                    <input type="text" id="playerNameInput" class="mobile-name-input" maxlength="15" placeholder="Your name">
+                    <input type="text" id="playerNameInput" class="mobile-name-input" maxlength="15" placeholder="Your pilot name">
                     <button id="saveNameBtn" class="mobile-save-btn">💾</button>
                 </div>
                 
-                <!-- Mobile Leaderboard -->
+                <!-- Compact Leaderboard -->
                 <div class="mobile-leaderboard">
-                    <h3>🏆 Top Players</h3>
-                    <div class="leaderboard-status">
-                        <span id="leaderboardStatus">📱 Mobile Leaderboard</span>
-                    </div>
+                    <h3>🏆 Top Pilots</h3>
+                    <div id="leaderboardStatus" class="mobile-status">📡 Loading...</div>
                     <ol id="leaderboardList" class="mobile-leaderboard-list">
                         <li>Loading...</li>
                     </ol>
                 </div>
                 
-                <button id="restartBtn" class="game-btn primary">🔄 Play Again</button>
+                <div class="mobile-buttons">
+                    <button id="restartBtn" class="mobile-btn primary">🔄 Fly Again</button>
+                    <button id="settingsBtn" class="mobile-btn secondary">⚙️ Settings</button>
+                </div>
             </div>
             
             <!-- Mobile HUD -->
             <div id="gameHUD" class="mobile-hud">
                 <div id="score" class="mobile-score">0</div>
                 <div id="difficulty" class="mobile-difficulty">Easy</div>
-                <button id="pauseBtn" class="mobile-pause-btn">⏸️</button>
             </div>
         </div>
-        
-        <!-- Game Canvas -->
-        <canvas id="gameCanvas" class="mobile-canvas"></canvas>
         
         <!-- Mobile Settings Panel -->
         <div id="settingsPanel" class="mobile-settings hidden">
@@ -101,41 +92,64 @@
                 <button id="closeSettingsBtn" class="mobile-close-btn">&times;</button>
             </div>
             
-            <!-- Mobile Volume Controls -->
-            <div class="mobile-volume-section">
+            <!-- Simplified Mobile Audio Controls -->
+            <div class="mobile-audio-section">
+                <h4>🔊 Audio</h4>
+                
                 <div class="mobile-volume-control">
-                    <label for="mobileVolumeSlider">🔊 Volume: <span id="volumeDisplay">70%</span></label>
-                    <input type="range" id="mobileVolumeSlider" min="0" max="100" value="70" class="mobile-slider">
+                    <label>🎵 Music: <span id="musicVolumeDisplay">30%</span></label>
+                    <input type="range" id="musicVolumeSlider" min="0" max="100" value="30" class="mobile-slider">
+                </div>
+                
+                <div class="mobile-volume-control">
+                    <label>🔊 Effects: <span id="tapVolumeDisplay">70%</span></label>
+                    <input type="range" id="tapVolumeSlider" min="0" max="100" value="70" class="mobile-slider">
+                </div>
+                
+                <div class="mobile-volume-control">
+                    <label>🎛️ Master: <span id="masterVolumeDisplay">100%</span></label>
+                    <input type="range" id="masterVolumeSlider" min="0" max="100" value="100" class="mobile-slider master">
                 </div>
             </div>
             
             <!-- Mobile Upload Controls -->
             <div class="mobile-upload-section">
-                <input type="file" id="mobileBirdUpload" accept="image/*">
-                <label for="mobileBirdUpload" class="mobile-upload-btn">🐦 Bird</label>
-                
-                <input type="file" id="mobileSoundUpload" accept="audio/*">
-                <label for="mobileSoundUpload" class="mobile-upload-btn">🔊 Sound</label>
+                <h4>🎨 Customize</h4>
+                <div class="mobile-upload-group">
+                    <input type="file" id="birdUpload" accept="image/*">
+                    <label for="birdUpload" class="mobile-upload-btn">🐦 Bird</label>
+                    <button id="removeBird" class="mobile-remove-btn">❌</button>
+                </div>
+                <div class="mobile-upload-group">
+                    <input type="file" id="tapSoundUpload" accept="audio/*">
+                    <label for="tapSoundUpload" class="mobile-upload-btn">🔊 Tap</label>
+                    <button id="removeTapSound" class="mobile-remove-btn">❌</button>
+                </div>
+            </div>
+            
+            <!-- Platform Switch -->
+            <div class="mobile-platform-switch">
+                <button onclick="window.location.href='platform-selector.html'" class="mobile-switch-btn">
+                    🖥️ Switch to Desktop
+                </button>
             </div>
         </div>
         
-        <!-- Mobile Settings Button -->
-        <button id="mobileSettingsBtn" class="mobile-settings-btn">⚙️</button>
-        
-        <!-- Mobile Touch Instructions -->
-        <div id="touchInstructions" class="touch-instructions">
-            <p>👆 Tap anywhere to fly!</p>
+        <!-- Mobile Touch Indicator -->
+        <div id="touchIndicator" class="touch-indicator">
+            <div class="touch-ripple"></div>
+            <span>👆</span>
         </div>
         
         <!-- Version Number -->
         <div class="mobile-version">v3.0.0-mobile</div>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (same as desktop) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
-    <!-- Game Scripts -->
+    <!-- Mobile Game Scripts -->
     <script src="leaderboard.js"></script>
     <script src="mobile-game.js"></script>
 </body>
