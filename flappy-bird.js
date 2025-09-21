@@ -20,12 +20,11 @@ class FlappyBirdGame {
         this.score = 0;
         this.bestScore = parseInt(localStorage.getItem('flappyBestScore')) || 0;
         
-        // Game settings with proper Flappy Bird physics
+        // Game settings
         this.settings = {
-            // Proper Flappy Bird physics parameters
-            jumpSpeed: 5.0,        // How fast bird jumps upward when tapped
-            fallingConstant: 9.8,  // Gravity acceleration (simulates real gravity)
-            birdSpeed: 4,          // Horizontal movement speed
+            gravity: 0.4,
+            jumpPower: { min: -8, max: -15 },
+            birdSpeed: 4, // Increased from 2 for better responsiveness
             pipeSpeed: 1.5,
             pipeGap: 250,
             pipeWidth: 50
@@ -38,8 +37,8 @@ class FlappyBirdGame {
             basePipeGap: 280
         };
         
-        // Game objects with proper physics
-        this.bird = { x: 0, y: 0, width: 40, height: 30, vertSpeed: 0, rotation: 0 };
+        // Game objects
+        this.bird = { x: 0, y: 0, width: 40, height: 30, velocity: 0, rotation: 0 };
         this.pipes = [];
         this.camera = { x: 0, y: 0 };
         
@@ -1107,7 +1106,7 @@ class FlappyBirdGame {
             y: this.canvas.height / 2,
             width: 50 * scale, // Updated to match new sprite
             height: 40 * scale, // Updated to match new sprite
-            vertSpeed: 0, // Proper Flappy Bird physics
+            velocity: 0,
             rotation: 0
         };
         
@@ -1140,8 +1139,16 @@ class FlappyBirdGame {
     }
     
     jump() {
-        // Proper Flappy Bird physics: reset vertSpeed to jumpSpeed on tap
-        this.bird.vertSpeed = this.settings.jumpSpeed;
+        let jumpPower = this.settings.jumpPower.min;
+        
+        if (this.jumpState.isPressed) {
+            const holdTime = Date.now() - this.jumpState.pressTime;
+            const holdRatio = Math.min(holdTime / this.jumpState.maxHoldTime, 1);
+            jumpPower = this.settings.jumpPower.min + 
+                       (this.settings.jumpPower.max - this.settings.jumpPower.min) * holdRatio;
+        }
+        
+        this.bird.velocity = jumpPower;
         this.playSound('tap');
     }
     
@@ -1158,16 +1165,16 @@ class FlappyBirdGame {
             // Funny bird has different expressions based on state
             let animationSpeed = this.frameDelay;
             
-            if (this.bird.vertSpeed > 4) {
+            if (this.bird.velocity < -5) {
                 // Super excited jumping - very fast animation
                 animationSpeed = 3;
-            } else if (this.bird.vertSpeed > 2) {
+            } else if (this.bird.velocity < -2) {
                 // Normal jumping - fast animation  
                 animationSpeed = Math.max(4, this.frameDelay - 2);
-            } else if (this.bird.vertSpeed < -4) {
+            } else if (this.bird.velocity > 5) {
                 // Panic falling - frantic animation
                 animationSpeed = 2;
-            } else if (this.bird.vertSpeed < -2) {
+            } else if (this.bird.velocity > 2) {
                 // Normal falling - slower animation
                 animationSpeed = this.frameDelay + 3;
             } else {
@@ -1222,30 +1229,36 @@ class FlappyBirdGame {
         if (this.gameState !== 'playing') return;
         
         // Progressive difficulty
+        this.settings.gravity = this.difficulty.baseGravity + (this.score * 0.01);
         this.settings.pipeSpeed = this.difficulty.basePipeSpeed + (this.score * 0.05);
         this.settings.pipeGap = Math.max(this.difficulty.basePipeGap - (this.score * 2), 120);
         
-        // Proper Flappy Bird physics implementation
-        const deltaTime = Math.max(0.5, Math.min(2.0, this.deltaTime || 1)) / 60; // Normalize to 60fps
+        // Update bird physics with delta time
+        const smoothDelta = Math.max(0.5, Math.min(2.0, this.deltaTime || 1)); // Clamp delta
+        this.bird.velocity += this.settings.gravity * smoothDelta;
         
-        // Apply gravity (fallingConstant) to decrease vertSpeed over time
-        this.bird.vertSpeed -= this.settings.fallingConstant * deltaTime;
+        // Continuous jump boost while held
+        if (this.jumpState.isPressed) {
+            const holdTime = Date.now() - this.jumpState.pressTime;
+            if (holdTime < this.jumpState.maxHoldTime) {
+                this.bird.velocity -= 0.3 * smoothDelta;
+            }
+        }
         
-        // Update bird's vertical position based on vertSpeed
-        this.bird.y -= this.bird.vertSpeed * deltaTime * 10; // Scale for game units
+        this.bird.y += this.bird.velocity * smoothDelta;
         
         // Apply power-up speed multiplier with gradual slowdown
         this.updatePowerUpSpeed();
         const currentBirdSpeed = this.settings.birdSpeed * this.powerUp.currentSpeedMultiplier;
         
-        this.bird.x += currentBirdSpeed * deltaTime * 60; // Scale horizontal movement
-        // Bird rotation based on vertSpeed - less tilting for more vertical movement
-        if (this.bird.vertSpeed < 0) {
-            // When falling (negative vertSpeed), minimal rotation for straighter fall
-            this.bird.rotation = Math.min(Math.abs(this.bird.vertSpeed) * 0.02, 0.15);
+        this.bird.x += currentBirdSpeed * smoothDelta;
+        // Bird rotation - less tilting when falling for more vertical descent
+        if (this.bird.velocity > 0) {
+            // When falling, minimal rotation for straighter fall
+            this.bird.rotation = Math.min(this.bird.velocity * 0.02, 0.15); // Much less rotation when falling
         } else {
-            // When jumping (positive vertSpeed), allow some upward tilt
-            this.bird.rotation = Math.max(-this.bird.vertSpeed * 0.03, -0.3);
+            // When jumping, allow some upward tilt
+            this.bird.rotation = Math.max(this.bird.velocity * 0.03, -0.3); // Slight upward tilt when jumping
         }
         
         // Update wing flapping animation
