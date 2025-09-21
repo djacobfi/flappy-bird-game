@@ -1,202 +1,635 @@
-/**
- * Mobile-Optimized Styles for Flappy Bird
- * Applied only on mobile devices for better gameplay
- */
+/* Mobile-Optimized Flappy Bird Styles */
 
-/* Mobile Game Canvas Scaling */
-@media (max-width: 768px) {
-    .fullscreen-game {
-        transform: scale(1.2);
-        transform-origin: center center;
-    }
-    
-    /* Larger touch targets for mobile */
-    .game-btn {
-        font-size: 1.3rem !important;
-        padding: 1rem 2rem !important;
-        min-height: 60px !important;
-        min-width: 200px !important;
-    }
-    
-    /* Mobile-specific HUD scaling */
-    .score-display {
-        font-size: 2.5rem !important;
-        top: 2rem !important;
-    }
-    
-    .difficulty-display {
-        font-size: 1.3rem !important;
-        top: 6rem !important;
-        padding: 0.6rem 1.5rem !important;
-    }
-    
-    /* Settings panel mobile optimization */
-    .settings-panel {
-        width: calc(100vw - 2rem) !important;
-        max-width: none !important;
-        top: 1rem !important;
-        right: calc(-100vw) !important; /* Start off-screen to the right */
-        max-height: calc(100vh - 2rem) !important;
-        /* Keep the original right-based mechanism */
-        transition: right 0.3s ease !important;
-    }
-    
-    .settings-panel:not(.hidden) {
-        right: 1rem !important; /* Slide in from right */
-    }
-    
-    /* Close button mobile optimization */
-    .close-btn {
-        font-size: 2rem !important;
-        width: 40px !important;
-        height: 40px !important;
-        padding: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background: rgba(231, 76, 60, 0.8) !important;
-        border-radius: 50% !important;
-    }
-    
-    .close-btn:hover {
-        background: rgba(192, 57, 43, 0.9) !important;
-        transform: scale(1.1) !important;
-    }
-    
-    /* Add backdrop for mobile settings panel */
-    .settings-panel:not(.hidden)::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: -1;
-        pointer-events: auto;
-    }
-    
-    /* Volume controls mobile-friendly */
-    .volume-slider {
-        height: 12px !important;
-    }
-    
-    .volume-slider::-webkit-slider-thumb {
-        width: 28px !important;
-        height: 28px !important;
-    }
-    
-    /* Upload controls mobile spacing */
-    .upload-group {
-        margin-bottom: 1.2rem !important;
-    }
-    
-    .upload-btn {
-        font-size: 1.1rem !important;
-        padding: 0.8rem 1.5rem !important;
-    }
-    
-    /* Settings button mobile size */
-    .settings-btn {
-        font-size: 1.8rem !important;
-        padding: 1rem !important;
-        width: 60px !important;
-        height: 60px !important;
-    }
-    
-    /* Leaderboard mobile optimization */
-    .leaderboard-section {
-        max-height: 250px !important;
-    }
-    
-    .leaderboard-list li {
-        font-size: 1rem !important;
-        padding: 0.7rem 1rem !important;
-    }
-    
-    .name-input {
-        font-size: 1.2rem !important;
-        padding: 0.7rem !important;
-        width: 180px !important;
-    }
-    
-    /* Version number mobile positioning */
-    .version-number {
-        font-size: 1rem !important;
-        bottom: 1.5rem !important;
-        right: 1.5rem !important;
-        padding: 0.5rem 1rem !important;
-    }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-/* Small mobile phones */
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Platform Selection Screen */
+.platform-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.platform-container {
+    text-align: center;
+    color: white;
+    padding: 2rem;
+    max-width: 90vw;
+}
+
+.platform-container h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.platform-container p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.platform-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.platform-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    color: white;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.platform-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.05);
+}
+
+.platform-desc {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    font-weight: normal;
+}
+
+.mobile-btn {
+    border-color: #e74c3c;
+}
+
+.mobile-btn:hover {
+    background: rgba(231, 76, 60, 0.2);
+    border-color: #e74c3c;
+}
+
+.desktop-btn {
+    border-color: #3498db;
+}
+
+.desktop-btn:hover {
+    background: rgba(52, 152, 219, 0.2);
+    border-color: #3498db;
+}
+
+.auto-detect {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.auto-detect p {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.auto-btn {
+    background: linear-gradient(45deg, #27ae60, #2ecc71);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.8rem 1.5rem;
+    transition: all 0.2s ease;
+}
+
+.auto-btn:hover {
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    transform: scale(1.05);
+}
+
+/* Mobile Game Container */
+.mobile-game-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #87CEEB;
+    overflow: hidden;
+}
+
+.mobile-ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.mobile-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    touch-action: none;
+}
+
+/* Mobile Screens */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    text-align: center;
+    padding: 2rem;
+    pointer-events: auto;
+}
+
+.screen h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+}
+
+.screen h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.screen p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 300px;
+}
+
+/* Mobile Buttons */
+.game-btn {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+    font-size: 1.3rem;
+    font-weight: bold;
+    padding: 1rem 2rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+    min-height: 60px;
+}
+
+.game-btn:hover, .game-btn:active {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.game-btn.primary {
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+}
+
+.game-btn.secondary {
+    background: linear-gradient(45deg, #f39c12, #e67e22);
+}
+
+.game-btn.tertiary {
+    background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+    font-size: 1rem;
+}
+
+/* Mobile HUD */
+.mobile-hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 15;
+}
+
+.mobile-score {
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 3rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+}
+
+.mobile-difficulty {
+    position: absolute;
+    top: 6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1rem;
+    font-weight: bold;
+    color: #27ae60;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.5);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    pointer-events: none;
+}
+
+.mobile-pause-btn {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    font-size: 1.5rem;
+    height: 50px;
+    width: 50px;
+    pointer-events: auto;
+    transition: all 0.2s ease;
+}
+
+.mobile-pause-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.1);
+}
+
+/* Mobile Score Display */
+.score-display {
+    margin: 1.5rem 0;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    padding: 1.5rem;
+}
+
+.score-number {
+    color: #f39c12;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.rank-display {
+    color: #e74c3c !important;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* Mobile Name Input */
+.mobile-name-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.mobile-name-input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    color: white;
+    font-size: 1.1rem;
+    padding: 0.8rem;
+    text-align: center;
+    width: 200px;
+}
+
+.mobile-name-input:focus {
+    outline: none;
+    border-color: #3498db;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.mobile-save-btn {
+    background: linear-gradient(45deg, #27ae60, #2ecc71);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    font-size: 1.2rem;
+    height: 50px;
+    width: 50px;
+    transition: all 0.2s ease;
+}
+
+.mobile-save-btn:hover {
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    transform: scale(1.1);
+}
+
+/* Mobile Leaderboard */
+.mobile-leaderboard {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    margin: 1rem 0;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 1rem;
+    width: 100%;
+}
+
+.mobile-leaderboard h3 {
+    color: #f39c12;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.leaderboard-status {
+    color: #95a5a6;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.mobile-leaderboard-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.mobile-leaderboard-list li {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    font-size: 1rem;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    padding: 0.8rem;
+}
+
+.mobile-leaderboard-list li:nth-child(1) {
+    background: linear-gradient(45deg, #f39c12, #e67e22);
+}
+
+.mobile-leaderboard-list li:nth-child(2) {
+    background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+}
+
+.mobile-leaderboard-list li:nth-child(3) {
+    background: linear-gradient(45deg, #e67e22, #d35400);
+}
+
+/* Mobile Settings */
+.mobile-settings {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 80vw;
+    max-width: 300px;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    transition: right 0.3s ease;
+    z-index: 30;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.mobile-settings:not(.hidden) {
+    right: 0;
+}
+
+.mobile-settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mobile-settings-header h3 {
+    color: white;
+    font-size: 1.3rem;
+}
+
+.mobile-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 2rem;
+    padding: 0.5rem;
+}
+
+.mobile-volume-section {
+    margin-bottom: 2rem;
+}
+
+.mobile-volume-control {
+    margin-bottom: 1.5rem;
+}
+
+.mobile-volume-control label {
+    color: #3498db;
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+}
+
+.mobile-slider {
+    appearance: none;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    cursor: pointer;
+    height: 8px;
+    outline: none;
+    width: 100%;
+}
+
+.mobile-slider::-webkit-slider-thumb {
+    appearance: none;
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    border-radius: 50%;
+    cursor: pointer;
+    height: 24px;
+    width: 24px;
+}
+
+.mobile-upload-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.mobile-upload-btn {
+    background: linear-gradient(45deg, #9b59b6, #8e44ad);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.mobile-upload-btn:hover {
+    background: linear-gradient(45deg, #8e44ad, #9b59b6);
+    transform: scale(1.02);
+}
+
+.mobile-settings-btn {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    font-size: 1.5rem;
+    height: 50px;
+    width: 50px;
+    z-index: 20;
+    transition: all 0.2s ease;
+}
+
+.mobile-settings-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.1);
+}
+
+/* Touch Instructions */
+.touch-instructions {
+    position: fixed;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 20px;
+    color: white;
+    font-size: 1.1rem;
+    padding: 1rem 2rem;
+    z-index: 15;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
+    50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+}
+
+/* Mobile Version */
+.mobile-version {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+    padding: 0.3rem 0.8rem;
+    z-index: 15;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+/* Mobile-Specific Optimizations */
 @media (max-width: 480px) {
-    .fullscreen-game {
-        transform: scale(1.4) !important;
+    .platform-container h1 {
+        font-size: 2rem;
     }
     
-    .score-display {
-        font-size: 3rem !important;
+    .platform-btn {
+        font-size: 1.1rem;
+        padding: 1.2rem;
+    }
+    
+    .mobile-score {
+        font-size: 2.5rem;
+        top: 1.5rem;
+    }
+    
+    .mobile-difficulty {
+        font-size: 0.9rem;
+        top: 5rem;
+    }
+    
+    .touch-instructions {
+        bottom: 2rem;
+        font-size: 1rem;
+        padding: 0.8rem 1.5rem;
+    }
+}
+
+/* Landscape Mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .screen h1 {
+        font-size: 2rem;
+    }
+    
+    .screen h2 {
+        font-size: 1.8rem;
+    }
+    
+    .mobile-score {
+        font-size: 2rem;
+        top: 1rem;
+    }
+    
+    .mobile-difficulty {
+        top: 3.5rem;
+    }
+    
+    .controls {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
     
     .game-btn {
-        font-size: 1.4rem !important;
-        min-width: 250px !important;
-        min-height: 70px !important;
-    }
-    
-    .settings-panel {
-        padding: 1rem !important;
-    }
-    
-    .volume-control label {
-        font-size: 1rem !important;
-    }
-}
-
-/* Large mobile phones and small tablets */
-@media (min-width: 481px) and (max-width: 768px) {
-    .fullscreen-game {
-        transform: scale(1.3) !important;
-    }
-}
-
-/* Portrait mobile specific */
-@media (max-width: 768px) and (orientation: portrait) {
-    .fullscreen-game {
-        transform: scale(1.5) !important;
-    }
-    
-    .score-display {
-        top: 3rem !important;
-    }
-    
-    .difficulty-display {
-        top: 7rem !important;
-    }
-}
-
-/* Landscape mobile specific */
-@media (max-width: 768px) and (orientation: landscape) {
-    .fullscreen-game {
-        transform: scale(1.2) !important;
-    }
-    
-    .settings-panel {
-        max-height: calc(100vh - 1rem) !important;
-        overflow-y: auto !important;
-    }
-}
-
-/* High DPI mobile displays */
-@media (max-width: 768px) and (-webkit-min-device-pixel-ratio: 3) {
-    .fullscreen-game {
-        transform: scale(1.1) !important;
-    }
-    
-    /* Sharper text on high DPI */
-    .score-display,
-    .difficulty-display {
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8) !important;
+        flex: 1;
+        min-width: 120px;
+        padding: 0.8rem 1rem;
     }
 }
