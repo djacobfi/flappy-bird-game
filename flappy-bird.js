@@ -108,7 +108,7 @@ class FlappyBirdGame {
         };
         
         this.easterEggs = [];
-        this.easterEggSpawnChance = 0.12; // 12% chance per pipe
+        this.easterEggSpawnChance = 0.03; // 3% chance per pipe (much rarer)
         
         // Sonic power-up music
         this.sonicMusic = null;
@@ -120,6 +120,9 @@ class FlappyBirdGame {
         
         // Global leaderboard system
         this.leaderboard = new GlobalLeaderboard();
+        
+        // Device-specific configuration
+        this.deviceConfig = new DeviceConfig();
         
         this.init();
     }
@@ -208,16 +211,30 @@ class FlappyBirdGame {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
         
+        // Apply device-specific configuration
+        this.deviceConfig.applyToCanvas(this.canvas);
+        
         // Position bird
         this.bird.x = this.canvas.width * 0.15;
         this.bird.y = this.canvas.height / 2;
         
-        // Scale for different screen sizes
-        const scale = Math.max(Math.min(this.canvas.width / 800, this.canvas.height / 600), 0.5);
-        this.bird.width = 50 * scale; // Updated to match new sprite
-        this.bird.height = 40 * scale; // Updated to match new sprite
-        this.settings.pipeWidth = Math.max(60 * scale, 40);
-        this.settings.pipeGap = Math.max(250 * scale, 180);
+        // Apply device-specific sizing
+        const config = this.deviceConfig.config;
+        const scale = config.gameScale;
+        
+        this.bird.width = config.bird.width;
+        this.bird.height = config.bird.height;
+        this.settings.pipeWidth = config.pipes.width;
+        this.settings.pipeGap = config.pipes.gap;
+        this.settings.birdSpeed = config.bird.speed;
+        this.settings.pipeSpeed = config.pipes.speed;
+        
+        console.log(`📱 Applied ${this.deviceConfig.deviceInfo.type} config:`, {
+            birdSize: `${this.bird.width}x${this.bird.height}`,
+            pipeWidth: this.settings.pipeWidth,
+            pipeGap: this.settings.pipeGap,
+            scale: scale
+        });
         
         window.addEventListener('resize', () => this.setupCanvas());
     }
@@ -1096,16 +1113,17 @@ class FlappyBirdGame {
     }
     
     resetGame() {
-        const scale = Math.max(Math.min(this.canvas.width / 800, this.canvas.height / 600), 0.5);
-        
         // Reset score submission tracking for new game
         this.currentGameSubmitted = false;
+        
+        // Use device-specific configuration
+        const config = this.deviceConfig.config;
         
         this.bird = {
             x: this.canvas.width * 0.15,
             y: this.canvas.height / 2,
-            width: 50 * scale, // Updated to match new sprite
-            height: 40 * scale, // Updated to match new sprite
+            width: config.bird.width,
+            height: config.bird.height,
             velocity: 0,
             rotation: 0
         };
