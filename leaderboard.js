@@ -23,11 +23,16 @@ class GlobalLeaderboard {
         // Local leaderboard fallback
         this.localScores = JSON.parse(localStorage.getItem('flappyLocalLeaderboard')) || [];
         
+        console.log(`📊 Initial local scores loaded: ${this.localScores.length}`);
+        console.log('📋 Local scores:', this.localScores.map(s => `${s.name}: ${s.score}`));
+        
         // Check for backup scores first
         this.checkForBackupScores();
         
         // Clean up any duplicate scores
         this.removeDuplicateScores();
+        
+        console.log(`📊 Final local scores after processing: ${this.localScores.length}`);
         
         // Add demo scores only if truly no scores exist (first time users)
         if (this.localScores.length === 0 && !localStorage.getItem('flappyBestScore')) {
@@ -317,17 +322,45 @@ class GlobalLeaderboard {
     }
     
     async getTotalPlayers() {
+        console.log(`📊 Getting total players - Connected: ${this.isConnected}, Local scores: ${this.localScores.length}`);
+        
         if (!this.isConnected) {
+            console.log(`💾 Using local player count: ${this.localScores.length}`);
             return this.localScores.length;
         }
         
         try {
             const snapshot = await this.db.ref('leaderboard').once('value');
-            return snapshot.numChildren();
+            const firebaseCount = snapshot.numChildren();
+            console.log(`🔥 Firebase player count: ${firebaseCount}`);
+            return firebaseCount;
         } catch (error) {
             console.error('❌ Failed to get total players:', error);
+            console.log(`💾 Fallback to local player count: ${this.localScores.length}`);
             return this.localScores.length;
         }
+    }
+    
+    // Debug methods
+    debugLocalStorage() {
+        console.log('🔍 LocalStorage Debug:');
+        console.log('flappyLocalLeaderboard:', localStorage.getItem('flappyLocalLeaderboard'));
+        console.log('flappyLocalLeaderboard_backup:', localStorage.getItem('flappyLocalLeaderboard_backup'));
+        console.log('flappyBestScore:', localStorage.getItem('flappyBestScore'));
+        console.log('flappyPlayerName:', localStorage.getItem('flappyPlayerName'));
+        console.log('Current localScores array:', this.localScores);
+        console.log('LocalScores count:', this.localScores.length);
+        
+        // Check for any other flappy-related keys
+        const allKeys = Object.keys(localStorage);
+        const flappyKeys = allKeys.filter(key => key.includes('flappy') || key.includes('Flappy'));
+        console.log('All Flappy localStorage keys:', flappyKeys);
+        
+        return {
+            localScores: this.localScores,
+            count: this.localScores.length,
+            allFlappyKeys: flappyKeys
+        };
     }
     
     // Manual score recovery methods

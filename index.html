@@ -4,7 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flappy Bird - Full Screen Adventure</title>
-    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Cache Control for Mobile -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Cache-busted resources -->
+    <link rel="stylesheet" href="styles.css?v=3.1.0">
 </head>
 <body>
     <!-- Full Screen Game Container -->
@@ -77,6 +89,14 @@
                     <label for="masterVolumeSlider">🎛️ Master Volume: <span id="masterVolumeDisplay">100%</span></label>
                     <input type="range" id="masterVolumeSlider" min="0" max="100" value="100" class="volume-slider master-slider">
                 </div>
+                
+                <!-- Debug Controls -->
+                  <div class="debug-controls">
+                      <button id="testBgMusic" class="debug-btn">🎵 Test Background Music</button>
+                      <button id="testAudioContext" class="debug-btn">🔊 Test Audio Context</button>
+                      <button id="debugLeaderboard" class="debug-btn">📊 Debug Leaderboard</button>
+                      <button id="clearCache" class="debug-btn">🔄 Clear Cache & Refresh</button>
+                  </div>
             </div>
             
             <!-- Audio Volume Controls -->
@@ -144,7 +164,7 @@
         <button id="settingsBtn" class="settings-btn" title="Game Settings">⚙️</button>
         
         <!-- Version Number -->
-        <div class="version-number">v3.0.0</div>
+        <div class="version-number">v3.1.0</div>
     </div>
 
     <!-- Firebase SDK -->
@@ -152,7 +172,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
     <!-- Leaderboard System -->
-    <script src="leaderboard.js"></script>
-    <script src="flappy-bird.js"></script>
+    <script src="leaderboard.js?v=3.1.0"></script>
+    <script src="flappy-bird.js?v=3.1.0"></script>
 </body>
 </html>

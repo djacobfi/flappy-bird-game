@@ -5,6 +5,9 @@
 
 class FlappyBirdGame {
     constructor() {
+        // Force cache refresh on mobile browsers
+        this.forceCacheRefresh();
+        
         // Core game elements
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
@@ -108,7 +111,11 @@ class FlappyBirdGame {
             // Safe zone system for post-power-up
             safeZoneActive: false,
             safeZoneStartTime: 0,
-            safeZoneDuration: 3000 // 3 seconds of no new pipes after power-up
+            safeZoneDuration: 3000, // 3 seconds of no new pipes after power-up
+            // Performance tracking for cleanup
+            activeIntervals: [],
+            activeTimeouts: [],
+            activeOscillators: []
         };
         
         this.easterEggs = [];
@@ -131,7 +138,7 @@ class FlappyBirdGame {
     loadSonicMusic() {
         // Load the Sonic "Gotta Go Fast" music
         this.sonicMusic = new Audio('Gotta Go Fast (Sonic Theme) - MLG Sound Effect (HD) ( 160kbps ).mp3');
-        this.sonicMusic.volume = 0.7;
+        this.sonicMusic.volume = this.getEffectiveVolume('powerup');
         this.sonicMusic.loop = false; // Play once during power-up
         
         // Add comprehensive error handling and debugging
@@ -196,6 +203,16 @@ class FlappyBirdGame {
         this.frameInterval = 1000 / this.targetFPS;
         this.lastFrameTime = 0;
         this.deltaTime = 0;
+        
+        // Performance monitoring for automatic quality adjustment
+        this.performanceMonitor = {
+            frameCount: 0,
+            lagFrames: 0,
+            lastPerformanceCheck: Date.now(),
+            performanceCheckInterval: 5000, // Check every 5 seconds
+            maxLagFrames: 50, // If more than 50 lag frames in 5 seconds, reduce quality
+            qualityReduced: false
+        };
         
         // Store optimization flags for later use
         this.deviceOptimization = {
@@ -482,7 +499,13 @@ class FlappyBirdGame {
         this.audio.sounds.crash = this.createNoiseSound(3.0);
         
         // Default background music - full melody (ensure it works on mobile)
-        this.audio.sounds.bgMusic = this.createMelodySound();
+        if (this.audioContext) {
+            this.audio.sounds.bgMusic = this.createMelodySound();
+            console.log('✅ Background music system created');
+        } else {
+            console.warn('⚠️ Cannot create background music - no audio context');
+            this.audio.sounds.bgMusic = null;
+        }
     }
     
     loadMarioTapSound() {
@@ -491,7 +514,7 @@ class FlappyBirdGame {
         
         // Try the simple filename first (no spaces)
         const marioLaugh = new Audio('mario-laugh.mp3');
-        marioLaugh.volume = 0.6;
+        marioLaugh.volume = this.getEffectiveVolume('tap');
         marioLaugh.preload = 'auto';
         
         let isLoaded = false;
@@ -528,7 +551,7 @@ class FlappyBirdGame {
             console.warn('⚠️ Simple filename failed, trying original filename...');
             
             const marioLaughOriginal = new Audio('Super mario laugh Sound Effects.mp3');
-            marioLaughOriginal.volume = 0.6;
+            marioLaughOriginal.volume = this.getEffectiveVolume('tap');
             marioLaughOriginal.preload = 'auto';
             
             marioLaughOriginal.addEventListener('canplaythrough', () => {
@@ -631,12 +654,13 @@ class FlappyBirdGame {
             
             masterGain.connect(this.audioContext.destination);
             
-            // Pleasant envelope for musical feedback
+            // Pleasant envelope for musical feedback with volume control
+            const effectiveVolume = this.getEffectiveVolume('tap');
             masterGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-            masterGain.gain.linearRampToValueAtTime(0.4, this.audioContext.currentTime + 0.02); // Gentler attack
-            masterGain.gain.exponentialRampToValueAtTime(0.25, this.audioContext.currentTime + 0.08); // Moderate sustain
-            masterGain.gain.exponentialRampToValueAtTime(0.15, this.audioContext.currentTime + 0.3); // Maintain presence
-            masterGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration); // Smooth fade
+            masterGain.gain.linearRampToValueAtTime(0.4 * effectiveVolume, this.audioContext.currentTime + 0.02); // Gentler attack
+            masterGain.gain.exponentialRampToValueAtTime(0.25 * effectiveVolume, this.audioContext.currentTime + 0.08); // Moderate sustain
+            masterGain.gain.exponentialRampToValueAtTime(0.15 * effectiveVolume, this.audioContext.currentTime + 0.3); // Maintain presence
+            masterGain.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + duration); // Smooth fade
             
             // Launch all oscillators for MAXIMUM IMPACT!
             const startTime = this.audioContext.currentTime;
@@ -733,12 +757,13 @@ class FlappyBirdGame {
             
             masterGain.connect(this.audioContext.destination);
             
-            // CATASTROPHIC envelope - INSTANT DOOM!
+            // CATASTROPHIC envelope with volume control - INSTANT DOOM!
+            const effectiveVolume = this.getEffectiveVolume('crash');
             masterGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-            masterGain.gain.linearRampToValueAtTime(1.2, this.audioContext.currentTime + 0.02); // MASSIVE IMPACT!
-            masterGain.gain.exponentialRampToValueAtTime(0.4, this.audioContext.currentTime + 0.1); // Sustain the doom
-            masterGain.gain.exponentialRampToValueAtTime(0.1, this.audioContext.currentTime + 0.8); // Slow fade of despair
-            masterGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration); // Final silence
+            masterGain.gain.linearRampToValueAtTime(1.2 * effectiveVolume, this.audioContext.currentTime + 0.02); // MASSIVE IMPACT!
+            masterGain.gain.exponentialRampToValueAtTime(0.4 * effectiveVolume, this.audioContext.currentTime + 0.1); // Sustain the doom
+            masterGain.gain.exponentialRampToValueAtTime(0.1 * effectiveVolume, this.audioContext.currentTime + 0.8); // Slow fade of despair
+            masterGain.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + duration); // Final silence
             
             // UNLEASH THE CHAOS!
             const startTime = this.audioContext.currentTime;
@@ -975,7 +1000,11 @@ class FlappyBirdGame {
             removeCrashSound: () => this.removeCustomSound('crash'),
             removeBgMusic: () => this.removeCustomSound('bgMusic'),
             saveNameBtn: () => this.savePlayerName(),
-            refreshLeaderboard: () => this.refreshLeaderboard()
+            refreshLeaderboard: () => this.refreshLeaderboard(),
+            testBgMusic: () => this.testBackgroundMusic(),
+            testAudioContext: () => this.testAudioContext(),
+            debugLeaderboard: () => this.leaderboard.debugLocalStorage(),
+            clearCache: () => this.clearCacheAndRefresh()
         };
         
         // Setup volume sliders
@@ -1130,10 +1159,21 @@ class FlappyBirdGame {
         this.score = 0;
         this.camera = { x: 0, y: 0 };
         
-        // Reset power-up
+        // Reset power-up and clean up any remaining resources
         if (this.powerUp.active) {
             this.deactivatePowerUp();
         }
+        
+        // Force cleanup of any remaining power-up resources (safety net)
+        this.powerUp.activeIntervals.forEach(interval => clearInterval(interval));
+        this.powerUp.activeTimeouts.forEach(timeout => clearTimeout(timeout));
+        this.powerUp.activeOscillators.forEach(osc => {
+            try { osc.stop(); } catch (e) {}
+        });
+        this.powerUp.activeIntervals = [];
+        this.powerUp.activeTimeouts = [];
+        this.powerUp.activeOscillators = [];
+        
         this.powerUp.gracePipeAllowed = false;
         this.powerUp.gracePipeUsed = false;
         this.powerUp.slowdownActive = false;
@@ -1331,12 +1371,20 @@ class FlappyBirdGame {
         const maxSpeedIncrease = this.settings.pipeSpeed * 2; // Cap at 3x original speed
         const dynamicPipeSpeed = this.settings.pipeSpeed + Math.min(speedIncrease, maxSpeedIncrease);
         
+        // Performance optimization: Hard limit on pipe count to prevent memory issues
+        const MAX_PIPES = 15; // Reasonable limit for high scores
+        if (this.pipes.length > MAX_PIPES) {
+            console.log(`⚡ Performance: Limiting pipes to ${MAX_PIPES} (was ${this.pipes.length})`);
+            this.pipes = this.pipes.slice(-MAX_PIPES);
+        }
+        
         for (let i = this.pipes.length - 1; i >= 0; i--) {
             const pipe = this.pipes[i];
             pipe.x -= dynamicPipeSpeed;
             
             // Remove off-screen pipes
-            if (pipe.x + this.settings.pipeWidth < this.camera.x - 100) {
+            // Remove pipes that are off-screen (more aggressive cleanup for performance)
+            if (pipe.x + this.settings.pipeWidth < this.camera.x - 50) {
                 this.pipes.splice(i, 1);
                 continue;
             }
@@ -1409,65 +1457,87 @@ class FlappyBirdGame {
             this.bird.x + this.canvas.width * 0.8 : 
             this.pipes[this.pipes.length - 1].x + pipeSpacing;
         
-        // Determine pipe type for variety
+        // Determine pipe type for variety with better balance for playability
         const pipeTypeRandom = Math.random();
         let pipeType;
         
-        if (pipeTypeRandom < 0.6) {
-            pipeType = 'full'; // 60% chance - traditional full pipe
-        } else if (pipeTypeRandom < 0.8) {
-            pipeType = 'topOnly'; // 20% chance - only top pipe (fly under)
+        // Consider previous pipe type for smoother transitions
+        const lastPipeType = this.pipes.length > 0 ? this.pipes[this.pipes.length - 1].type : 'full';
+        
+        // Early game: mostly traditional pipes for easier learning
+        if (this.score < 5) {
+            pipeType = 'full'; // Only traditional pipes for first 5 points
+        } else if (this.score < 15) {
+            // Gradual introduction of variety
+            if (pipeTypeRandom < 0.8) {
+                pipeType = 'full'; // 80% chance - traditional full pipe
+            } else if (pipeTypeRandom < 0.9) {
+                pipeType = 'topOnly'; // 10% chance - only top pipe (fly under)
+            } else {
+                pipeType = 'bottomOnly'; // 10% chance - only bottom pipe (fly over)
+            }
         } else {
-            pipeType = 'bottomOnly'; // 20% chance - only bottom pipe (fly over)
+            // Full variety but still balanced for playability
+            if (pipeTypeRandom < 0.7) {
+                pipeType = 'full'; // 70% chance - traditional full pipe (increased for stability)
+            } else if (pipeTypeRandom < 0.85) {
+                pipeType = 'topOnly'; // 15% chance - only top pipe (fly under)
+            } else {
+                pipeType = 'bottomOnly'; // 15% chance - only bottom pipe (fly over)
+            }
+            
+            // Avoid consecutive special pipe types for better flow
+            if (lastPipeType !== 'full' && pipeType !== 'full' && Math.random() < 0.6) {
+                pipeType = 'full'; // 60% chance to return to normal pipe after special pipe
+            }
         }
         
         // Create pipe based on type
         let pipe;
         
         if (pipeType === 'full') {
-            // Traditional pipe with gap
+            // Traditional pipe with gap - Smooth, playable pipe positioning with gradual transitions
             let topHeight;
             
-            // Enhanced random positioning with pattern variations
-            const pattern = Math.random();
-            
-            if (pattern < 0.3) {
-                // High pipes (30% chance) - gap in upper area
-                const upperRange = (maxHeight - minHeight) * 0.3;
-                topHeight = minHeight + Math.random() * upperRange;
-            } else if (pattern < 0.6) {
-                // Low pipes (30% chance) - gap in lower area  
-                const lowerRange = (maxHeight - minHeight) * 0.3;
-                topHeight = maxHeight - lowerRange + Math.random() * lowerRange;
-            } else if (pattern < 0.8) {
-                // Middle pipes (20% chance) - gap in center area
+            if (this.pipes.length === 0) {
+                // First pipe - start in middle area for easier entry
                 const centerY = (minHeight + maxHeight) / 2;
-                const centerRange = (maxHeight - minHeight) * 0.3;
+                const centerRange = (maxHeight - minHeight) * 0.4;
                 topHeight = centerY - centerRange/2 + Math.random() * centerRange;
             } else {
-                // Completely random (20% chance) - anywhere
-                topHeight = minHeight + Math.random() * (maxHeight - minHeight);
-            }
-            
-            // Add some influence from previous pipe to create flowing patterns
-            if (this.pipes.length > 0) {
+                // Subsequent pipes - create smooth, playable transitions
                 const lastPipe = this.pipes[this.pipes.length - 1];
+                const lastHeight = lastPipe.topHeight;
                 
-                // Adjust influence based on difficulty - harder = more erratic
-                const difficultyFactor = Math.min(this.score / 20, 1); // 0 to 1 based on score
-                const influence = 0.3 - (difficultyFactor * 0.1); // Less influence = more erratic
-                const randomness = 0.7 + (difficultyFactor * 0.2); // More randomness = more erratic
+                // Calculate maximum safe movement based on bird flight capability
+                const birdJumpHeight = this.settings.jumpPower.max * 8; // Approximate bird jump reach
+                const maxSafeMovement = Math.min(birdJumpHeight * 0.6, 120); // Conservative safe movement
                 
-                topHeight = topHeight * randomness + lastPipe.topHeight * influence;
+                // Difficulty scaling - more challenging but still playable
+                const difficultyFactor = Math.min(this.score / 30, 0.8); // Cap at 80% difficulty
+                const currentMaxMovement = maxSafeMovement * (0.5 + difficultyFactor * 0.5); // 50% to 100% of safe movement
                 
-                // Add difficulty-based extreme positions
-                if (this.score > 10 && Math.random() < 0.1) {
-                    // 10% chance for extreme positions after score 10
-                    topHeight = Math.random() < 0.5 ? minHeight + 20 : maxHeight - 20;
+                // Generate smooth transition with controlled randomness
+                const direction = (Math.random() - 0.5) * 2; // -1 to 1
+                const movement = direction * Math.random() * currentMaxMovement;
+                
+                topHeight = lastHeight + movement;
+                
+                // Gentle drift toward center to prevent getting stuck at extremes
+                const centerY = (minHeight + maxHeight) / 2;
+                const distanceFromCenter = Math.abs(topHeight - centerY);
+                const maxDistanceFromCenter = (maxHeight - minHeight) * 0.4;
+                
+                if (distanceFromCenter > maxDistanceFromCenter) {
+                    // Gently pull back toward center
+                    const pullStrength = 0.3;
+                    const pullDirection = topHeight > centerY ? -1 : 1;
+                    topHeight += pullDirection * currentMaxMovement * pullStrength;
                 }
                 
-                // Ensure we stay within bounds
-                topHeight = Math.max(minHeight, Math.min(maxHeight, topHeight));
+                // Ensure we stay within playable bounds (with margin)
+                const safeMargin = 40;
+                topHeight = Math.max(minHeight + safeMargin, Math.min(maxHeight - safeMargin, topHeight));
             }
             
             pipe = {
@@ -1479,8 +1549,26 @@ class FlappyBirdGame {
             };
             
         } else if (pipeType === 'topOnly') {
-            // Only top pipe - fly underneath
-            const topHeight = this.canvas.height * 0.3 + Math.random() * (this.canvas.height * 0.4);
+            // Only top pipe - fly underneath with smooth transitions
+            let topHeight;
+            
+            if (this.pipes.length === 0) {
+                // First pipe - reasonable starting position
+                topHeight = this.canvas.height * 0.4 + Math.random() * (this.canvas.height * 0.2);
+            } else {
+                // Smooth transition from previous pipe
+                const lastPipe = this.pipes[this.pipes.length - 1];
+                const lastHeight = lastPipe.type === 'topOnly' ? lastPipe.topHeight : 
+                                lastPipe.type === 'bottomOnly' ? this.canvas.height * 0.5 :
+                                lastPipe.topHeight;
+                
+                const maxMovement = 80; // Conservative movement for playability
+                const movement = (Math.random() - 0.5) * maxMovement;
+                topHeight = lastHeight + movement;
+                
+                // Keep within reasonable bounds for topOnly pipes
+                topHeight = Math.max(this.canvas.height * 0.2, Math.min(this.canvas.height * 0.6, topHeight));
+            }
             
             pipe = {
                 x: pipeX,
@@ -1491,8 +1579,26 @@ class FlappyBirdGame {
             };
             
         } else { // bottomOnly
-            // Only bottom pipe - fly overhead
-            const bottomHeight = this.canvas.height * 0.4 + Math.random() * (this.canvas.height * 0.3);
+            // Only bottom pipe - fly overhead with smooth transitions
+            let bottomHeight;
+            
+            if (this.pipes.length === 0) {
+                // First pipe - reasonable starting position
+                bottomHeight = this.canvas.height * 0.6 + Math.random() * (this.canvas.height * 0.2);
+            } else {
+                // Smooth transition from previous pipe
+                const lastPipe = this.pipes[this.pipes.length - 1];
+                const lastHeight = lastPipe.type === 'bottomOnly' ? lastPipe.bottomY :
+                                lastPipe.type === 'topOnly' ? this.canvas.height * 0.6 :
+                                lastPipe.bottomY;
+                
+                const maxMovement = 80; // Conservative movement for playability
+                const movement = (Math.random() - 0.5) * maxMovement;
+                bottomHeight = lastHeight + movement;
+                
+                // Keep within reasonable bounds for bottomOnly pipes
+                bottomHeight = Math.max(this.canvas.height * 0.4, Math.min(this.canvas.height * 0.8, bottomHeight));
+            }
             
             pipe = {
                 x: pipeX,
@@ -1551,6 +1657,13 @@ class FlappyBirdGame {
     }
     
     updateEasterEggs() {
+        // Performance optimization: Limit easter eggs count
+        const MAX_EASTER_EGGS = 5;
+        if (this.easterEggs.length > MAX_EASTER_EGGS) {
+            console.log(`⚡ Performance: Limiting easter eggs to ${MAX_EASTER_EGGS} (was ${this.easterEggs.length})`);
+            this.easterEggs = this.easterEggs.slice(-MAX_EASTER_EGGS);
+        }
+        
         for (let i = this.easterEggs.length - 1; i >= 0; i--) {
             const egg = this.easterEggs[i];
             
@@ -1558,8 +1671,8 @@ class FlappyBirdGame {
             egg.rotation += 0.1;
             egg.pulseScale = 1 + Math.sin(Date.now() * 0.01 + i) * 0.2;
             
-            // Remove off-screen eggs
-            if (egg.x + egg.width < this.camera.x - 100) {
+            // Remove off-screen eggs (more aggressive cleanup)
+            if (egg.x + egg.width < this.camera.x - 50) {
                 this.easterEggs.splice(i, 1);
                 continue;
             }
@@ -1644,7 +1757,7 @@ class FlappyBirdGame {
                 // Create rapid-fire epic notes
                 const frequencies = [880, 1046.5, 1318.5, 1760]; // A-C-E-A progression
                 frequencies.forEach((freq, index) => {
-                    setTimeout(() => {
+                    const timeout = setTimeout(() => {
                         const osc = this.audioContext.createOscillator();
                         const gain = this.audioContext.createGain();
                         
@@ -1654,23 +1767,65 @@ class FlappyBirdGame {
                         gain.connect(this.audioContext.destination);
                         
                         gain.gain.setValueAtTime(0, this.audioContext.currentTime);
-                        gain.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + 0.01);
-                        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+                        gain.gain.linearRampToValueAtTime(0.3 * this.getEffectiveVolume('powerup'), this.audioContext.currentTime + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.01 * this.getEffectiveVolume('powerup'), this.audioContext.currentTime + 0.2);
                         
                         osc.start(this.audioContext.currentTime);
                         osc.stop(this.audioContext.currentTime + 0.2);
+                        
+                        // Track oscillator for cleanup
+                        this.powerUp.activeOscillators.push(osc);
+                        
+                        // Clean up oscillator reference after it stops
+                        setTimeout(() => {
+                            const index = this.powerUp.activeOscillators.indexOf(osc);
+                            if (index > -1) {
+                                this.powerUp.activeOscillators.splice(index, 1);
+                            }
+                        }, 250);
                     }, index * 50);
+                    
+                    // Track timeout for cleanup
+                    this.powerUp.activeTimeouts.push(timeout);
                 });
             } else {
                 clearInterval(powerUpInterval);
             }
         }, 200); // Fast, energetic rhythm
+        
+        // Track interval for cleanup
+        this.powerUp.activeIntervals.push(powerUpInterval);
     }
     
     deactivatePowerUp() {
         this.powerUp.active = false;
         this.powerUp.gracePipeAllowed = true; // Enable grace pipe
         this.powerUp.gracePipeUsed = false; // Reset grace pipe usage
+        
+        // CRITICAL: Clean up all power-up intervals, timeouts, and oscillators to prevent memory leaks
+        console.log(`🧹 Cleaning up ${this.powerUp.activeIntervals.length} intervals, ${this.powerUp.activeTimeouts.length} timeouts, ${this.powerUp.activeOscillators.length} oscillators`);
+        
+        // Clear all intervals
+        this.powerUp.activeIntervals.forEach(interval => {
+            clearInterval(interval);
+        });
+        this.powerUp.activeIntervals = [];
+        
+        // Clear all timeouts
+        this.powerUp.activeTimeouts.forEach(timeout => {
+            clearTimeout(timeout);
+        });
+        this.powerUp.activeTimeouts = [];
+        
+        // Stop all oscillators
+        this.powerUp.activeOscillators.forEach(osc => {
+            try {
+                osc.stop();
+            } catch (e) {
+                // Oscillator might already be stopped
+            }
+        });
+        this.powerUp.activeOscillators = [];
         
         // Start gradual slowdown
         this.powerUp.slowdownActive = true;
@@ -1913,18 +2068,32 @@ class FlappyBirdGame {
             });
         } else if (this.audio.sounds.bgMusic) {
             try {
+                console.log('🎵 Attempting to start default background music...');
+                console.log('Audio context state:', this.audioContext ? this.audioContext.state : 'null');
+                console.log('Background music object:', !!this.audio.sounds.bgMusic);
+                
                 // Ensure audio context is resumed (critical for mobile)
                 if (this.audioContext && this.audioContext.state === 'suspended') {
                     console.log('🔊 Resuming audio context for background music...');
                     this.audioContext.resume().then(() => {
                         console.log('✅ Audio context resumed, starting background music');
-                        this.audio.sounds.bgMusic.start();
+                        try {
+                            this.audio.sounds.bgMusic.start();
+                            console.log('✅ Background music started successfully');
+                        } catch (startError) {
+                            console.error('❌ Failed to start background music after resume:', startError);
+                        }
                     }).catch(e => {
                         console.error('❌ Failed to resume audio context:', e);
                     });
                 } else if (this.audioContext) {
                     console.log('🎵 Starting background music (audio context ready)');
-                    this.audio.sounds.bgMusic.start();
+                    try {
+                        this.audio.sounds.bgMusic.start();
+                        console.log('✅ Background music started successfully');
+                    } catch (startError) {
+                        console.error('❌ Failed to start background music:', startError);
+                    }
                 } else {
                     console.warn('⚠️ No audio context available for background music');
                 }
@@ -1977,12 +2146,9 @@ class FlappyBirdGame {
     }
     
     applyVolumeSettings() {
-        const masterMultiplier = this.audio.volumes.master / 100;
-        
         // Update background music volume
         if (this.audio.custom.bgMusic) {
-            this.audio.custom.bgMusic.volume = this.audio.enabled ? 
-                (this.audio.volumes.music / 100) * masterMultiplier : 0;
+            this.audio.custom.bgMusic.volume = this.getEffectiveVolume('music');
         }
         
         // Update sonic music volume
@@ -2317,6 +2483,92 @@ class FlappyBirdGame {
         this.updateRemoveButtonState('bgMusic');
     }
     
+    // Debug Methods
+    testBackgroundMusic() {
+        console.log('🎵 Manual background music test...');
+        console.log('Audio context:', this.audioContext ? this.audioContext.state : 'null');
+        console.log('Background music object:', !!this.audio.sounds.bgMusic);
+        console.log('Audio enabled:', this.audio.enabled);
+        console.log('Music volume:', this.getEffectiveVolume('music'));
+        
+        if (this.audio.sounds.bgMusic) {
+            try {
+                this.audio.sounds.bgMusic.start();
+                console.log('✅ Background music test started');
+            } catch (e) {
+                console.error('❌ Background music test failed:', e);
+            }
+        } else {
+            console.warn('⚠️ No background music object available');
+        }
+    }
+    
+    testAudioContext() {
+        console.log('🔊 Audio context test...');
+        console.log('Audio context exists:', !!this.audioContext);
+        console.log('Audio context state:', this.audioContext ? this.audioContext.state : 'null');
+        console.log('Audio context sample rate:', this.audioContext ? this.audioContext.sampleRate : 'null');
+        
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            console.log('🔄 Attempting to resume audio context...');
+            this.audioContext.resume().then(() => {
+                console.log('✅ Audio context resumed successfully');
+            }).catch(e => {
+                console.error('❌ Failed to resume audio context:', e);
+            });
+        }
+    }
+    
+    clearCacheAndRefresh() {
+        console.log('🔄 Manual cache clear requested...');
+        
+        // Show confirmation dialog
+        if (confirm('This will clear all cached data and refresh the game. Continue?')) {
+            // Clear localStorage (except important game data)
+            const keysToKeep = ['flappyBestScore', 'flappyPlayerName', 'flappyLocalLeaderboard', 'flappyLocalLeaderboard_backup'];
+            const allKeys = Object.keys(localStorage);
+            
+            allKeys.forEach(key => {
+                if (!keysToKeep.includes(key)) {
+                    localStorage.removeItem(key);
+                    console.log('🧹 Cleared:', key);
+                }
+            });
+            
+            // Update version to force cache refresh
+            localStorage.setItem('flappyGameVersion', '3.1.0-cleared-' + Date.now());
+            
+            // Clear service worker cache if available
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(registration => {
+                    if (registration.active) {
+                        registration.active.postMessage({ type: 'CLEAR_CACHE' });
+                    }
+                }).catch(e => console.log('Service worker not available:', e.message));
+            }
+            
+            // Clear browser cache (force reload)
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => {
+                        caches.delete(name);
+                        console.log('🧹 Cleared cache:', name);
+                    });
+                }).then(() => {
+                    // Force reload with cache bypass
+                    setTimeout(() => {
+                        window.location.href = window.location.href + '?nocache=' + Date.now();
+                    }, 500);
+                });
+            } else {
+                // Fallback for browsers without Cache API
+                setTimeout(() => {
+                    window.location.href = window.location.href + '?nocache=' + Date.now();
+                }, 500);
+            }
+        }
+    }
+    
     // Leaderboard Methods
     async savePlayerName() {
         const nameInput = document.getElementById('playerNameInput');
@@ -2498,7 +2750,12 @@ class FlappyBirdGame {
                         audio.play();
                     }
                 } else {
-                    audio.volume = 0.5;
+                    // Set appropriate volume based on sound type
+                    if (soundType === 'tap') {
+                        audio.volume = this.getEffectiveVolume('tap');
+                    } else if (soundType === 'crash') {
+                        audio.volume = this.getEffectiveVolume('crash');
+                    }
                     this.audio.custom[soundType + 'Sound'] = audio;
                 }
                 
@@ -3533,6 +3790,26 @@ class FlappyBirdGame {
         // Calculate delta time for smooth movement
         this.deltaTime = (currentTime - this.lastFrameTime) / 16.67; // Normalize to 60fps
         
+        // Performance monitoring
+        this.performanceMonitor.frameCount++;
+        if (this.deltaTime > 2) { // Frame took more than 2x expected time
+            this.performanceMonitor.lagFrames++;
+        }
+        
+        // Check performance every 5 seconds and adjust if needed
+        if (currentTime - this.performanceMonitor.lastPerformanceCheck > this.performanceMonitor.performanceCheckInterval) {
+            if (this.performanceMonitor.lagFrames > this.performanceMonitor.maxLagFrames && !this.performanceMonitor.qualityReduced) {
+                console.log(`⚡ Performance issue detected: ${this.performanceMonitor.lagFrames} lag frames in 5s. Reducing quality.`);
+                this.frameInterval = 1000 / 45; // Reduce to 45 FPS
+                this.performanceMonitor.qualityReduced = true;
+            }
+            
+            // Reset counters
+            this.performanceMonitor.frameCount = 0;
+            this.performanceMonitor.lagFrames = 0;
+            this.performanceMonitor.lastPerformanceCheck = currentTime;
+        }
+        
         // Frame rate limiting for performance (but smoother)
         if (currentTime - this.lastFrameTime >= this.frameInterval) {
             this.update();
@@ -3541,6 +3818,160 @@ class FlappyBirdGame {
         }
         
         requestAnimationFrame(() => this.gameLoop());
+    }
+    
+    // Mobile Cache Management
+    forceCacheRefresh() {
+        // Check if we're on mobile
+        const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase());
+        
+        if (isMobile) {
+            console.log('📱 Mobile detected - implementing cache refresh strategies');
+            
+            // Force reload if localStorage indicates stale cache
+            const currentVersion = '3.1.0';
+            const storedVersion = localStorage.getItem('flappyGameVersion');
+            
+            if (storedVersion !== currentVersion) {
+                console.log(`🔄 Version change detected: ${storedVersion} → ${currentVersion}`);
+                localStorage.setItem('flappyGameVersion', currentVersion);
+                
+                // Clear any cached audio or image objects
+                this.clearCachedAssets();
+                
+                // Force browser to bypass cache on next resource loads
+                this.addCacheBustingToImages();
+            }
+            
+        // Add mobile-specific performance optimizations
+        this.optimizeForMobile();
+        
+        // Set up mobile app lifecycle detection
+        this.setupMobileLifecycleHandlers();
+        }
+    }
+    
+    clearCachedAssets() {
+        // Clear any cached audio references
+        if (typeof(Storage) !== "undefined") {
+            // Clear audio-related cache keys
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('audio') || key.includes('sound') || key.includes('music'))) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => {
+                console.log(`🧹 Clearing cached asset: ${key}`);
+                localStorage.removeItem(key);
+            });
+        }
+    }
+    
+    addCacheBustingToImages() {
+        // Add timestamp to any dynamically loaded images
+        this.cacheBustParam = `?cb=${Date.now()}`;
+        console.log('🔄 Cache busting parameter added:', this.cacheBustParam);
+    }
+    
+    optimizeForMobile() {
+        // Mobile-specific optimizations
+        if (window.navigator && window.navigator.serviceWorker) {
+            // Register service worker for better cache control
+            window.navigator.serviceWorker.register('/sw.js').then(() => {
+                console.log('📱 Service worker registered for cache control');
+            }).catch(err => {
+                console.log('📱 Service worker registration failed (normal if not available):', err.message);
+            });
+        }
+        
+        // Prevent mobile zoom and improve touch response
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    }
+    
+    setupMobileLifecycleHandlers() {
+        // Handle mobile app lifecycle events
+        let appHidden = false;
+        let appHiddenTime = 0;
+        
+        // Page visibility API for mobile app switching
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                appHidden = true;
+                appHiddenTime = Date.now();
+                console.log('📱 App hidden - pausing game');
+                
+                // Pause game if playing
+                if (this.gameState === 'playing') {
+                    this.gameState = 'paused';
+                }
+            } else {
+                console.log('📱 App visible - checking for updates');
+                
+                if (appHidden) {
+                    const hiddenDuration = Date.now() - appHiddenTime;
+                    
+                    // If app was hidden for more than 30 seconds, check for cache issues
+                    if (hiddenDuration > 30000) {
+                        console.log('📱 App was hidden for', hiddenDuration, 'ms - checking cache');
+                        this.checkForCacheIssues();
+                    }
+                    
+                    // Resume game if it was playing
+                    if (this.gameState === 'paused') {
+                        this.gameState = 'playing';
+                    }
+                }
+                
+                appHidden = false;
+            }
+        });
+        
+        // Handle mobile browser refresh/reload
+        window.addEventListener('beforeunload', () => {
+            console.log('📱 Page unloading - saving state');
+            localStorage.setItem('flappyLastSession', Date.now().toString());
+        });
+        
+        // Check for stale sessions on load
+        const lastSession = localStorage.getItem('flappyLastSession');
+        if (lastSession) {
+            const sessionAge = Date.now() - parseInt(lastSession);
+            if (sessionAge > 300000) { // 5 minutes
+                console.log('📱 Stale session detected - clearing cache');
+                this.clearCachedAssets();
+            }
+        }
+    }
+    
+    checkForCacheIssues() {
+        // Check if the game is running an old version
+        const currentVersion = '3.1.0';
+        const storedVersion = localStorage.getItem('flappyGameVersion');
+        
+        if (!storedVersion || storedVersion !== currentVersion) {
+            console.log('📱 Version mismatch detected - refreshing');
+            localStorage.setItem('flappyGameVersion', currentVersion);
+            
+            // Gentle refresh without losing game state
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
     }
 }
 
