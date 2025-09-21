@@ -93,6 +93,59 @@ class MobileUIComponents {
     }
 
     /**
+     * Create mobile start screen
+     */
+    createMobileStartScreen() {
+        const screen = document.createElement('div');
+        screen.id = 'mobileStartScreen';
+        screen.className = 'mobile-start-screen';
+        
+        const content = document.createElement('div');
+        content.className = 'mobile-start-content';
+        
+        content.innerHTML = `
+            <h1>🐦 Flappy Bird</h1>
+            <p>Touch anywhere to start flying!</p>
+            <div class="mobile-start-instructions">
+                <div class="instruction-item">
+                    <span class="instruction-icon">👆</span>
+                    <span class="instruction-text">Tap to fly</span>
+                </div>
+                <div class="instruction-item">
+                    <span class="instruction-icon">📱</span>
+                    <span class="instruction-text">Hold for longer jumps</span>
+                </div>
+                <div class="instruction-item">
+                    <span class="instruction-icon">🎯</span>
+                    <span class="instruction-text">Avoid the pipes</span>
+                </div>
+            </div>
+            <button id="mobileStartBtn" class="mobile-btn primary large">🚀 Start Game</button>
+            <button id="mobileSettingsBtn" class="mobile-btn secondary">⚙️ Settings</button>
+        `;
+        
+        screen.appendChild(content);
+        
+        // Add event listeners
+        const startBtn = content.querySelector('#mobileStartBtn');
+        const settingsBtn = content.querySelector('#mobileSettingsBtn');
+        
+        if (startBtn) {
+            this.addTouchHandlers(startBtn, () => {
+                this.startGame();
+            });
+        }
+        
+        if (settingsBtn) {
+            this.addTouchHandlers(settingsBtn, () => {
+                this.toggleMobileSettings();
+            });
+        }
+        
+        return screen;
+    }
+
+    /**
      * Create touch-friendly game control overlay
      */
     createTouchControls() {
@@ -459,6 +512,10 @@ class MobileUIComponents {
      * Initialize all mobile components
      */
     initialize() {
+        // Create mobile start screen
+        const startScreen = this.createMobileStartScreen();
+        document.body.appendChild(startScreen);
+        
         // Create touch controls
         const touchControls = this.createTouchControls();
         document.body.appendChild(touchControls);
@@ -476,6 +533,7 @@ class MobileUIComponents {
         
         // Store component references
         this.components = {
+            startScreen,
             touchControls,
             settingsPanel,
             gameOverScreen,
@@ -491,21 +549,24 @@ class MobileUIComponents {
      * Update mobile UI based on game state
      */
     updateUI(gameState) {
-        const { touchControls, settingsPanel, gameOverScreen } = this.components;
+        const { startScreen, touchControls, settingsPanel, gameOverScreen } = this.components;
         
         // Show/hide appropriate screens
         if (gameState === 'playing') {
-            touchControls.classList.remove('hidden');
-            settingsPanel.classList.add('hidden');
-            gameOverScreen.classList.add('hidden');
+            if (startScreen) startScreen.classList.add('hidden');
+            if (touchControls) touchControls.classList.remove('hidden');
+            if (settingsPanel) settingsPanel.classList.add('hidden');
+            if (gameOverScreen) gameOverScreen.classList.add('hidden');
         } else if (gameState === 'gameOver') {
-            touchControls.classList.add('hidden');
-            settingsPanel.classList.add('hidden');
-            gameOverScreen.classList.remove('hidden');
+            if (startScreen) startScreen.classList.add('hidden');
+            if (touchControls) touchControls.classList.add('hidden');
+            if (settingsPanel) settingsPanel.classList.add('hidden');
+            if (gameOverScreen) gameOverScreen.classList.remove('hidden');
         } else if (gameState === 'menu') {
-            touchControls.classList.add('hidden');
-            settingsPanel.classList.add('hidden');
-            gameOverScreen.classList.add('hidden');
+            if (startScreen) startScreen.classList.remove('hidden');
+            if (touchControls) touchControls.classList.add('hidden');
+            if (settingsPanel) settingsPanel.classList.add('hidden');
+            if (gameOverScreen) gameOverScreen.classList.add('hidden');
         }
     }
 
@@ -516,6 +577,32 @@ class MobileUIComponents {
         const scoreDisplay = this.components.scoreDisplay;
         if (scoreDisplay) {
             scoreDisplay.textContent = score;
+        }
+    }
+
+    /**
+     * Start the game (called from start button)
+     */
+    startGame() {
+        // Hide start screen
+        const startScreen = this.components.startScreen;
+        if (startScreen) {
+            startScreen.classList.add('hidden');
+        }
+        
+        // Notify the game engine to start
+        if (window.adaptiveGameLoader && window.adaptiveGameLoader.mobileGame) {
+            window.adaptiveGameLoader.mobileGame.startGame();
+        }
+    }
+
+    /**
+     * Toggle mobile settings
+     */
+    toggleMobileSettings() {
+        const settingsPanel = this.components.settingsPanel;
+        if (settingsPanel) {
+            settingsPanel.classList.toggle('hidden');
         }
     }
 
