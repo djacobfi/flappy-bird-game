@@ -145,7 +145,28 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
-    <!-- Leaderboard System -->
+    <!-- Platform Detection Script -->
+    <script>
+        // Check if user has made a platform choice
+        const platformChoice = localStorage.getItem('flappyPlatformChoice');
+        const userAgent = navigator.userAgent.toLowerCase();
+        const screenWidth = window.innerWidth;
+        const isMobile = screenWidth <= 768 || /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+        
+        // Redirect to platform selector if no choice made, or to mobile if mobile detected
+        if (!platformChoice) {
+            if (isMobile) {
+                localStorage.setItem('flappyPlatformChoice', 'mobile');
+                window.location.href = 'mobile.html';
+            } else {
+                window.location.href = 'platform-selector.html';
+            }
+        } else if (platformChoice === 'mobile' && window.location.pathname.includes('index.html')) {
+            window.location.href = 'mobile.html';
+        }
+    </script>
+    
+    <!-- Desktop Game Scripts -->
     <script src="leaderboard.js"></script>
     <script src="flappy-bird.js"></script>
 </body>
