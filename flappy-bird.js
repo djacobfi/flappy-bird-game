@@ -104,7 +104,7 @@ class FlappyBirdGame {
             // Extended invincibility system
             extendedInvincibility: false,
             invincibilityPipesLeft: 0,
-            invincibilityPipesTotal: 2, // 2 pipes of extended invincibility
+            invincibilityPipesTotal: 3, // 3 pipes of extended invincibility (increased for mobile)
             // Safe zone system for post-power-up
             safeZoneActive: false,
             safeZoneStartTime: 0,
@@ -1342,11 +1342,16 @@ class FlappyBirdGame {
                 // Decrement extended invincibility pipe counter
                 if (this.powerUp.extendedInvincibility && this.powerUp.invincibilityPipesLeft > 0) {
                     this.powerUp.invincibilityPipesLeft--;
-                    console.log(`🛡️ Extended invincibility: ${this.powerUp.invincibilityPipesLeft} pipes remaining`);
+                    console.log(`🛡️ Extended invincibility: ${this.powerUp.invincibilityPipesLeft} pipes remaining (pipe #${this.score} passed)`);
                     
                     if (this.powerUp.invincibilityPipesLeft <= 0) {
                         this.powerUp.extendedInvincibility = false;
                         console.log('🛡️ Extended invincibility ended - bird is now vulnerable');
+                        
+                        // Add a brief warning period
+                        setTimeout(() => {
+                            console.log('⚠️ WARNING: Bird is now vulnerable to collisions!');
+                        }, 1000);
                     }
                 }
             }
@@ -1703,13 +1708,21 @@ class FlappyBirdGame {
         // Pipe collision with safe corners - skip if any invincibility is active
         const canPhaseThrough = (this.powerUp.active && this.powerUp.canPhaseThrough) || this.powerUp.extendedInvincibility;
         
-        // Debug logging for invincibility states (only when bird is near pipes)
-        if (this.powerUp.extendedInvincibility && this.pipes.length > 0) {
-            const nearPipe = this.pipes.some(pipe => 
-                Math.abs(this.bird.x - pipe.x) < 100
+        // Enhanced debug logging for collision states
+        if ((this.powerUp.extendedInvincibility || this.powerUp.active) && this.pipes.length > 0) {
+            const nearestPipe = this.pipes.find(pipe => 
+                Math.abs(this.bird.x - pipe.x) < 150
             );
-            if (nearPipe) {
-                console.log(`🛡️ Extended invincibility: ${this.powerUp.invincibilityPipesLeft} pipes left, phasing: ${canPhaseThrough}`);
+            if (nearestPipe) {
+                console.log(`🛡️ Collision Debug:`, {
+                    powerUpActive: this.powerUp.active,
+                    extendedInvincibility: this.powerUp.extendedInvincibility,
+                    pipesLeft: this.powerUp.invincibilityPipesLeft,
+                    canPhaseThrough: canPhaseThrough,
+                    birdX: Math.round(this.bird.x),
+                    pipeX: Math.round(nearestPipe.x),
+                    pipeType: nearestPipe.type
+                });
             }
         }
         
@@ -1722,12 +1735,16 @@ class FlappyBirdGame {
                 const bottomPipeTop = pipe.bottomY + pipeMargin;
                 
                 if (birdRight > pipeLeft && birdLeft < pipeRight) {
-                    // Check if this is the grace pipe (first pipe after power-up)
-                    if (this.powerUp.gracePipeAllowed && !this.powerUp.gracePipeUsed) {
-                        // Mark grace pipe as used and allow passage
-                        this.powerUp.gracePipeUsed = true;
-                        this.powerUp.gracePipeAllowed = false;
-                        console.log('🛡️ Grace pipe used - safe passage granted!');
+                    // Check if this is the grace pipe (first pipe after power-up) OR extended invincibility
+                    if ((this.powerUp.gracePipeAllowed && !this.powerUp.gracePipeUsed) || this.powerUp.extendedInvincibility) {
+                        if (this.powerUp.gracePipeAllowed && !this.powerUp.gracePipeUsed) {
+                            // Mark grace pipe as used and allow passage
+                            this.powerUp.gracePipeUsed = true;
+                            this.powerUp.gracePipeAllowed = false;
+                            console.log('🛡️ Grace pipe used - safe passage granted!');
+                        } else if (this.powerUp.extendedInvincibility) {
+                            console.log(`🛡️ Extended invincibility active - safe passage (${this.powerUp.invincibilityPipesLeft} pipes left)`);
+                        }
                         continue; // Skip collision for this pipe
                     }
                     
