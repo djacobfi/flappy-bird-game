@@ -228,16 +228,16 @@ html, body {
 .settings-panel {
     position: fixed;
     top: 7rem;
-    right: -350px;
-    width: 320px;
+    right: -380px;
+    width: 350px;
     max-width: calc(100vw - 2rem);
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.95);
     border-radius: 15px;
     padding: 1.5rem;
     z-index: 25;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(15px);
     border: 2px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     transition: right 0.3s ease;
     max-height: calc(100vh - 9rem);
     overflow-y: auto;
@@ -282,17 +282,90 @@ html, body {
 }
 
 /* Setting Sections */
+/* Setting Sections */
 .setting-section {
     margin-bottom: 1.5rem;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
 }
 
+.setting-section:last-child {
+    margin-bottom: 0;
+}
+
 .setting-section h4 {
-    margin-bottom: 1rem;
-    color: #3498db;
+    margin: 0 0 1rem 0;
     font-size: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
     padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Master Section */
+.master-section {
+    background: rgba(231, 76, 60, 0.1);
+    border-color: rgba(231, 76, 60, 0.3);
+}
+
+.master-section h4 {
+    color: #e74c3c;
+}
+
+/* Audio Section */
+.audio-section {
+    background: rgba(52, 152, 219, 0.1);
+    border-color: rgba(52, 152, 219, 0.3);
+}
+
+.audio-section h4 {
+    color: #3498db;
+}
+
+/* Volume Grid */
+.volume-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+}
+
+.volume-grid .volume-control {
+    margin: 0;
+    padding: 0.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.volume-grid .volume-control label {
+    font-size: 0.8rem;
+    margin-bottom: 0.4rem;
+}
+
+/* Customization Section */
+.customization-section {
+    background: rgba(46, 204, 113, 0.1);
+    border-color: rgba(46, 204, 113, 0.3);
+}
+
+.customization-section h4 {
+    color: #2ecc71;
+}
+
+/* Audio Uploads Subsection */
+.audio-uploads {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.audio-uploads h5 {
+    color: #f39c12;
+    font-size: 0.9rem;
+    margin-bottom: 0.8rem;
+    text-align: center;
+    font-weight: bold;
 }
 
 /* Upload Buttons */
@@ -621,6 +694,30 @@ input[type="file"] {
 @media (max-width: 768px) {
     .screen h1 {
         font-size: 2.5rem;
+    }
+    
+    /* Mobile Settings Panel */
+    .settings-panel {
+        width: calc(100vw - 2rem);
+        right: -100vw;
+    }
+    
+    .settings-panel:not(.hidden) {
+        right: 1rem;
+    }
+    
+    /* Mobile Volume Grid */
+    .volume-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .volume-grid .volume-control {
+        padding: 0.6rem;
+    }
+    
+    .volume-grid .volume-control label {
+        font-size: 0.9rem;
     }
     
     .screen h2 {
