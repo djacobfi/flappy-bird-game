@@ -100,6 +100,12 @@ class MobileGameEngine {
         this.initializeCanvas();
         this.setupEventListeners();
         this.loadAssets();
+        
+        // Prevent conflicts with desktop version
+        this.preventDesktopGameInitialization();
+        
+        // Start the mobile game immediately
+        this.startMobileGame();
     }
 
     /**
@@ -258,6 +264,32 @@ class MobileGameEngine {
     }
 
     /**
+     * Start the mobile game (initial setup)
+     */
+    startMobileGame() {
+        this.gameState = 'menu';
+        this.score = 0;
+        this.bird.y = this.canvas.height / 2;
+        this.bird.velocity = 0;
+        this.bird.rotation = 0;
+        this.pipes = [];
+        this.particles = [];
+        this.camera.x = 0;
+        
+        // Reset performance tracking
+        this.performance.frameCount = 0;
+        this.performance.lastFPSUpdate = Date.now();
+        this.performance.droppedFrames = 0;
+        
+        // Update UI
+        this.mobileUI.updateUI('menu');
+        this.mobileUI.updateScore(0);
+        
+        // Start initial render loop
+        this.initialRender();
+    }
+
+    /**
      * Start the game
      */
     startGame() {
@@ -281,6 +313,17 @@ class MobileGameEngine {
         
         // Start game loop
         this.gameLoop();
+    }
+
+    /**
+     * Initial render loop for menu state
+     */
+    initialRender() {
+        this.render();
+        
+        if (this.gameState === 'menu') {
+            requestAnimationFrame(() => this.initialRender());
+        }
     }
 
     /**
@@ -702,6 +745,31 @@ class MobileGameEngine {
             shadowsEnabled: this.renderState.enableShadows,
             adaptiveQuality: this.performance.adaptiveQuality
         };
+    }
+
+    /**
+     * Prevent desktop game initialization conflicts
+     */
+    preventDesktopGameInitialization() {
+        // Clear any existing game instances
+        if (window.game) {
+            window.game = null;
+        }
+        
+        // Prevent the original game from auto-starting
+        const startBtn = document.getElementById('startBtn');
+        if (startBtn) {
+            startBtn.style.display = 'none';
+        }
+        
+        // Hide desktop UI elements
+        const desktopElements = ['startScreen', 'gameOverScreen', 'gameHUD'];
+        desktopElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.style.display = 'none';
+            }
+        });
     }
 
     /**

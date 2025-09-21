@@ -114,6 +114,15 @@ class AdaptiveGameLoader {
         
         // Initialize desktop game if the original game class exists
         if (window.FlappyBirdGame) {
+            // Wait for DOM to be fully ready
+            await new Promise(resolve => {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', resolve);
+                } else {
+                    resolve();
+                }
+            });
+            
             this.desktopGame = new FlappyBirdGame();
         } else {
             // Fallback to mobile version if desktop version not available
@@ -585,7 +594,10 @@ class AdaptiveGameLoader {
 
 // Auto-initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    window.adaptiveGameLoader = new AdaptiveGameLoader();
+    // Small delay to ensure all scripts are loaded
+    setTimeout(() => {
+        window.adaptiveGameLoader = new AdaptiveGameLoader();
+    }, 100);
 });
 
 // Export for manual initialization if needed
