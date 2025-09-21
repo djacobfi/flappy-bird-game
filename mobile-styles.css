@@ -35,9 +35,45 @@
         width: calc(100vw - 2rem) !important;
         max-width: none !important;
         top: 1rem !important;
-        right: 1rem !important;
-        left: 1rem !important;
+        right: calc(-100vw) !important; /* Start off-screen to the right */
         max-height: calc(100vh - 2rem) !important;
+        /* Keep the original right-based mechanism */
+        transition: right 0.3s ease !important;
+    }
+    
+    .settings-panel:not(.hidden) {
+        right: 1rem !important; /* Slide in from right */
+    }
+    
+    /* Close button mobile optimization */
+    .close-btn {
+        font-size: 2rem !important;
+        width: 40px !important;
+        height: 40px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: rgba(231, 76, 60, 0.8) !important;
+        border-radius: 50% !important;
+    }
+    
+    .close-btn:hover {
+        background: rgba(192, 57, 43, 0.9) !important;
+        transform: scale(1.1) !important;
+    }
+    
+    /* Add backdrop for mobile settings panel */
+    .settings-panel:not(.hidden)::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+        pointer-events: auto;
     }
     
     /* Volume controls mobile-friendly */

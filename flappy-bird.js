@@ -218,23 +218,37 @@ class FlappyBirdGame {
         this.bird.x = this.canvas.width * 0.15;
         this.bird.y = this.canvas.height / 2;
         
-        // Apply device-specific sizing
-        const config = this.deviceConfig.config;
-        const scale = config.gameScale;
-        
-        this.bird.width = config.bird.width;
-        this.bird.height = config.bird.height;
-        this.settings.pipeWidth = config.pipes.width;
-        this.settings.pipeGap = config.pipes.gap;
-        this.settings.birdSpeed = config.bird.speed;
-        this.settings.pipeSpeed = config.pipes.speed;
-        
-        console.log(`📱 Applied ${this.deviceConfig.deviceInfo.type} config:`, {
-            birdSize: `${this.bird.width}x${this.bird.height}`,
-            pipeWidth: this.settings.pipeWidth,
-            pipeGap: this.settings.pipeGap,
-            scale: scale
-        });
+        // Apply device-specific sizing only for mobile, keep desktop unchanged
+        if (this.deviceConfig.deviceInfo.isMobile) {
+            const config = this.deviceConfig.config;
+            
+            this.bird.width = config.bird.width;
+            this.bird.height = config.bird.height;
+            this.settings.pipeWidth = config.pipes.width;
+            this.settings.pipeGap = config.pipes.gap;
+            this.settings.birdSpeed = config.bird.speed;
+            this.settings.pipeSpeed = config.pipes.speed;
+            
+            console.log(`📱 Applied mobile config:`, {
+                birdSize: `${this.bird.width}x${this.bird.height}`,
+                pipeWidth: this.settings.pipeWidth,
+                pipeGap: this.settings.pipeGap
+            });
+        } else {
+            // Desktop: use original scaling system
+            const scale = Math.max(Math.min(this.canvas.width / 800, this.canvas.height / 600), 0.5);
+            this.bird.width = 50 * scale;
+            this.bird.height = 40 * scale;
+            this.settings.pipeWidth = Math.max(60 * scale, 40);
+            this.settings.pipeGap = Math.max(250 * scale, 180);
+            
+            console.log(`🖥️ Applied desktop config:`, {
+                birdSize: `${this.bird.width}x${this.bird.height}`,
+                pipeWidth: this.settings.pipeWidth,
+                pipeGap: this.settings.pipeGap,
+                scale: scale
+            });
+        }
         
         window.addEventListener('resize', () => this.setupCanvas());
     }
@@ -1116,17 +1130,31 @@ class FlappyBirdGame {
         // Reset score submission tracking for new game
         this.currentGameSubmitted = false;
         
-        // Use device-specific configuration
-        const config = this.deviceConfig.config;
-        
-        this.bird = {
-            x: this.canvas.width * 0.15,
-            y: this.canvas.height / 2,
-            width: config.bird.width,
-            height: config.bird.height,
-            velocity: 0,
-            rotation: 0
-        };
+        // Use device-specific configuration only for mobile
+        if (this.deviceConfig.deviceInfo.isMobile) {
+            const config = this.deviceConfig.config;
+            
+            this.bird = {
+                x: this.canvas.width * 0.15,
+                y: this.canvas.height / 2,
+                width: config.bird.width,
+                height: config.bird.height,
+                velocity: 0,
+                rotation: 0
+            };
+        } else {
+            // Desktop: use original scaling
+            const scale = Math.max(Math.min(this.canvas.width / 800, this.canvas.height / 600), 0.5);
+            
+            this.bird = {
+                x: this.canvas.width * 0.15,
+                y: this.canvas.height / 2,
+                width: 50 * scale,
+                height: 40 * scale,
+                velocity: 0,
+                rotation: 0
+            };
+        }
         
         this.pipes = [];
         this.easterEggs = [];
@@ -2545,10 +2573,41 @@ class FlappyBirdGame {
     toggleSettings() {
         const panel = document.getElementById('settingsPanel');
         panel.classList.toggle('hidden');
+        
+        // Add mobile backdrop click handler
+        if (this.deviceConfig.deviceInfo.isMobile && !panel.classList.contains('hidden')) {
+            this.addMobileBackdropHandler();
+        }
     }
     
     hideSettings() {
-        document.getElementById('settingsPanel').classList.add('hidden');
+        const panel = document.getElementById('settingsPanel');
+        panel.classList.add('hidden');
+        this.removeMobileBackdropHandler();
+    }
+    
+    addMobileBackdropHandler() {
+        // Remove any existing handler
+        this.removeMobileBackdropHandler();
+        
+        // Add backdrop click handler for mobile
+        this.mobileBackdropHandler = (e) => {
+            const panel = document.getElementById('settingsPanel');
+            if (e.target === document.body || e.target === this.canvas) {
+                this.hideSettings();
+            }
+        };
+        
+        document.addEventListener('touchstart', this.mobileBackdropHandler);
+        document.addEventListener('click', this.mobileBackdropHandler);
+    }
+    
+    removeMobileBackdropHandler() {
+        if (this.mobileBackdropHandler) {
+            document.removeEventListener('touchstart', this.mobileBackdropHandler);
+            document.removeEventListener('click', this.mobileBackdropHandler);
+            this.mobileBackdropHandler = null;
+        }
     }
     
     updateScore() {
