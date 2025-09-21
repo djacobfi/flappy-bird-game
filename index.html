@@ -70,64 +70,70 @@
                 <button id="closeSettingsBtn" class="close-btn">&times;</button>
             </div>
             
-            <!-- Bird Customization -->
-            <div class="setting-section">
-                <h4>🐦 Bird Sprite</h4>
-                <input type="file" id="birdUpload" accept="image/*">
-                <label for="birdUpload" class="upload-btn">Upload Bird Sprite</label>
-            </div>
-            
-            <!-- Audio Settings -->
-            <div class="setting-section">
-                <h4>🔊 Audio Settings</h4>
-                
-                <!-- Background Music Controls -->
-                <div class="volume-control">
-                    <label for="musicVolumeSlider">🎵 Background Music: <span id="musicVolumeDisplay">30%</span></label>
-                    <input type="range" id="musicVolumeSlider" min="0" max="100" value="30" class="volume-slider">
-                </div>
-                
-                <!-- Tap Sound Controls -->
-                <div class="volume-control">
-                    <label for="tapVolumeSlider">🔊 Tap Sound: <span id="tapVolumeDisplay">70%</span></label>
-                    <input type="range" id="tapVolumeSlider" min="0" max="100" value="70" class="volume-slider">
-                </div>
-                
-                <!-- Crash Sound Controls -->
-                <div class="volume-control">
-                    <label for="crashVolumeSlider">💥 Crash Sound: <span id="crashVolumeDisplay">80%</span></label>
-                    <input type="range" id="crashVolumeSlider" min="0" max="100" value="80" class="volume-slider">
-                </div>
-                
-                <!-- Power-up Music Controls -->
-                <div class="volume-control">
-                    <label for="powerupVolumeSlider">🚀 Power-up Music: <span id="powerupVolumeDisplay">60%</span></label>
-                    <input type="range" id="powerupVolumeSlider" min="0" max="100" value="60" class="volume-slider">
-                </div>
-                
-                <!-- Master Volume Controls -->
+            <!-- Master Volume Section -->
+            <div class="setting-section master-section">
+                <h4>🎛️ Master Controls</h4>
                 <div class="volume-control master-volume">
                     <label for="masterVolumeSlider">🎛️ Master Volume: <span id="masterVolumeDisplay">100%</span></label>
                     <input type="range" id="masterVolumeSlider" min="0" max="100" value="100" class="volume-slider master-slider">
                 </div>
+            </div>
+            
+            <!-- Audio Volume Controls -->
+            <div class="setting-section audio-section">
+                <h4>🔊 Audio Levels</h4>
                 
-                <!-- File Upload Controls -->
-                <div class="upload-controls">
+                <div class="volume-grid">
+                    <div class="volume-control">
+                        <label for="musicVolumeSlider">🎵 Music: <span id="musicVolumeDisplay">30%</span></label>
+                        <input type="range" id="musicVolumeSlider" min="0" max="100" value="30" class="volume-slider">
+                    </div>
+                    
+                    <div class="volume-control">
+                        <label for="tapVolumeSlider">🔊 Tap: <span id="tapVolumeDisplay">70%</span></label>
+                        <input type="range" id="tapVolumeSlider" min="0" max="100" value="70" class="volume-slider">
+                    </div>
+                    
+                    <div class="volume-control">
+                        <label for="crashVolumeSlider">💥 Crash: <span id="crashVolumeDisplay">80%</span></label>
+                        <input type="range" id="crashVolumeSlider" min="0" max="100" value="80" class="volume-slider">
+                    </div>
+                    
+                    <div class="volume-control">
+                        <label for="powerupVolumeSlider">🚀 Power-up: <span id="powerupVolumeDisplay">60%</span></label>
+                        <input type="range" id="powerupVolumeSlider" min="0" max="100" value="60" class="volume-slider">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Customization Section -->
+            <div class="setting-section customization-section">
+                <h4>🎨 Customization</h4>
+                
+                <!-- Bird Sprite -->
+                <div class="upload-group">
+                    <input type="file" id="birdUpload" accept="image/*">
+                    <label for="birdUpload" class="upload-btn">🐦 Upload Bird Sprite</label>
+                </div>
+                
+                <!-- Audio Files -->
+                <div class="audio-uploads">
+                    <h5>🎵 Custom Audio</h5>
                     <div class="upload-group">
                         <input type="file" id="tapSoundUpload" accept="audio/*">
-                        <label for="tapSoundUpload" class="upload-btn">🔊 Upload Tap Sound</label>
+                        <label for="tapSoundUpload" class="upload-btn">🔊 Tap Sound</label>
                         <button id="removeTapSound" class="remove-btn" title="Remove custom tap sound">❌</button>
                     </div>
                     
                     <div class="upload-group">
                         <input type="file" id="crashSoundUpload" accept="audio/*">
-                        <label for="crashSoundUpload" class="upload-btn">💥 Upload Crash Sound</label>
+                        <label for="crashSoundUpload" class="upload-btn">💥 Crash Sound</label>
                         <button id="removeCrashSound" class="remove-btn" title="Remove custom crash sound">❌</button>
                     </div>
                     
                     <div class="upload-group">
                         <input type="file" id="bgMusicUpload" accept="audio/*">
-                        <label for="bgMusicUpload" class="upload-btn">🎵 Upload Background Music</label>
+                        <label for="bgMusicUpload" class="upload-btn">🎵 Background Music</label>
                         <button id="removeBgMusic" class="remove-btn" title="Remove custom background music">❌</button>
                     </div>
                 </div>
