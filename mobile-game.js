@@ -328,8 +328,6 @@ class MobileFlappyBirdGame {
     
     createMobileMusic() {
         // Simplified background music for mobile
-        let musicInterval;
-        
         return {
             start: () => {
                 if (!this.audioContext || this.getEffectiveVolume('music') === 0) return;
@@ -341,37 +339,43 @@ class MobileFlappyBirdGame {
                 }
             },
             stop: () => {
-                if (musicInterval) {
-                    clearInterval(musicInterval);
-                    musicInterval = null;
+                if (this.musicInterval) {
+                    clearInterval(this.musicInterval);
+                    this.musicInterval = null;
                 }
             }
         };
     }
     
     startMobileMelody() {
+        if (!this.audioContext) return;
+        
         // Simple melody for mobile performance
         const notes = [440, 523, 659, 523]; // A, C, E, C
         let noteIndex = 0;
         
-        const musicInterval = setInterval(() => {
-            if (this.audio.enabled && this.getEffectiveVolume('music') > 0) {
-                const osc = this.audioContext.createOscillator();
-                const gain = this.audioContext.createGain();
-                
-                osc.frequency.value = notes[noteIndex];
-                osc.type = 'sine';
-                osc.connect(gain);
-                gain.connect(this.audioContext.destination);
-                
-                gain.gain.setValueAtTime(0, this.audioContext.currentTime);
-                gain.gain.linearRampToValueAtTime(this.getEffectiveVolume('music') * 0.1, this.audioContext.currentTime + 0.1);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8);
-                
-                osc.start(this.audioContext.currentTime);
-                osc.stop(this.audioContext.currentTime + 0.8);
-                
-                noteIndex = (noteIndex + 1) % notes.length;
+        this.musicInterval = setInterval(() => {
+            if (this.audio.enabled && this.getEffectiveVolume('music') > 0 && this.audioContext) {
+                try {
+                    const osc = this.audioContext.createOscillator();
+                    const gain = this.audioContext.createGain();
+                    
+                    osc.frequency.value = notes[noteIndex];
+                    osc.type = 'sine';
+                    osc.connect(gain);
+                    gain.connect(this.audioContext.destination);
+                    
+                    gain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                    gain.gain.linearRampToValueAtTime(this.getEffectiveVolume('music') * 0.1, this.audioContext.currentTime + 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8);
+                    
+                    osc.start(this.audioContext.currentTime);
+                    osc.stop(this.audioContext.currentTime + 0.8);
+                    
+                    noteIndex = (noteIndex + 1) % notes.length;
+                } catch (error) {
+                    console.log('Mobile music error:', error);
+                }
             }
         }, 1000); // Slower tempo for mobile
     }
@@ -751,6 +755,9 @@ class MobileFlappyBirdGame {
         // Update pipes
         this.updateMobilePipes();
         
+        // Update mobile-specific features
+        this.updateMobileGame();
+        
         // Check collisions (mobile-optimized)
         this.checkMobileCollisions();
     }
@@ -1022,6 +1029,87 @@ class MobileFlappyBirdGame {
     
     startGameLoop() {
         this.gameLoop();
+    }
+    
+    // Missing essential methods for mobile game
+    updateMobileEasterEggs() {
+        for (let i = this.easterEggs.length - 1; i >= 0; i--) {
+            const egg = this.easterEggs[i];
+            
+            // Remove off-screen eggs
+            if (egg.x + egg.width < this.camera.x - 100) {
+                this.easterEggs.splice(i, 1);
+                continue;
+            }
+            
+            // Simple rotation animation
+            egg.rotation += 0.1;
+            
+            // Check collection
+            if (!egg.collected &&
+                this.bird.x < egg.x + egg.width &&
+                this.bird.x + this.bird.width > egg.x &&
+                this.bird.y < egg.y + egg.height &&
+                this.bird.y + this.bird.height > egg.y) {
+                
+                this.collectMobileEasterEgg(i);
+            }
+        }
+    }
+    
+    collectMobileEasterEgg(index) {
+        this.easterEggs.splice(index, 1);
+        this.activateMobilePowerUp();
+    }
+    
+    activateMobilePowerUp() {
+        this.powerUp.active = true;
+        this.powerUp.startTime = Date.now();
+        this.powerUp.currentSpeedMultiplier = this.powerUp.speedMultiplier;
+        
+        console.log('🚀 Mobile power-up activated!');
+        
+        // Simple mobile power-up sound
+        this.playMobilePowerUpSound();
+    }
+    
+    playMobilePowerUpSound() {
+        if (this.audioContext) {
+            // Simple ascending tone for mobile
+            const frequencies = [440, 554, 659, 880];
+            frequencies.forEach((freq, index) => {
+                setTimeout(() => {
+                    const osc = this.audioContext.createOscillator();
+                    const gain = this.audioContext.createGain();
+                    
+                    osc.frequency.value = freq;
+                    osc.type = 'sine';
+                    osc.connect(gain);
+                    gain.connect(this.audioContext.destination);
+                    
+                    gain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                    gain.gain.linearRampToValueAtTime(this.getEffectiveVolume('powerup') * 0.3, this.audioContext.currentTime + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                    
+                    osc.start(this.audioContext.currentTime);
+                    osc.stop(this.audioContext.currentTime + 0.3);
+                }, index * 100);
+            });
+        }
+    }
+    
+    updateMobilePowerUp() {
+        if (this.powerUp.active && Date.now() - this.powerUp.startTime > this.powerUp.duration) {
+            this.powerUp.active = false;
+            this.powerUp.currentSpeedMultiplier = 1;
+            console.log('🐦 Mobile power-up ended');
+        }
+    }
+    
+    // Add missing update calls
+    updateMobileGame() {
+        this.updateMobileEasterEggs();
+        this.updateMobilePowerUp();
     }
 }
 
