@@ -26,6 +26,9 @@ class GlobalLeaderboard {
         // Check for backup scores first
         this.checkForBackupScores();
         
+        // Clean up any duplicate scores
+        this.removeDuplicateScores();
+        
         // Add demo scores only if truly no scores exist (first time users)
         if (this.localScores.length === 0 && !localStorage.getItem('flappyBestScore')) {
             console.log('🎮 First time player detected, adding demo scores');
@@ -165,8 +168,13 @@ class GlobalLeaderboard {
             date: new Date().toISOString()
         };
         
-        // Always save to local storage
-        this.saveToLocalStorage(scoreEntry);
+        // Always save to local storage first
+        const localSaved = this.saveToLocalStorage(scoreEntry);
+        
+        if (!localSaved) {
+            console.log('⚠️ Score not saved - duplicate detected');
+            return false;
+        }
         
         // Try to save to Firebase if connected
         if (this.isConnected) {
@@ -184,6 +192,19 @@ class GlobalLeaderboard {
     }
     
     saveToLocalStorage(scoreEntry) {
+        // Check for duplicate scores from same player within last 10 minutes
+        const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
+        const isDuplicate = this.localScores.some(existing => 
+            existing.name === scoreEntry.name && 
+            existing.score === scoreEntry.score &&
+            existing.timestamp > tenMinutesAgo
+        );
+        
+        if (isDuplicate) {
+            console.log('⚠️ Duplicate score detected, not adding to leaderboard');
+            return false;
+        }
+        
         this.localScores.push(scoreEntry);
         this.localScores.sort((a, b) => b.score - a.score);
         this.localScores = this.localScores.slice(0, 20); // Keep top 20 (increased from 10)
@@ -196,6 +217,7 @@ class GlobalLeaderboard {
         localStorage.setItem('flappyLeaderboardLastSave', Date.now().toString());
         
         console.log(`💾 Score saved to local leaderboard (${this.localScores.length} total scores)`);
+        return true;
     }
     
     async saveToFirebase(scoreEntry) {
@@ -358,6 +380,28 @@ class GlobalLeaderboard {
         localStorage.removeItem('flappyLocalLeaderboard_backup');
         localStorage.removeItem('flappyLeaderboardLastSave');
         console.log('🗑️ All local scores cleared');
+    }
+    
+    removeDuplicateScores() {
+        const uniqueScores = [];
+        const seen = new Set();
+        
+        for (const score of this.localScores) {
+            const key = `${score.name}-${score.score}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                uniqueScores.push(score);
+            } else {
+                console.log(`🧹 Removing duplicate: ${score.name} - ${score.score}`);
+            }
+        }
+        
+        if (uniqueScores.length !== this.localScores.length) {
+            this.localScores = uniqueScores;
+            localStorage.setItem('flappyLocalLeaderboard', JSON.stringify(this.localScores));
+            localStorage.setItem('flappyLocalLeaderboard_backup', JSON.stringify(this.localScores));
+            console.log(`✅ Cleaned up duplicates, ${this.localScores.length} unique scores remain`);
+        }
     }
 }
 
