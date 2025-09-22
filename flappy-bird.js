@@ -1236,12 +1236,12 @@ class FlappyBirdGame {
             this.analytics.logEvent('game_started');
         }
         
-        // Also track with Google Analytics gtag
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'game_started', {
-                event_category: 'Game',
-                event_label: 'Game Start',
-                custom_parameter_user_id: this.leaderboard.userId
+        // Also track with Mixpanel
+        if (typeof mixpanel !== 'undefined' && mixpanel.track) {
+            mixpanel.track('game_started', {
+                category: 'Game',
+                label: 'Game Start',
+                user_id: this.leaderboard.userId
             });
         }
         
@@ -2082,14 +2082,13 @@ class FlappyBirdGame {
             });
         }
         
-        // Also track with Google Analytics gtag
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'power_up_activated', {
-                event_category: 'Power Up',
-                event_label: 'Speed Boost',
-                value: this.score,
-                custom_parameter_score: this.score,
-                custom_parameter_user_id: this.leaderboard.userId
+        // Also track with Mixpanel
+        if (typeof mixpanel !== 'undefined' && mixpanel.track) {
+            mixpanel.track('power_up_activated', {
+                category: 'Power Up',
+                label: 'Speed Boost',
+                score: this.score,
+                user_id: this.leaderboard.userId
             });
         }
         
@@ -2366,14 +2365,13 @@ class FlappyBirdGame {
             });
         }
         
-        // Also track with Google Analytics gtag
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'game_over', {
-                event_category: 'Game',
-                event_label: 'Game Over',
-                value: this.score,
-                custom_parameter_score: this.score,
-                custom_parameter_user_id: this.leaderboard.userId
+        // Also track with Mixpanel
+        if (typeof mixpanel !== 'undefined' && mixpanel.track) {
+            mixpanel.track('game_over', {
+                category: 'Game',
+                label: 'Game Over',
+                score: this.score,
+                user_id: this.leaderboard.userId
             });
         }
         
