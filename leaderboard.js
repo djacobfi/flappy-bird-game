@@ -22,6 +22,10 @@ class GlobalLeaderboard {
         this.isConnected = false;
         this.playerName = localStorage.getItem('flappyPlayerName') || this.generateRandomName();
         
+        // Generate or retrieve consistent user ID for analytics
+        this.userId = localStorage.getItem('flappyUserId') || this.generateUserId();
+        localStorage.setItem('flappyUserId', this.userId);
+        
         // Local leaderboard fallback
         this.localScores = JSON.parse(localStorage.getItem('flappyLocalLeaderboard')) || [];
         
@@ -50,6 +54,13 @@ class GlobalLeaderboard {
         const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
         // Default names must not include numbers
         return `${randomAdj}${randomNoun}`;
+    }
+    
+    generateUserId() {
+        // Generate a consistent user ID for analytics
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 15);
+        return `user_${timestamp}_${random}`;
     }
 
     // Remove demo/bot/invalid entries and normalize list
@@ -139,7 +150,10 @@ class GlobalLeaderboard {
                         // Initialize Analytics
                         if (typeof firebase.analytics !== 'undefined') {
                             this.analytics = firebase.analytics();
-                            console.log('📊 Firebase Analytics initialized');
+                            
+                            // Set user ID for consistent tracking
+                            this.analytics.setUserId(this.userId);
+                            console.log('📊 Firebase Analytics initialized with user ID:', this.userId);
                         }
                         
                         resolve();
@@ -231,7 +245,8 @@ class GlobalLeaderboard {
                         event_label: 'Global Score Submission',
                         value: score,
                         custom_parameter_score: score,
-                        custom_parameter_player: this.playerName
+                        custom_parameter_player: this.playerName,
+                        custom_parameter_user_id: this.userId
                     });
                 }
                 
