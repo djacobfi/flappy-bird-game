@@ -73,14 +73,18 @@ html, body {
 
 .game-title {
     font-size: 4rem !important;
-    background: linear-gradient(45deg, #f39c12, #e67e22, #f39c12);
-    background-size: 200% 200%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: titleGlow 3s ease-in-out infinite, gradientShift 2s ease-in-out infinite;
+    color: #f39c12;
     text-shadow: 0 0 20px rgba(243, 156, 18, 0.5);
     margin-bottom: 0.5rem !important;
+    animation: titleGlow 3s ease-in-out infinite;
+}
+
+.game-title::first-letter {
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: unset !important;
+    background-clip: unset !important;
+    color: inherit !important;
 }
 
 .game-subtitle {
@@ -101,14 +105,6 @@ html, body {
     }
 }
 
-@keyframes gradientShift {
-    0%, 100% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-}
 
 @keyframes pulse {
     0%, 100% {
