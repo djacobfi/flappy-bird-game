@@ -1099,6 +1099,7 @@ class FlappyBirdGame {
         } else if (this.gameState === 'gameOver') {
             this.handleRestart();
         }
+        // Do nothing when paused - prevent jumping while paused
     }
     
     handleJumpEnd() {
@@ -1115,13 +1116,14 @@ class FlappyBirdGame {
     }
     
     togglePause() {
-        if (this.gameState === 'playing') {
+        if (this.gameState === 'playing' || this.gameState === 'paused') {
             this.isPaused = !this.isPaused;
             this.gameState = this.isPaused ? 'paused' : 'playing';
             
             const pauseBtn = document.getElementById('pauseBtn');
             if (pauseBtn) {
                 pauseBtn.textContent = this.isPaused ? '▶️' : '⏸️';
+                pauseBtn.title = this.isPaused ? 'Resume Game' : 'Pause Game';
             }
         }
     }
@@ -3017,7 +3019,7 @@ class FlappyBirdGame {
         
         this.drawBackground();
         
-        if (this.gameState === 'playing' || this.gameState === 'gameOver') {
+        if (this.gameState === 'playing' || this.gameState === 'paused' || this.gameState === 'gameOver') {
             this.ctx.save();
             this.ctx.translate(-this.camera.x, -this.camera.y);
             
@@ -3037,9 +3039,41 @@ class FlappyBirdGame {
             } else if (this.powerUp.safeZoneActive) {
                 this.drawSafeZoneEffects();
             }
+            
+            // Draw pause overlay
+            if (this.gameState === 'paused') {
+                this.drawPauseOverlay();
+            }
         }
         
         this.lastGameState = this.gameState;
+    }
+    
+    drawPauseOverlay() {
+        // Draw semi-transparent overlay
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Draw pause text
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = 'bold 48px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
+        
+        // Main pause text
+        this.ctx.fillText('⏸️ PAUSED', centerX, centerY - 30);
+        
+        // Instructions
+        this.ctx.font = 'bold 24px Arial';
+        this.ctx.fillStyle = '#FFD700';
+        this.ctx.fillText('Press ▶️ to resume', centerX, centerY + 30);
+        
+        // Reset text alignment for other elements
+        this.ctx.textAlign = 'left';
+        this.ctx.textBaseline = 'alphabetic';
     }
     
     drawBackground() {
@@ -3921,7 +3955,10 @@ class FlappyBirdGame {
         
         // Frame rate limiting for performance (but smoother)
         if (currentTime - this.lastFrameTime >= this.frameInterval) {
-            this.update();
+            // Only update game state if not paused
+            if (this.gameState !== 'paused') {
+                this.update();
+            }
             this.render();
             this.lastFrameTime = currentTime;
         }
