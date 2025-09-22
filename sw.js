@@ -3,7 +3,16 @@
  * Handles cache management to prevent mobile cache issues
  */
 
-const CACHE_NAME = 'flappy-bird-v3.1.0';
+// Generate dynamic version based on current date and time
+const now = new Date();
+const year = now.getFullYear();
+const month = String(now.getMonth() + 1).padStart(2, '0');
+const day = String(now.getDate()).padStart(2, '0');
+const hour = String(now.getHours()).padStart(2, '0');
+const minute = String(now.getMinutes()).padStart(2, '0');
+const dynamicVersion = `${year}.${month}.${day}.${hour}${minute}`;
+
+const CACHE_NAME = `flappy-bird-v${dynamicVersion}`;
 const urlsToCache = [
     '/',
     '/index.html',
@@ -23,7 +32,7 @@ self.addEventListener('install', function(event) {
         caches.open(CACHE_NAME)
             .then(function(cache) {
                 console.log('📱 Service Worker: Caching app shell');
-                return cache.addAll(urlsToCache.map(url => url + '?v=3.1.0'));
+                      return cache.addAll(urlsToCache.map(url => url + `?v=${dynamicVersion}`));
             })
             .catch(function(error) {
                 console.log('📱 Service Worker: Cache failed', error);
