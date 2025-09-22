@@ -495,12 +495,16 @@ class FlappyBirdGame {
             
             // Mobile-specific audio context handling
             if (this.audioContext.state === 'suspended') {
+                console.log('🔊 Audio context suspended, will resume on user interaction');
             }
             
             // Ensure audio context works on mobile
             const resumeAudioContext = () => {
-                if (this.audioContext.state === 'suspended') {
+                if (this.audioContext && this.audioContext.state === 'suspended') {
                     this.audioContext.resume().then(() => {
+                        console.log('✅ Audio context resumed successfully');
+                    }).catch(e => {
+                        console.error('❌ Failed to resume audio context:', e);
                     });
                 }
             };
@@ -508,6 +512,7 @@ class FlappyBirdGame {
             // Resume audio context on first user interaction (mobile requirement)
             document.addEventListener('touchstart', resumeAudioContext, { once: true });
             document.addEventListener('click', resumeAudioContext, { once: true });
+            document.addEventListener('keydown', resumeAudioContext, { once: true });
             
         } catch (error) {
             console.error('❌ Failed to create audio context:', error);
@@ -611,195 +616,62 @@ class FlappyBirdGame {
     
     createBeepSound(frequency, duration) {
         return () => {
-            if (this.audioContext.state === 'suspended') {
-                this.audioContext.resume();
+            if (!this.audioContext || this.audioContext.state === 'suspended') {
+                return; // Skip if audio context not ready
             }
             
-            // Create an EPIC, adrenaline-pumping tap sound!
-            const osc1 = this.audioContext.createOscillator(); // Power chord root
-            const osc2 = this.audioContext.createOscillator(); // Perfect fifth
-            const osc3 = this.audioContext.createOscillator(); // Octave
-            const osc4 = this.audioContext.createOscillator(); // Sub bass for punch
-            
-            const gain1 = this.audioContext.createGain();
-            const gain2 = this.audioContext.createGain();
-            const gain3 = this.audioContext.createGain();
-            const gain4 = this.audioContext.createGain();
-            const masterGain = this.audioContext.createGain();
-            
-            // Add multiple delay nodes for epic reverb
-            const delay1 = this.audioContext.createDelay();
-            const delay2 = this.audioContext.createDelay();
-            const delayGain1 = this.audioContext.createGain();
-            const delayGain2 = this.audioContext.createGain();
-            
-            delay1.delayTime.setValueAtTime(0.08, this.audioContext.currentTime);
-            delay2.delayTime.setValueAtTime(0.15, this.audioContext.currentTime);
-            delayGain1.gain.setValueAtTime(0.4, this.audioContext.currentTime);
-            delayGain2.gain.setValueAtTime(0.2, this.audioContext.currentTime);
-            
-            // Epic power chord frequencies
-            osc1.frequency.value = frequency; // Root note
-            osc2.frequency.value = frequency * 1.5; // Perfect fifth (power chord!)
-            osc3.frequency.value = frequency * 2; // Octave for brightness
-            osc4.frequency.value = frequency * 0.5; // Sub bass for PUNCH
-            
-            // Wave types for maximum impact
-            osc1.type = 'sawtooth'; // Aggressive main tone
-            osc2.type = 'square'; // Punchy fifth
-            osc3.type = 'triangle'; // Bright octave
-            osc4.type = 'sine'; // Deep sub bass
-            
-            // Connect oscillators
-            osc1.connect(gain1);
-            osc2.connect(gain2);
-            osc3.connect(gain3);
-            osc4.connect(gain4);
-            
-            // Mix for pleasant impact (reduced volume)
-            gain1.gain.setValueAtTime(0.2, this.audioContext.currentTime); // Reduced root
-            gain2.gain.setValueAtTime(0.12, this.audioContext.currentTime); // Reduced fifth
-            gain3.gain.setValueAtTime(0.08, this.audioContext.currentTime); // Reduced top
-            gain4.gain.setValueAtTime(0.15, this.audioContext.currentTime); // Reduced bass
-            
-            // Connect to master with epic reverb
-            gain1.connect(masterGain);
-            gain2.connect(masterGain);
-            gain3.connect(masterGain);
-            gain4.connect(masterGain);
-            
-            // Epic reverb chain
-            gain1.connect(delay1);
-            delay1.connect(delayGain1);
-            delayGain1.connect(delay2);
-            delay2.connect(delayGain2);
-            delayGain2.connect(masterGain);
-            
-            masterGain.connect(this.audioContext.destination);
-            
-            // Pleasant envelope for musical feedback with volume control
-            const effectiveVolume = this.getEffectiveVolume('tap');
-            masterGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-            masterGain.gain.linearRampToValueAtTime(0.4 * effectiveVolume, this.audioContext.currentTime + 0.02); // Gentler attack
-            masterGain.gain.exponentialRampToValueAtTime(0.25 * effectiveVolume, this.audioContext.currentTime + 0.08); // Moderate sustain
-            masterGain.gain.exponentialRampToValueAtTime(0.15 * effectiveVolume, this.audioContext.currentTime + 0.3); // Maintain presence
-            masterGain.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + duration); // Smooth fade
-            
-            // Launch all oscillators for MAXIMUM IMPACT!
-            const startTime = this.audioContext.currentTime;
-            osc1.start(startTime);
-            osc2.start(startTime);
-            osc3.start(startTime);
-            osc4.start(startTime);
-            
-            osc1.stop(startTime + duration);
-            osc2.stop(startTime + duration);
-            osc3.stop(startTime + duration);
-            osc4.stop(startTime + duration);
+            try {
+                // Simplified mobile-friendly tap sound
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.frequency.value = frequency;
+                osc.type = 'sine';
+                osc.connect(gain);
+                gain.connect(this.audioContext.destination);
+                
+                const effectiveVolume = this.getEffectiveVolume('tap');
+                gain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                gain.gain.linearRampToValueAtTime(0.3 * effectiveVolume, this.audioContext.currentTime + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + duration);
+                
+                const startTime = this.audioContext.currentTime;
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            } catch (error) {
+                console.error('❌ Error playing tap sound:', error);
+            }
         };
     }
     
     createNoiseSound(duration) {
         return () => {
-            if (this.audioContext.state === 'suspended') {
-                this.audioContext.resume();
+            if (!this.audioContext || this.audioContext.state === 'suspended') {
+                return; // Skip if audio context not ready
             }
             
-            // Create an EPIC CRASH sound that gives MAXIMUM adrenaline rush!
-            const crashOsc1 = this.audioContext.createOscillator(); // Deep doom note
-            const crashOsc2 = this.audioContext.createOscillator(); // Dissonant clash
-            const crashOsc3 = this.audioContext.createOscillator(); // High tension
-            const crashOsc4 = this.audioContext.createOscillator(); // Ultra sub bass
-            
-            const gain1 = this.audioContext.createGain();
-            const gain2 = this.audioContext.createGain();
-            const gain3 = this.audioContext.createGain();
-            const gain4 = this.audioContext.createGain();
-            const masterGain = this.audioContext.createGain();
-            
-            // Create EXPLOSIVE noise burst
-            const bufferSize = this.audioContext.sampleRate * 0.5;
-            const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
-            const output = buffer.getChannelData(0);
-            
-            for (let i = 0; i < bufferSize; i++) {
-                // Chaotic noise with impact
-                output[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize); // Fade noise over time
+            try {
+                // Simplified mobile-friendly crash sound
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.frequency.setValueAtTime(150, this.audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(50, this.audioContext.currentTime + duration);
+                osc.type = 'sawtooth';
+                osc.connect(gain);
+                gain.connect(this.audioContext.destination);
+                
+                const effectiveVolume = this.getEffectiveVolume('crash');
+                gain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                gain.gain.linearRampToValueAtTime(0.4 * effectiveVolume, this.audioContext.currentTime + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + duration);
+                
+                const startTime = this.audioContext.currentTime;
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            } catch (error) {
+                console.error('❌ Error playing crash sound:', error);
             }
-            
-            const noiseSource = this.audioContext.createBufferSource();
-            const noiseGain = this.audioContext.createGain();
-            const distortion = this.audioContext.createWaveShaper();
-            
-            // Add distortion for EPIC crash effect
-            const samples = 44100;
-            const curve = new Float32Array(samples);
-            for (let i = 0; i < samples; i++) {
-                const x = (i * 2) / samples - 1;
-                curve[i] = ((3 + 20) * x * 20 * Math.PI / 180) / (Math.PI + 20 * Math.abs(x));
-            }
-            distortion.curve = curve;
-            
-            noiseSource.buffer = buffer;
-            noiseSource.connect(distortion);
-            distortion.connect(noiseGain);
-            noiseGain.connect(masterGain);
-            
-            // DRAMATIC descending chord of DOOM!
-            crashOsc1.frequency.setValueAtTime(110, this.audioContext.currentTime); // Low A
-            crashOsc1.frequency.exponentialRampToValueAtTime(55, this.audioContext.currentTime + duration); // Drop an octave!
-            crashOsc1.type = 'sawtooth';
-            crashOsc1.connect(gain1);
-            
-            crashOsc2.frequency.setValueAtTime(146.83, this.audioContext.currentTime); // Dissonant D
-            crashOsc2.frequency.exponentialRampToValueAtTime(73.42, this.audioContext.currentTime + duration); // Doom descent
-            crashOsc2.type = 'square';
-            crashOsc2.connect(gain2);
-            
-            crashOsc3.frequency.setValueAtTime(220, this.audioContext.currentTime); // High tension A
-            crashOsc3.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + duration); // Fall to doom
-            crashOsc3.type = 'triangle';
-            crashOsc3.connect(gain3);
-            
-            crashOsc4.frequency.setValueAtTime(55, this.audioContext.currentTime); // ULTRA SUB BASS
-            crashOsc4.frequency.exponentialRampToValueAtTime(27.5, this.audioContext.currentTime + duration); // Earthquake low
-            crashOsc4.type = 'sine';
-            crashOsc4.connect(gain4);
-            
-            // Mix for CATASTROPHIC impact
-            gain1.gain.setValueAtTime(0.25, this.audioContext.currentTime);
-            gain2.gain.setValueAtTime(0.2, this.audioContext.currentTime);
-            gain3.gain.setValueAtTime(0.15, this.audioContext.currentTime);
-            gain4.gain.setValueAtTime(0.3, this.audioContext.currentTime); // MASSIVE sub bass
-            noiseGain.gain.setValueAtTime(0.2, this.audioContext.currentTime);
-            
-            gain1.connect(masterGain);
-            gain2.connect(masterGain);
-            gain3.connect(masterGain);
-            gain4.connect(masterGain);
-            
-            masterGain.connect(this.audioContext.destination);
-            
-            // CATASTROPHIC envelope with volume control - INSTANT DOOM!
-            const effectiveVolume = this.getEffectiveVolume('crash');
-            masterGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-            masterGain.gain.linearRampToValueAtTime(1.2 * effectiveVolume, this.audioContext.currentTime + 0.02); // MASSIVE IMPACT!
-            masterGain.gain.exponentialRampToValueAtTime(0.4 * effectiveVolume, this.audioContext.currentTime + 0.1); // Sustain the doom
-            masterGain.gain.exponentialRampToValueAtTime(0.1 * effectiveVolume, this.audioContext.currentTime + 0.8); // Slow fade of despair
-            masterGain.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + duration); // Final silence
-            
-            // UNLEASH THE CHAOS!
-            const startTime = this.audioContext.currentTime;
-            crashOsc1.start(startTime);
-            crashOsc2.start(startTime);
-            crashOsc3.start(startTime);
-            crashOsc4.start(startTime);
-            noiseSource.start(startTime);
-            
-            crashOsc1.stop(startTime + duration);
-            crashOsc2.stop(startTime + duration);
-            crashOsc3.stop(startTime + duration);
-            crashOsc4.stop(startTime + duration);
         };
     }
     
@@ -1105,7 +977,6 @@ class FlappyBirdGame {
         const elements = {
             startBtn: () => this.startGame(),
             restartBtn: () => this.handleRestart(),
-            toggleMusic: () => this.toggleMusic(),
             settingsBtn: () => this.toggleSettings(),
             closeSettingsBtn: () => this.hideSettings(),
             pauseBtn: () => this.togglePause(),
@@ -1188,7 +1059,6 @@ class FlappyBirdGame {
         
         // Set other UI elements
         document.getElementById('bestScore').textContent = this.bestScore;
-        document.getElementById('toggleMusic').textContent = this.audio.enabled ? '🔊 Music' : '🔇 Music';
         
         // Hide HUD initially (show only during gameplay)
         document.getElementById('gameHUD').style.display = 'none';
@@ -1276,6 +1146,12 @@ class FlappyBirdGame {
         if (this.audioContext && this.audioContext.state === 'suspended') {
             this.audioContext.resume().then(() => {
                 console.log('✅ Audio context resumed for game start');
+                if (!this.audio.playing) {
+                    this.startBackgroundMusic();
+                }
+            }).catch(e => {
+                console.error('❌ Failed to resume audio context:', e);
+                // Try to start background music anyway
                 if (!this.audio.playing) {
                     this.startBackgroundMusic();
                 }
@@ -2449,6 +2325,16 @@ class FlappyBirdGame {
     
     // Audio System
     playSound(soundType) {
+        // Ensure audio context is resumed (critical for mobile)
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            this.audioContext.resume().then(() => {
+                this.playSound(soundType); // Retry after resuming
+            }).catch(e => {
+                console.error('❌ Failed to resume audio context for sound:', e);
+            });
+            return;
+        }
+        
         const now = Date.now();
         
         // Skip playing sounds if volume is zero to prevent issues
