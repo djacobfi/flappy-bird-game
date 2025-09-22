@@ -121,10 +121,18 @@ class GlobalLeaderboard {
             if (typeof firebase !== 'undefined') {
                 console.log('🔥 Firebase SDK detected, attempting connection...');
                 
-                // Try to initialize Firebase with timeout
+                // Try to initialize Firebase with timeout (avoid duplicate init)
                 const initPromise = new Promise((resolve, reject) => {
                     try {
-                        firebase.initializeApp(this.firebaseConfig);
+                        // Check if Firebase is already initialized
+                        let app;
+                        try {
+                            app = firebase.app();
+                            console.log('🔥 Using existing Firebase app');
+                        } catch (e) {
+                            app = firebase.initializeApp(this.firebaseConfig);
+                            console.log('🔥 Initialized new Firebase app');
+                        }
                         this.db = firebase.database();
                         resolve();
                     } catch (error) {
@@ -189,11 +197,13 @@ class GlobalLeaderboard {
         // Try to save to Firebase if connected
         if (this.isConnected) {
             try {
+                console.log('🔥 Attempting to save to Firebase with config:', this.firebaseConfig);
                 await this.saveToFirebase(scoreEntry);
                 console.log('🏆 Score submitted to global leaderboard!');
                 return true;
             } catch (error) {
                 console.error('❌ Failed to submit to global leaderboard:', error);
+                console.error('❌ Firebase config being used:', this.firebaseConfig);
                 return false;
             }
         }
