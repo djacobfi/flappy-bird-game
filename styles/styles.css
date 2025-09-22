@@ -71,6 +71,56 @@ html, body {
     animation: glow 2s ease-in-out infinite alternate;
 }
 
+.game-title {
+    font-size: 4rem !important;
+    background: linear-gradient(45deg, #f39c12, #e67e22, #f39c12);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: titleGlow 3s ease-in-out infinite, gradientShift 2s ease-in-out infinite;
+    text-shadow: 0 0 20px rgba(243, 156, 18, 0.5);
+    margin-bottom: 0.5rem !important;
+}
+
+.game-subtitle {
+    font-size: 1.5rem !important;
+    color: #3498db !important;
+    text-shadow: 0 0 10px rgba(52, 152, 219, 0.6) !important;
+    animation: pulse 2s ease-in-out infinite;
+    margin-bottom: 2rem !important;
+    font-weight: 600;
+}
+
+@keyframes titleGlow {
+    0%, 100% {
+        text-shadow: 0 0 20px rgba(243, 156, 18, 0.5), 0 0 30px rgba(243, 156, 18, 0.3);
+    }
+    50% {
+        text-shadow: 0 0 30px rgba(243, 156, 18, 0.8), 0 0 40px rgba(243, 156, 18, 0.5);
+    }
+}
+
+@keyframes gradientShift {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}
+
 .screen h2 {
     font-size: 2.5rem;
     margin-bottom: 1.5rem;
@@ -113,6 +163,18 @@ html, body {
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     min-width: 160px;
+    position: relative;
+    overflow: hidden;
+    animation: buttonFloat 3s ease-in-out infinite;
+}
+
+@keyframes buttonFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
 }
 
 .game-btn.primary {
