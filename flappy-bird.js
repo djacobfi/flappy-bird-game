@@ -136,8 +136,7 @@ class FlappyBirdGame {
         };
         
         this.easterEggs = [];
-        this.easterEggSpawnChance = 0.02; // Make easter egg rare: ~2% chance per eligible group
-        this.lastEasterEggSpawnTime = 0; // cooldown timer to prevent frequent spawns
+        this.easterEggSpawnChance = 0.12; // 12% chance per pipe
         
         // Moving pipe system
         this.movingPipes = [];
@@ -895,9 +894,43 @@ class FlappyBirdGame {
         let melodyInterval;
         let bassInterval;
         let percussionInterval;
-
-        // Start all melody/bass/percussion intervals (closure-local to keep references)
-        const startMelodyIntervals = () => {
+        
+        return {
+            start: () => {
+                // Ensure audio context is ready (critical for mobile/PWA)
+                if (!this.audioContext) {
+                    console.warn('⚠️ No audio context available for background music');
+                    return;
+                }
+                
+                if (this.audioContext.state === 'suspended') {
+                    console.log('🔊 Resuming audio context for melody...');
+                    this.audioContext.resume().then(() => {
+                        console.log('✅ Audio context resumed, starting melody');
+                        this.startMelodyIntervals();
+                    }).catch(e => {
+                        console.error('❌ Failed to resume audio context for melody:', e);
+                    });
+                    return;
+                }
+                
+                this.startMelodyIntervals();
+            },
+            stop: () => {
+                if (melodyInterval) {
+                    clearInterval(melodyInterval);
+                }
+                if (bassInterval) {
+                    clearInterval(bassInterval);
+                }
+                if (percussionInterval) {
+                    clearInterval(percussionInterval);
+                }
+            }
+        };
+        
+        // Define the melody intervals method within the closure
+        this.startMelodyIntervals = () => {
                 
                 // EPIC melody line with POWER!
                 melodyInterval = setInterval(() => {
@@ -1015,40 +1048,6 @@ class FlappyBirdGame {
                         kickOsc.stop(this.audioContext.currentTime + 0.15);
                     }
                 }, 400); // Fast percussion for ADRENALINE!
-        };
-
-        return {
-            start: () => {
-                // Ensure audio context is ready (critical for mobile/PWA)
-                if (!this.audioContext) {
-                    console.warn('⚠️ No audio context available for background music');
-                    return;
-                }
-                
-                if (this.audioContext.state === 'suspended') {
-                    console.log('🔊 Resuming audio context for melody...');
-                    this.audioContext.resume().then(() => {
-                        console.log('✅ Audio context resumed, starting melody');
-                        startMelodyIntervals();
-                    }).catch(e => {
-                        console.error('❌ Failed to resume audio context for melody:', e);
-                    });
-                    return;
-                }
-                
-                startMelodyIntervals();
-            },
-            stop: () => {
-                if (melodyInterval) {
-                    clearInterval(melodyInterval);
-                }
-                if (bassInterval) {
-                    clearInterval(bassInterval);
-                }
-                if (percussionInterval) {
-                    clearInterval(percussionInterval);
-                }
-            }
         };
     }
     
@@ -1898,14 +1897,8 @@ class FlappyBirdGame {
         this.pipes.push(pipe);
         
         // Spawn easter egg with chance (only if power-up not active and it's the last pipe in group)
-        if (
-            pipeIndex === groupSize - 1 &&
-            !this.powerUp.active &&
-            Math.random() < this.easterEggSpawnChance &&
-            (Date.now() - this.lastEasterEggSpawnTime) > 30000 // 30s cooldown
-        ) {
+        if (pipeIndex === groupSize - 1 && Math.random() < this.easterEggSpawnChance && !this.powerUp.active) {
             this.spawnEasterEgg(pipeX + this.settings.pipeWidth + 100);
-            this.lastEasterEggSpawnTime = Date.now();
         }
     }
     

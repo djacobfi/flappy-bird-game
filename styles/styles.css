@@ -71,6 +71,52 @@ html, body {
     animation: glow 2s ease-in-out infinite alternate;
 }
 
+.game-title {
+    font-size: 4rem !important;
+    color: #f39c12;
+    text-shadow: 0 0 20px rgba(243, 156, 18, 0.5);
+    margin-bottom: 0.5rem !important;
+    animation: titleGlow 3s ease-in-out infinite;
+}
+
+.game-title::first-letter {
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: unset !important;
+    background-clip: unset !important;
+    color: inherit !important;
+}
+
+.game-subtitle {
+    font-size: 1.5rem !important;
+    color: #3498db !important;
+    text-shadow: 0 0 10px rgba(52, 152, 219, 0.6) !important;
+    animation: pulse 2s ease-in-out infinite;
+    margin-bottom: 2rem !important;
+    font-weight: 600;
+}
+
+@keyframes titleGlow {
+    0%, 100% {
+        text-shadow: 0 0 20px rgba(243, 156, 18, 0.5), 0 0 30px rgba(243, 156, 18, 0.3);
+    }
+    50% {
+        text-shadow: 0 0 30px rgba(243, 156, 18, 0.8), 0 0 40px rgba(243, 156, 18, 0.5);
+    }
+}
+
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}
+
 .screen h2 {
     font-size: 2.5rem;
     margin-bottom: 1.5rem;
@@ -113,10 +159,22 @@ html, body {
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     min-width: 160px;
+    position: relative;
+    overflow: hidden;
+    animation: buttonFloat 3s ease-in-out infinite;
+}
+
+@keyframes buttonFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
 }
 
 .game-btn.primary {
-    background: linear-gradient(45deg, #e74c3c, #c0392b);
+    background: linear-gradient(45deg, #2980b9, #3498db);
     color: white;
 }
 
@@ -128,6 +186,11 @@ html, body {
 .game-btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.game-btn.primary:hover {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    box-shadow: 0 6px 20px rgba(41, 128, 185, 0.4);
 }
 
 .game-btn:active {
@@ -1015,6 +1078,33 @@ input[type="file"] {
     width: 20px;
     height: 20px;
     filter: brightness(0) invert(1); /* Make it white */
+}
+
+/* Instagram link styling */
+.instagram-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(225, 48, 108, 0.12); /* Instagram pink */
+    border: 1px solid rgba(225, 48, 108, 0.35);
+    border-radius: 8px;
+    color: #ffffff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.instagram-link:hover {
+    background: rgba(225, 48, 108, 0.24);
+    border-color: rgba(225, 48, 108, 0.55);
+    transform: translateY(-1px);
+}
+
+.instagram-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
 }
 
 /* Footer */
