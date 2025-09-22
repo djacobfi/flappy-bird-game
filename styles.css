@@ -898,6 +898,9 @@ input[type="file"] {
 }
 
 .discord-footer {
+    position: fixed;
+    bottom: 0.8rem;
+    left: 0.8rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -910,6 +913,7 @@ input[type="file"] {
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    z-index: 15;
 }
 
 .discord-footer:hover {

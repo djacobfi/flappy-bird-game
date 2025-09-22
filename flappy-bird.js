@@ -1451,232 +1451,36 @@ class FlappyBirdGame {
     }
     
     createPipe() {
-        // Random chance for different pipe formations
-        const formationRandom = Math.random();
+        // More random pipe group sizes with varied probabilities
+        const groupRandom = Math.random();
+        let pipeGroupSize;
         
-        if (formationRandom < 0.15) { // 15% chance for multi-pipe formations
-            this.createMultiPipeFormation();
-        } else if (formationRandom < 0.23) { // 8% chance for moving pipe
+        if (groupRandom < 0.4) {
+            pipeGroupSize = 1; // 40% chance for single pipe
+        } else if (groupRandom < 0.65) {
+            pipeGroupSize = 2; // 25% chance for double pipe
+        } else if (groupRandom < 0.8) {
+            pipeGroupSize = 3; // 15% chance for triple pipe
+        } else if (groupRandom < 0.9) {
+            pipeGroupSize = 4; // 10% chance for quadruple pipe
+        } else {
+            pipeGroupSize = 5; // 10% chance for quintuple pipe (rare)
+        }
+        
+        // Decide if pipes should be side-by-side or sequential
+        const sideBySide = Math.random() < 0.3; // 30% chance for side-by-side pipes
+        
+        if (sideBySide && pipeGroupSize > 1) {
+            this.createSideBySidePipes(pipeGroupSize);
+        } else {
+            for (let i = 0; i < pipeGroupSize; i++) {
+                this.createSinglePipe(i, pipeGroupSize);
+            }
+        }
+        
+        // Random chance to create a moving pipe instead of regular pipes
+        if (Math.random() < 0.08) { // 8% chance for moving pipe
             this.createRandomMovingPipe();
-        } else {
-            // Regular single pipe (77% chance)
-            this.createSinglePipe(0, 1);
-        }
-    }
-    
-    createMultiPipeFormation() {
-        // Create 2-4 pipes in various formations
-        const formationType = Math.random();
-        const numPipes = Math.floor(Math.random() * 3) + 2; // 2, 3, or 4 pipes
-        
-        if (formationType < 0.4) {
-            // Vertical stack formation - pipes stacked vertically
-            this.createVerticalStackFormation(numPipes);
-        } else if (formationType < 0.7) {
-            // Horizontal line formation - pipes side by side
-            this.createHorizontalLineFormation(numPipes);
-        } else {
-            // Scattered formation - pipes at random positions
-            this.createScatteredFormation(numPipes);
-        }
-    }
-    
-    createVerticalStackFormation(numPipes) {
-        const minHeight = 50;
-        const maxHeight = this.canvas.height - this.settings.pipeGap - minHeight;
-        
-        // Calculate base spacing
-        let baseSpacing = Math.max(this.canvas.width * 0.3, 250); // Closer spacing for formations
-        const timeSinceLastPowerUp = Date.now() - (this.powerUp.slowdownStartTime || 0);
-        if (timeSinceLastPowerUp < 10000) {
-            baseSpacing *= 1.5;
-        }
-        
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile) {
-            baseSpacing *= 1.2;
-        }
-        
-        const pipeX = this.pipes.length === 0 ? 
-            this.bird.x + this.canvas.width * 0.8 : 
-            this.pipes[this.pipes.length - 1].x + baseSpacing;
-        
-        // Create vertical stack with varied heights
-        for (let i = 0; i < numPipes; i++) {
-            const verticalOffset = (i - (numPipes - 1) / 2) * 80; // Spread vertically
-            const baseHeight = (minHeight + maxHeight) / 2;
-            const heightVariation = (Math.random() - 0.5) * 100;
-            const topHeight = Math.max(minHeight + 20, Math.min(maxHeight - 20, 
-                baseHeight + verticalOffset + heightVariation));
-            
-            const pipe = {
-                x: pipeX,
-                topHeight: topHeight,
-                bottomY: topHeight + this.settings.pipeGap,
-                scored: false,
-                type: 'full',
-                formation: 'verticalStack',
-                formationIndex: i,
-                totalInFormation: numPipes
-            };
-            
-            this.pipes.push(pipe);
-        }
-        
-        // Spawn easter egg on last pipe
-        if (Math.random() < this.easterEggSpawnChance && !this.powerUp.active) {
-            this.spawnEasterEgg(pipeX + this.settings.pipeWidth + 100);
-        }
-    }
-    
-    createHorizontalLineFormation(numPipes) {
-        const minHeight = 50;
-        const maxHeight = this.canvas.height - this.settings.pipeGap - minHeight;
-        
-        let baseSpacing = Math.max(this.canvas.width * 0.2, 150); // Very close spacing
-        const timeSinceLastPowerUp = Date.now() - (this.powerUp.slowdownStartTime || 0);
-        if (timeSinceLastPowerUp < 10000) {
-            baseSpacing *= 1.5;
-        }
-        
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile) {
-            baseSpacing *= 1.2;
-        }
-        
-        const startX = this.pipes.length === 0 ? 
-            this.bird.x + this.canvas.width * 0.8 : 
-            this.pipes[this.pipes.length - 1].x + baseSpacing * 2;
-        
-        // Create horizontal line with same height but different pipe types
-        const baseHeight = minHeight + Math.random() * (maxHeight - minHeight - this.settings.pipeGap);
-        
-        for (let i = 0; i < numPipes; i++) {
-            const pipeX = startX + (i * baseSpacing);
-            
-            // Vary pipe types in the formation
-            let pipeType = 'full';
-            if (i > 0 && Math.random() < 0.3) { // 30% chance for special pipes
-                pipeType = Math.random() < 0.5 ? 'topOnly' : 'bottomOnly';
-            }
-            
-            let pipe;
-            if (pipeType === 'full') {
-                pipe = {
-                    x: pipeX,
-                    topHeight: baseHeight,
-                    bottomY: baseHeight + this.settings.pipeGap,
-                    scored: false,
-                    type: 'full',
-                    formation: 'horizontalLine',
-                    formationIndex: i,
-                    totalInFormation: numPipes
-                };
-            } else if (pipeType === 'topOnly') {
-                pipe = {
-                    x: pipeX,
-                    topHeight: baseHeight,
-                    bottomY: this.canvas.height + 100,
-                    scored: false,
-                    type: 'topOnly',
-                    formation: 'horizontalLine',
-                    formationIndex: i,
-                    totalInFormation: numPipes
-                };
-            } else { // bottomOnly
-                pipe = {
-                    x: pipeX,
-                    topHeight: -100,
-                    bottomY: baseHeight + this.settings.pipeGap,
-                    scored: false,
-                    type: 'bottomOnly',
-                    formation: 'horizontalLine',
-                    formationIndex: i,
-                    totalInFormation: numPipes
-                };
-            }
-            
-            this.pipes.push(pipe);
-        }
-        
-        // Spawn easter egg on last pipe
-        if (Math.random() < this.easterEggSpawnChance && !this.powerUp.active) {
-            this.spawnEasterEgg(startX + (numPipes * baseSpacing) + this.settings.pipeWidth + 100);
-        }
-    }
-    
-    createScatteredFormation(numPipes) {
-        const minHeight = 50;
-        const maxHeight = this.canvas.height - this.settings.pipeGap - minHeight;
-        
-        let baseSpacing = Math.max(this.canvas.width * 0.4, 300);
-        const timeSinceLastPowerUp = Date.now() - (this.powerUp.slowdownStartTime || 0);
-        if (timeSinceLastPowerUp < 10000) {
-            baseSpacing *= 1.5;
-        }
-        
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile) {
-            baseSpacing *= 1.2;
-        }
-        
-        const startX = this.pipes.length === 0 ? 
-            this.bird.x + this.canvas.width * 0.8 : 
-            this.pipes[this.pipes.length - 1].x + baseSpacing;
-        
-        // Create scattered formation with random positions
-        for (let i = 0; i < numPipes; i++) {
-            const pipeX = startX + (i * baseSpacing * 0.6); // Closer horizontal spacing
-            const topHeight = minHeight + Math.random() * (maxHeight - minHeight);
-            
-            // Random pipe type
-            let pipeType = 'full';
-            if (Math.random() < 0.4) { // 40% chance for special pipes in scattered formation
-                pipeType = Math.random() < 0.5 ? 'topOnly' : 'bottomOnly';
-            }
-            
-            let pipe;
-            if (pipeType === 'full') {
-                pipe = {
-                    x: pipeX,
-                    topHeight: topHeight,
-                    bottomY: topHeight + this.settings.pipeGap,
-                    scored: false,
-                    type: 'full',
-                    formation: 'scattered',
-                    formationIndex: i,
-                    totalInFormation: numPipes
-                };
-            } else if (pipeType === 'topOnly') {
-                pipe = {
-                    x: pipeX,
-                    topHeight: topHeight,
-                    bottomY: this.canvas.height + 100,
-                    scored: false,
-                    type: 'topOnly',
-                    formation: 'scattered',
-                    formationIndex: i,
-                    totalInFormation: numPipes
-                };
-            } else { // bottomOnly
-                pipe = {
-                    x: pipeX,
-                    topHeight: -100,
-                    bottomY: topHeight + this.settings.pipeGap,
-                    scored: false,
-                    type: 'bottomOnly',
-                    formation: 'scattered',
-                    formationIndex: i,
-                    totalInFormation: numPipes
-                };
-            }
-            
-            this.pipes.push(pipe);
-        }
-        
-        // Spawn easter egg on last pipe
-        if (Math.random() < this.easterEggSpawnChance && !this.powerUp.active) {
-            this.spawnEasterEgg(startX + ((numPipes - 1) * baseSpacing * 0.6) + this.settings.pipeWidth + 100);
         }
     }
     
@@ -1945,6 +1749,114 @@ class FlappyBirdGame {
             maxY: this.canvas.height - pipeHeight - 30
         };
         this.movingPipes.push(movingPipe);
+    }
+    
+    createSideBySidePipes(count) {
+        // Create multiple pipes side by side horizontally
+        const baseX = this.pipes.length === 0 ? 
+            this.bird.x + this.canvas.width * 0.8 : 
+            this.pipes[this.pipes.length - 1].x + 400;
+        
+        const pipeWidth = this.settings.pipeWidth;
+        const horizontalSpacing = 60; // Space between side-by-side pipes
+        const totalWidth = (count - 1) * horizontalSpacing + pipeWidth;
+        const startX = baseX - totalWidth / 2; // Center the group
+        
+        for (let i = 0; i < count; i++) {
+            const pipeX = startX + i * horizontalSpacing;
+            this.createSingleSidePipe(pipeX, i, count);
+        }
+    }
+    
+    createSingleSidePipe(pipeX, index, totalCount) {
+        const minHeight = 50;
+        const maxHeight = this.canvas.height - this.settings.pipeGap - minHeight;
+        
+        // Determine pipe type for variety
+        const pipeTypeRandom = Math.random();
+        let pipeType;
+        
+        // Early game: mostly traditional pipes for easier learning
+        if (this.score < 5) {
+            pipeType = 'full'; // Only traditional pipes for first 5 points
+        } else if (this.score < 15) {
+            // Gradual introduction of variety
+            if (pipeTypeRandom < 0.8) {
+                pipeType = 'full'; // 80% chance - traditional full pipe
+            } else if (pipeTypeRandom < 0.9) {
+                pipeType = 'topOnly'; // 10% chance - only top pipe (fly under)
+            } else {
+                pipeType = 'bottomOnly'; // 10% chance - only bottom pipe (fly over)
+            }
+        } else {
+            // Full variety but still balanced for playability
+            if (pipeTypeRandom < 0.7) {
+                pipeType = 'full'; // 70% chance - traditional full pipe
+            } else if (pipeTypeRandom < 0.85) {
+                pipeType = 'topOnly'; // 15% chance - only top pipe (fly under)
+            } else {
+                pipeType = 'bottomOnly'; // 15% chance - only bottom pipe (fly over)
+            }
+        }
+        
+        // Create pipe with varied heights for side-by-side effect
+        let topHeight;
+        
+        if (pipeType === 'full') {
+            // Create varied heights for side-by-side pipes
+            const centerY = (minHeight + maxHeight) / 2;
+            const variation = (maxHeight - minHeight) * 0.3; // 30% variation
+            const heightVariation = (Math.random() - 0.5) * variation;
+            
+            // Add some pattern to the heights (not completely random)
+            const patternOffset = Math.sin(index * 0.8) * variation * 0.3;
+            topHeight = centerY + heightVariation + patternOffset;
+            
+            // Ensure we stay within playable bounds
+            const safeMargin = 40;
+            topHeight = Math.max(minHeight + safeMargin, Math.min(maxHeight - safeMargin, topHeight));
+            
+        } else if (pipeType === 'topOnly') {
+            topHeight = this.canvas.height * 0.3 + Math.random() * (this.canvas.height * 0.3);
+        } else { // bottomOnly
+            topHeight = -100; // No top pipe
+        }
+        
+        let pipe;
+        
+        if (pipeType === 'full') {
+            pipe = {
+                x: pipeX,
+                topHeight: topHeight,
+                bottomY: topHeight + this.settings.pipeGap,
+                scored: false,
+                type: 'full'
+            };
+        } else if (pipeType === 'topOnly') {
+            pipe = {
+                x: pipeX,
+                topHeight: topHeight,
+                bottomY: this.canvas.height + 100, // No bottom pipe
+                scored: false,
+                type: 'topOnly'
+            };
+        } else { // bottomOnly
+            const bottomHeight = this.canvas.height * 0.6 + Math.random() * (this.canvas.height * 0.2);
+            pipe = {
+                x: pipeX,
+                topHeight: -100, // No top pipe
+                bottomY: bottomHeight,
+                scored: false,
+                type: 'bottomOnly'
+            };
+        }
+        
+        this.pipes.push(pipe);
+        
+        // Spawn easter egg with chance (only on the last pipe in the group)
+        if (index === totalCount - 1 && Math.random() < this.easterEggSpawnChance && !this.powerUp.active) {
+            this.spawnEasterEgg(pipeX + this.settings.pipeWidth + 100);
+        }
     }
     
     spawnEasterEgg(x) {
