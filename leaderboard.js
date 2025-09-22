@@ -224,6 +224,17 @@ class GlobalLeaderboard {
                     leaderboard_type: 'global'
                 });
                 
+                // Also track with Google Analytics gtag
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'score_submitted', {
+                        event_category: 'Leaderboard',
+                        event_label: 'Global Score Submission',
+                        value: score,
+                        custom_parameter_score: score,
+                        custom_parameter_player: this.playerName
+                    });
+                }
+                
                 return true;
             } catch (error) {
                 console.error('❌ Failed to submit to global leaderboard:', error);
