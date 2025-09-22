@@ -846,18 +846,21 @@ class FlappyBirdGame {
             gain1.gain.setValueAtTime(0, this.audioContext.currentTime);
             gain1.gain.linearRampToValueAtTime(0.3 * effectiveVolume, this.audioContext.currentTime + 0.05);
             gain1.gain.exponentialRampToValueAtTime(0.1 * effectiveVolume, this.audioContext.currentTime + 0.3);
+            gain1.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + 1.0);
             
             gain2.gain.setValueAtTime(0, this.audioContext.currentTime);
             gain2.gain.linearRampToValueAtTime(0.2 * effectiveVolume, this.audioContext.currentTime + 0.05);
             gain2.gain.exponentialRampToValueAtTime(0.05 * effectiveVolume, this.audioContext.currentTime + 0.3);
+            gain2.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + 1.0);
             
             gain3.gain.setValueAtTime(0, this.audioContext.currentTime);
             gain3.gain.linearRampToValueAtTime(0.15 * effectiveVolume, this.audioContext.currentTime + 0.1);
             gain3.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + 0.25);
+            gain3.gain.exponentialRampToValueAtTime(0.001 * effectiveVolume, this.audioContext.currentTime + 1.0);
             
             masterGain.gain.setValueAtTime(0, this.audioContext.currentTime);
             masterGain.gain.linearRampToValueAtTime(1.0 * effectiveVolume, this.audioContext.currentTime + 0.02);
-            masterGain.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + 0.4);
+            masterGain.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + 1.0);
             
             // Play the sound
             const startTime = this.audioContext.currentTime;
@@ -865,9 +868,9 @@ class FlappyBirdGame {
             osc2.start(startTime);
             osc3.start(startTime);
             
-            osc1.stop(startTime + 0.4);
-            osc2.stop(startTime + 0.4);
-            osc3.stop(startTime + 0.4);
+            osc1.stop(startTime + 1.0);
+            osc2.stop(startTime + 1.0);
+            osc3.stop(startTime + 1.0);
         };
     }
     
