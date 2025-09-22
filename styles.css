@@ -871,7 +871,9 @@ input[type="file"] {
 }
 
 .discord-icon {
-    font-size: 1.1rem;
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1); /* Make it white */
 }
 
 /* Footer */
@@ -919,7 +921,9 @@ input[type="file"] {
 }
 
 .discord-logo {
-    font-size: 1.2rem;
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1); /* Make it white */
 }
 
 /* Mobile Pause Button */
@@ -949,7 +953,8 @@ input[type="file"] {
     }
     
     .discord-logo {
-        font-size: 1rem;
+        width: 20px;
+        height: 20px;
     }
 }
 
@@ -978,6 +983,7 @@ input[type="file"] {
     }
     
     .discord-logo {
-        font-size: 0.9rem;
+        width: 18px;
+        height: 18px;
     }
 }
