@@ -64,16 +64,19 @@ class FlappyBirdGame {
                 music: parseFloat(localStorage.getItem('flappyMusicVolume')) || 30,
                 tap: parseFloat(localStorage.getItem('flappyTapVolume')) || 70,
                 crash: parseFloat(localStorage.getItem('flappyCrashVolume')) || 80,
+                point: parseFloat(localStorage.getItem('flappyPointVolume')) || 60,
                 powerup: parseFloat(localStorage.getItem('flappyPowerupVolume')) || 60
             },
             playing: false,
-            sounds: { tap: null, crash: null, bgMusic: null },
-            custom: { birdImage: null, tapSound: null, crashSound: null, bgMusic: null },
+            sounds: { tap: null, crash: null, point: null, bgMusic: null },
+            custom: { birdImage: null, tapSound: null, crashSound: null, pointSound: null, bgMusic: null },
             state: { 
                 tapLastPlayed: 0, 
                 crashLastPlayed: 0,
+                pointLastPlayed: 0,
                 currentTapAudio: null,
-                currentCrashAudio: null
+                currentCrashAudio: null,
+                currentPointAudio: null
             }
         };
         
@@ -513,6 +516,9 @@ class FlappyBirdGame {
         // Default crash sound (3 seconds) - same as previous version
         this.audio.sounds.crash = this.createNoiseSound(3.0);
         
+        // Default point sound - cheerful beep
+        this.audio.sounds.point = this.createPointSound();
+        
         // Default background music - full melody (ensure it works on mobile)
         if (this.audioContext) {
             this.audio.sounds.bgMusic = this.createMelodySound();
@@ -793,6 +799,78 @@ class FlappyBirdGame {
         };
     }
     
+    createPointSound() {
+        return () => {
+            if (this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+            }
+            
+            // Create a cheerful, satisfying point sound
+            const osc1 = this.audioContext.createOscillator(); // Main melody
+            const osc2 = this.audioContext.createOscillator(); // Harmony
+            const osc3 = this.audioContext.createOscillator(); // Sparkle
+            
+            const gain1 = this.audioContext.createGain();
+            const gain2 = this.audioContext.createGain();
+            const gain3 = this.audioContext.createGain();
+            const masterGain = this.audioContext.createGain();
+            
+            // Connect oscillators
+            osc1.connect(gain1);
+            osc2.connect(gain2);
+            osc3.connect(gain3);
+            gain1.connect(masterGain);
+            gain2.connect(masterGain);
+            gain3.connect(masterGain);
+            masterGain.connect(this.audioContext.destination);
+            
+            // Cheerful ascending melody
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(523.25, this.audioContext.currentTime); // C5
+            osc1.frequency.setValueAtTime(659.25, this.audioContext.currentTime + 0.1); // E5
+            osc1.frequency.setValueAtTime(783.99, this.audioContext.currentTime + 0.2); // G5
+            
+            // Harmony note
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(392.00, this.audioContext.currentTime); // G4
+            osc2.frequency.setValueAtTime(523.25, this.audioContext.currentTime + 0.1); // C5
+            osc2.frequency.setValueAtTime(659.25, this.audioContext.currentTime + 0.2); // E5
+            
+            // Sparkle effect
+            osc3.type = 'sine';
+            osc3.frequency.setValueAtTime(1046.50, this.audioContext.currentTime); // C6
+            osc3.frequency.setValueAtTime(1318.51, this.audioContext.currentTime + 0.15); // E6
+            
+            // Volume envelopes for smooth sound
+            const effectiveVolume = this.getEffectiveVolume('point');
+            gain1.gain.setValueAtTime(0, this.audioContext.currentTime);
+            gain1.gain.linearRampToValueAtTime(0.3 * effectiveVolume, this.audioContext.currentTime + 0.05);
+            gain1.gain.exponentialRampToValueAtTime(0.1 * effectiveVolume, this.audioContext.currentTime + 0.3);
+            
+            gain2.gain.setValueAtTime(0, this.audioContext.currentTime);
+            gain2.gain.linearRampToValueAtTime(0.2 * effectiveVolume, this.audioContext.currentTime + 0.05);
+            gain2.gain.exponentialRampToValueAtTime(0.05 * effectiveVolume, this.audioContext.currentTime + 0.3);
+            
+            gain3.gain.setValueAtTime(0, this.audioContext.currentTime);
+            gain3.gain.linearRampToValueAtTime(0.15 * effectiveVolume, this.audioContext.currentTime + 0.1);
+            gain3.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + 0.25);
+            
+            masterGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+            masterGain.gain.linearRampToValueAtTime(1.0 * effectiveVolume, this.audioContext.currentTime + 0.02);
+            masterGain.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + 0.4);
+            
+            // Play the sound
+            const startTime = this.audioContext.currentTime;
+            osc1.start(startTime);
+            osc2.start(startTime);
+            osc3.start(startTime);
+            
+            osc1.stop(startTime + 0.4);
+            osc2.stop(startTime + 0.4);
+            osc3.stop(startTime + 0.4);
+        };
+    }
+    
     createMelodySound() {
         // EPIC ADVENTURE MUSIC for maximum adrenaline!
         const epicMelody = [
@@ -1012,6 +1090,7 @@ class FlappyBirdGame {
             pauseBtn: () => this.togglePause(),
             removeTapSound: () => this.removeCustomSound('tap'),
             removeCrashSound: () => this.removeCustomSound('crash'),
+            removePointSound: () => this.removeCustomSound('point'),
             removeBgMusic: () => this.removeCustomSound('bgMusic'),
             saveNameBtn: () => this.savePlayerName(),
             refreshLeaderboard: () => this.refreshLeaderboard(),
@@ -1023,6 +1102,7 @@ class FlappyBirdGame {
             musicVolumeSlider: (e) => this.updateVolume('music', parseInt(e.target.value)),
             tapVolumeSlider: (e) => this.updateVolume('tap', parseInt(e.target.value)),
             crashVolumeSlider: (e) => this.updateVolume('crash', parseInt(e.target.value)),
+            pointVolumeSlider: (e) => this.updateVolume('point', parseInt(e.target.value)),
             powerupVolumeSlider: (e) => this.updateVolume('powerup', parseInt(e.target.value))
         };
         
@@ -1052,6 +1132,7 @@ class FlappyBirdGame {
             birdUpload: (file) => this.handleBirdUpload(file),
             tapSoundUpload: (file) => this.handleSoundUpload(file, 'tap'),
             crashSoundUpload: (file) => this.handleSoundUpload(file, 'crash'),
+            pointSoundUpload: (file) => this.handleSoundUpload(file, 'point'),
             bgMusicUpload: (file) => this.handleSoundUpload(file, 'bgMusic')
         };
         
@@ -1449,6 +1530,7 @@ class FlappyBirdGame {
                 this.world.totalPipesPassed++;
                 this.updateScore();
                 this.updateDifficulty();
+                this.playSound('point');
                 this.checkSeasonChanges();
                 
                 // Decrement extended invincibility pipe counter
@@ -1953,6 +2035,7 @@ class FlappyBirdGame {
                 this.score++;
                 this.world.totalPipesPassed++;
                 this.updateScore();
+                this.playSound('point');
                 this.updateDifficulty();
                 this.checkSeasonChanges();
                 console.log('🎯 Passed moving pipe! Score:', this.score);
@@ -2337,6 +2420,23 @@ class FlappyBirdGame {
                 }, 3000);
             } else if (this.audio.sounds.crash) {
                 this.audio.sounds.crash();
+            }
+        } else if (soundType === 'point') {
+            // Point: prevent overlaps
+            if (now - this.audio.state.pointLastPlayed < 200) return;
+            this.audio.state.pointLastPlayed = now;
+            
+            if (this.audio.custom.pointSound) {
+                this.audio.custom.pointSound.volume = this.getEffectiveVolume('point');
+                this.audio.custom.pointSound.currentTime = 0;
+                this.audio.custom.pointSound.play();
+                
+                setTimeout(() => {
+                    this.audio.custom.pointSound.pause();
+                    this.audio.custom.pointSound.currentTime = 0;
+                }, 1000);
+            } else if (this.audio.sounds.point) {
+                this.audio.sounds.point();
             }
         }
     }
@@ -2764,6 +2864,7 @@ class FlappyBirdGame {
         if (button) {
             const hasCustomSound = soundType === 'tap' ? this.audio.custom.tapSound :
                                  soundType === 'crash' ? this.audio.custom.crashSound :
+                                 soundType === 'point' ? this.audio.custom.pointSound :
                                  soundType === 'bgMusic' ? this.audio.custom.bgMusic : false;
             
             button.disabled = !hasCustomSound;
@@ -2774,6 +2875,7 @@ class FlappyBirdGame {
     updateAllRemoveButtonStates() {
         this.updateRemoveButtonState('tap');
         this.updateRemoveButtonState('crash');
+        this.updateRemoveButtonState('point');
         this.updateRemoveButtonState('bgMusic');
     }
     
@@ -2964,6 +3066,8 @@ class FlappyBirdGame {
                         audio.volume = this.getEffectiveVolume('tap');
                     } else if (soundType === 'crash') {
                         audio.volume = this.getEffectiveVolume('crash');
+                    } else if (soundType === 'point') {
+                        audio.volume = this.getEffectiveVolume('point');
                     }
                     this.audio.custom[soundType + 'Sound'] = audio;
                 }
@@ -2988,6 +3092,7 @@ class FlappyBirdGame {
                     birdUpload: '🐦',
                     tapSoundUpload: '🔊',
                     crashSoundUpload: '💥',
+                    pointSoundUpload: '🎯',
                     bgMusicUpload: '🎵'
                 };
                 
@@ -3013,6 +3118,7 @@ class FlappyBirdGame {
                 birdUpload: '🐦 Upload Bird Sprite',
                 tapSoundUpload: '🔊 Upload Tap Sound',
                 crashSoundUpload: '💥 Upload Crash Sound',
+                pointSoundUpload: '🎯 Upload Point Sound',
                 bgMusicUpload: '🎵 Upload Background Music'
             };
             
@@ -3031,6 +3137,7 @@ class FlappyBirdGame {
             birdUpload: { text: 'Upload Bird Sprite', asset: 'birdImage' },
             tapSoundUpload: { text: '🔊 Tap Sound', asset: 'tapSound' },
             crashSoundUpload: { text: '💥 Crash Sound', asset: 'crashSound' },
+            pointSoundUpload: { text: '🎯 Point Sound', asset: 'pointSound' },
             bgMusicUpload: { text: '🎵 Background Music', asset: 'bgMusic' }
         };
         

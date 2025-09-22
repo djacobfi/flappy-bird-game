@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy X - Full Screen Adventure</title>
+    <title>Flappy X - Make your brain!</title>
     
     <!-- Cache Control for Mobile -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -108,6 +108,12 @@
                     </div>
                     
                     <div class="upload-group">
+                        <input type="file" id="pointSoundUpload" accept="audio/*">
+                        <label for="pointSoundUpload" class="upload-btn">🎯 Point Sound</label>
+                        <button id="removePointSound" class="remove-btn" title="Remove custom point sound">❌</button>
+                    </div>
+                    
+                    <div class="upload-group">
                         <input type="file" id="bgMusicUpload" accept="audio/*">
                         <label for="bgMusicUpload" class="upload-btn">🎵 Background Music</label>
                         <button id="removeBgMusic" class="remove-btn" title="Remove custom background music">❌</button>
@@ -143,6 +149,11 @@
                     <div class="volume-control">
                         <label for="crashVolumeSlider">💥 Crash: <span id="crashVolumeDisplay">80%</span></label>
                         <input type="range" id="crashVolumeSlider" min="0" max="100" value="80" class="volume-slider">
+                    </div>
+                    
+                    <div class="volume-control">
+                        <label for="pointVolumeSlider">🎯 Point: <span id="pointVolumeDisplay">60%</span></label>
+                        <input type="range" id="pointVolumeSlider" min="0" max="100" value="60" class="volume-slider">
                     </div>
                     
                     <div class="volume-control">
