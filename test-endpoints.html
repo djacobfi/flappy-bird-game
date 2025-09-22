@@ -55,8 +55,37 @@
     
     <div id="results"></div>
     
-    <!-- Game Canvas (hidden) -->
+    <!-- Game Canvas and required DOM elements (hidden) -->
     <canvas id="gameCanvas" style="display: none;"></canvas>
+    <div id="score" style="display: none;">0</div>
+    <div id="difficulty" style="display: none;">Easy Mode</div>
+    <div id="startScreen" style="display: none;"></div>
+    <div id="gameOverScreen" style="display: none;"></div>
+    <div id="gameHUD" style="display: none;"></div>
+    <div id="settingsPanel" style="display: none;"></div>
+    <button id="settingsBtn" style="display: none;"></button>
+    <button id="pauseBtn" style="display: none;"></button>
+    <div id="playerNameInput" style="display: none;"></div>
+    <div id="finalScore" style="display: none;">0</div>
+    <div id="bestScore" style="display: none;">0</div>
+    <div id="leaderboardList" style="display: none;"></div>
+    <div id="leaderboardStatus" style="display: none;"></div>
+    <div id="playerCount" style="display: none;">0</div>
+    <div id="totalPlayers" style="display: none;"></div>
+    <div id="globalRank" style="display: none;"></div>
+    <div id="rankNumber" style="display: none;">-</div>
+    <div id="masterVolumeDisplay" style="display: none;">100%</div>
+    <div id="musicVolumeDisplay" style="display: none;">30%</div>
+    <div id="tapVolumeDisplay" style="display: none;">70%</div>
+    <div id="crashVolumeDisplay" style="display: none;">80%</div>
+    <div id="pointVolumeDisplay" style="display: none;">60%</div>
+    <div id="powerupVolumeDisplay" style="display: none;">60%</div>
+    <input id="masterVolumeSlider" type="range" style="display: none;">
+    <input id="musicVolumeSlider" type="range" style="display: none;">
+    <input id="tapVolumeSlider" type="range" style="display: none;">
+    <input id="crashVolumeSlider" type="range" style="display: none;">
+    <input id="pointVolumeSlider" type="range" style="display: none;">
+    <input id="powerupVolumeSlider" type="range" style="display: none;">
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -108,7 +137,7 @@
                 }
                 addResult('Firebase', 'Firebase SDK loaded', 'success');
                 
-                // Test Firebase config
+                // Test Firebase config (avoid duplicate init)
                 const config = {
                     apiKey: "AIzaSyAtSBB3Ao22BMxLhKd6vdwyHsDStvYBb4I",
                     authDomain: "flappy-x-bb3fd.firebaseapp.com",
@@ -119,7 +148,13 @@
                     appId: "1:951359218855:web:fa4c784ba02d7097a0a782"
                 };
                 
-                firebase.initializeApp(config);
+                // Check if Firebase is already initialized
+                let app;
+                try {
+                    app = firebase.app();
+                } catch (e) {
+                    app = firebase.initializeApp(config);
+                }
                 const db = firebase.database();
                 addResult('Firebase', 'Firebase initialized', 'success');
                 
