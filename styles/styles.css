@@ -746,17 +746,17 @@ input[type="file"] {
 }
 
 .leaderboard-list li {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
     border-radius: 8px;
     color: #ecf0f1;
     display: flex;
     justify-content: space-between;
-    margin-bottom: 0.4rem;
-    padding: 0.7rem 1rem;
+    margin-bottom: 0.35rem;
+    padding: 0.6rem 0.9rem;
     font-size: 0.95rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
 .leaderboard-list li:hover {
@@ -811,19 +811,13 @@ input[type="file"] {
 .leaderboard-list .player-name {
     flex: 1;
     text-align: left;
-    font-weight: 500;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-weight: 400; /* back to normal weight */
 }
 
 .leaderboard-list .player-score {
-    font-weight: bold;
+    font-weight: 600;
     color: #f39c12;
-    font-size: 1.1rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    background: rgba(0, 0, 0, 0.2);
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    border: 1px solid rgba(243, 156, 18, 0.3);
+    font-size: 1.0rem;
 }
 
 .rank-display {
