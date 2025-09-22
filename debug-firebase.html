@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Debug Test</title>
+</head>
+<body>
+    <h1>Firebase Debug Test</h1>
+    <div id="results"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        function log(message) {
+            console.log(message);
+            results.innerHTML += '<div>' + message + '</div>';
+        }
+        
+        async function testFirebase() {
+            try {
+                log('🔥 Testing Firebase connection...');
+                
+                const config = {
+                    apiKey: "AIzaSyDM05u04JICdhyXG5VYRnXzvbr-rUdie-U",
+                    authDomain: "flappyx-d87a0.firebaseapp.com",
+                    databaseURL: "https://flappyx-d87a0-default-rtdb.firebaseio.com",
+                    projectId: "flappyx-d87a0",
+                    storageBucket: "flappyx-d87a0.firebasestorage.app",
+                    messagingSenderId: "962661707767",
+                    appId: "1:962661707767:web:0a6d56f1dde64e3be3c8f2"
+                };
+                
+                log('📋 Config: ' + JSON.stringify(config, null, 2));
+                
+                // Initialize Firebase
+                firebase.initializeApp(config);
+                const db = firebase.database();
+                log('✅ Firebase initialized');
+                
+                // Test connection
+                const connectedRef = db.ref('.info/connected');
+                connectedRef.on('value', (snap) => {
+                    log('🔗 Connected: ' + snap.val());
+                });
+                
+                // Test write
+                log('📝 Testing write permission...');
+                const testData = {
+                    name: 'TestUser',
+                    score: 42,
+                    timestamp: Date.now()
+                };
+                
+                await db.ref('leaderboard').push(testData);
+                log('✅ Write successful!');
+                
+                // Test read
+                log('📖 Testing read permission...');
+                const snapshot = await db.ref('leaderboard').limitToLast(5).once('value');
+                const scores = [];
+                snapshot.forEach(child => {
+                    scores.push(child.val());
+                });
+                log('✅ Read successful! Found ' + scores.length + ' scores');
+                log('📊 Sample scores: ' + JSON.stringify(scores.slice(0, 3), null, 2));
+                
+                // Clean up test data
+                const testScoresRef = db.ref('leaderboard');
+                const testSnapshot = await testScoresRef.orderByChild('name').equalTo('TestUser').once('value');
+                testSnapshot.forEach(child => {
+                    child.ref.remove();
+                });
+                log('🧹 Test data cleaned up');
+                
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                log('🔍 Full error: ' + JSON.stringify(error, null, 2));
+            }
+        }
+        
+        // Run test when page loads
+        window.addEventListener('load', testFirebase);
+    </script>
+</body>
+</html>
