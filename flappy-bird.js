@@ -1069,12 +1069,17 @@ class FlappyBirdGame {
         this.canvas.addEventListener('mouseup', () => this.handleJumpEnd());
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.handleJumpStart();
-        });
+        }, { passive: false });
         this.canvas.addEventListener('touchend', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.handleJumpEnd();
-        });
+        }, { passive: false });
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
         
         // UI buttons
         this.setupUIEventListeners();

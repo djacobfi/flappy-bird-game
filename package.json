@@ -1,0 +1,24 @@
+{
+  "name": "flappy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "flappy-bird.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/djacobfi/flappy-bird-game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/djacobfi/flappy-bird-game/issues"
+  },
+  "homepage": "https://github.com/djacobfi/flappy-bird-game#readme",
+  "dependencies": {
+    "firebase": "^9.23.0"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "leaderboard": {
+      ".read": true,
+      ".write": "newData.hasChildren(['name','score','timestamp']) &&
+                 newData.child('name').isString() &&
+                 newData.child('score').isNumber() &&
+                 newData.child('timestamp').isNumber() &&
+                 newData.child('score').val() >= 0 &&
+                 newData.child('name').val().length > 0 &&
+                 newData.child('name').val().length <= 20 &&
+                 newData.child('timestamp').val() <= now &&
+                 newData.child('timestamp').val() >= (now - 604800000)",
+      ".indexOn": ["score"]
+    },
+    ".read": false,
+    ".write": false
+  }
+}

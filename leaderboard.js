@@ -121,29 +121,33 @@ class GlobalLeaderboard {
             if (typeof firebase !== 'undefined') {
                 console.log('🔥 Firebase SDK detected, attempting connection...');
                 
-                // Try to initialize Firebase with timeout
-                const initPromise = new Promise((resolve, reject) => {
-                    try {
-                        firebase.initializeApp(this.firebaseConfig);
-                        this.db = firebase.database();
-                        resolve();
-                    } catch (error) {
-                        reject(error);
-                    }
-                });
+                // Check if Firebase app already exists (mobile issue)
+                let app;
+                try {
+                    app = firebase.app();
+                    console.log('📱 Using existing Firebase app (mobile compatibility)');
+                } catch (e) {
+                    // App doesn't exist, create it
+                    app = firebase.initializeApp(this.firebaseConfig);
+                    console.log('🔥 Firebase app initialized');
+                }
                 
-                // 3-second timeout for Firebase initialization
+                this.db = firebase.database();
+                
+                // Mobile-specific connection test with longer timeout
+                const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase());
+                const timeout = isMobile ? 8000 : 3000; // Longer timeout for mobile
+                
+                const testPromise = this.testConnection();
                 const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Firebase initialization timeout')), 3000);
+                    setTimeout(() => reject(new Error('Firebase connection timeout')), timeout);
                 });
                 
-                await Promise.race([initPromise, timeoutPromise]);
+                await Promise.race([testPromise, timeoutPromise]);
                 
                 this.isConnected = true;
                 console.log('✅ Firebase connected successfully!');
                 
-                // Test connection with timeout
-                await this.testConnection();
             } else {
                 console.warn('⚠️ Firebase not available, using local storage only');
                 this.useLocalStorageOnly();
@@ -262,6 +266,10 @@ class GlobalLeaderboard {
         }
         
         try {
+            // Mobile-specific timeout and retry logic
+            const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase());
+            const timeout = isMobile ? 10000 : 5000; // Longer timeout for mobile
+            
             // Add timeout to Firebase query
             const queryPromise = this.db.ref('leaderboard')
                 .orderByChild('score')
@@ -269,7 +277,7 @@ class GlobalLeaderboard {
                 .once('value');
             
             const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Firebase query timeout')), 5000);
+                setTimeout(() => reject(new Error('Firebase query timeout')), timeout);
             });
             
             const snapshot = await Promise.race([queryPromise, timeoutPromise]);
@@ -286,7 +294,20 @@ class GlobalLeaderboard {
         } catch (error) {
             console.error('❌ Failed to fetch global leaderboard:', error);
             console.log('💾 Falling back to local leaderboard');
-            this.isConnected = false; // Mark as disconnected for future calls
+            
+            // Mobile-specific retry logic
+            const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase());
+            if (isMobile && error.message.includes('timeout')) {
+                console.log('📱 Mobile timeout detected, attempting reconnection...');
+                this.isConnected = false;
+                // Try to reconnect after a delay
+                setTimeout(() => {
+                    this.initializeFirebase();
+                }, 2000);
+            } else {
+                this.isConnected = false; // Mark as disconnected for future calls
+            }
+            
             return this.getLocalLeaderboard(limit);
         }
     }

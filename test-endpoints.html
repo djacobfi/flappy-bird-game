@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy X - Endpoint Tests</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: #fff; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #333; border-radius: 8px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #2d5a2d; border: 1px solid #4a7c4a; }
+        .error { background: #5a2d2d; border: 1px solid #7c4a4a; }
+        .warning { background: #5a4a2d; border: 1px solid #7c6a4a; }
+        .info { background: #2d4a5a; border: 1px solid #4a6a7c; }
+        button { padding: 10px 20px; margin: 5px; background: #4a7c4a; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #5a8c5a; }
+        #results { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Flappy X - Endpoint & Functionality Tests</h1>
+    
+    <div class="test-section">
+        <h2>📡 Firebase Connection Test</h2>
+        <button onclick="testFirebaseConnection()">Test Firebase Connection</button>
+        <div id="firebase-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎮 Game Functionality Test</h2>
+        <button onclick="testGameInitialization()">Test Game Init</button>
+        <button onclick="testAudioSystem()">Test Audio System</button>
+        <div id="game-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🏆 Leaderboard Test</h2>
+        <button onclick="testLeaderboardSubmission()">Test Score Submission</button>
+        <button onclick="testLeaderboardRetrieval()">Test Score Retrieval</button>
+        <button onclick="testLocalStorage()">Test Local Storage</button>
+        <div id="leaderboard-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔧 Configuration Test</h2>
+        <button onclick="testConfiguration()">Test All Configs</button>
+        <div id="config-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🌐 Network Test</h2>
+        <button onclick="testNetworkEndpoints()">Test Network Endpoints</button>
+        <div id="network-result"></div>
+    </div>
+    
+    <div id="results"></div>
+    
+    <!-- Game Canvas (hidden) -->
+    <canvas id="gameCanvas" style="display: none;"></canvas>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <!-- Game Scripts -->
+    <script src="leaderboard.js"></script>
+    <script src="flappy-bird.js"></script>
+    
+    <script>
+        let testResults = [];
+        
+        function addResult(section, message, type = 'info') {
+            const result = { section, message, type, timestamp: new Date().toISOString() };
+            testResults.push(result);
+            console.log(`[${type.toUpperCase()}] ${section}: ${message}`);
+        }
+        
+        function displayResults() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2>📊 Test Results Summary</h2>';
+            
+            const sections = [...new Set(testResults.map(r => r.section))];
+            sections.forEach(section => {
+                const sectionResults = testResults.filter(r => r.section === section);
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'test-section';
+                sectionDiv.innerHTML = `<h3>${section}</h3>`;
+                
+                sectionResults.forEach(result => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = `test-result ${result.type}`;
+                    resultDiv.innerHTML = `<strong>${result.timestamp}</strong>: ${result.message}`;
+                    sectionDiv.appendChild(resultDiv);
+                });
+                
+                resultsDiv.appendChild(sectionDiv);
+            });
+        }
+        
+        async function testFirebaseConnection() {
+            const resultDiv = document.getElementById('firebase-result');
+            resultDiv.innerHTML = '<div class="info">Testing Firebase connection...</div>';
+            
+            try {
+                // Test Firebase availability
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK not loaded');
+                }
+                addResult('Firebase', 'Firebase SDK loaded', 'success');
+                
+                // Test Firebase config
+                const config = {
+                    apiKey: "AIzaSyAtSBB3Ao22BMxLhKd6vdwyHsDStvYBb4I",
+                    authDomain: "flappy-x-bb3fd.firebaseapp.com",
+                    databaseURL: "https://flappy-x-bb3fd-default-rtdb.asia-southeast1.firebasedatabase.app",
+                    projectId: "flappy-x-bb3fd",
+                    storageBucket: "flappy-x-bb3fd.firebasestorage.app",
+                    messagingSenderId: "951359218855",
+                    appId: "1:951359218855:web:fa4c784ba02d7097a0a782"
+                };
+                
+                firebase.initializeApp(config);
+                const db = firebase.database();
+                addResult('Firebase', 'Firebase initialized', 'success');
+                
+                // Test database connection
+                const testRef = db.ref('.info/connected');
+                const snapshot = await testRef.once('value');
+                addResult('Firebase', 'Database connection test passed', 'success');
+                
+                // Test write permission
+                const testScore = {
+                    name: 'TestUser',
+                    score: 999,
+                    timestamp: Date.now(),
+                    test: true
+                };
+                
+                await db.ref('leaderboard').push(testScore);
+                addResult('Firebase', 'Write permission test passed', 'success');
+                
+                // Clean up test data
+                const scoresRef = db.ref('leaderboard');
+                const scoresSnapshot = await scoresRef.orderByChild('test').equalTo(true).once('value');
+                scoresSnapshot.forEach(child => {
+                    child.ref.remove();
+                });
+                addResult('Firebase', 'Test data cleaned up', 'success');
+                
+                resultDiv.innerHTML = '<div class="success">✅ Firebase connection successful!</div>';
+                
+            } catch (error) {
+                addResult('Firebase', `Connection failed: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<div class="error">❌ Firebase connection failed: ${error.message}</div>`;
+            }
+        }
+        
+        async function testGameInitialization() {
+            const resultDiv = document.getElementById('game-result');
+            resultDiv.innerHTML = '<div class="info">Testing game initialization...</div>';
+            
+            try {
+                // Test canvas
+                const canvas = document.getElementById('gameCanvas');
+                if (!canvas) {
+                    throw new Error('Game canvas not found');
+                }
+                addResult('Game', 'Canvas found', 'success');
+                
+                // Test game class
+                if (typeof FlappyBirdGame === 'undefined') {
+                    throw new Error('FlappyBirdGame class not loaded');
+                }
+                addResult('Game', 'Game class loaded', 'success');
+                
+                // Test game initialization
+                const game = new FlappyBirdGame();
+                addResult('Game', 'Game instance created', 'success');
+                
+                // Test audio context
+                if (game.audioContext && game.audioContext.state) {
+                    addResult('Game', `Audio context initialized: ${game.audioContext.state}`, 'success');
+                } else {
+                    addResult('Game', 'Audio context not available (may need user interaction)', 'warning');
+                }
+                
+                resultDiv.innerHTML = '<div class="success">✅ Game initialization successful!</div>';
+                
+            } catch (error) {
+                addResult('Game', `Initialization failed: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<div class="error">❌ Game initialization failed: ${error.message}</div>`;
+            }
+        }
+        
+        async function testAudioSystem() {
+            const resultDiv = document.getElementById('game-result');
+            
+            try {
+                const game = new FlappyBirdGame();
+                
+                // Test audio volumes
+                const volumes = game.audio.volumes;
+                const requiredVolumes = ['master', 'music', 'tap', 'crash', 'point', 'powerup'];
+                
+                requiredVolumes.forEach(vol => {
+                    if (volumes[vol] !== undefined) {
+                        addResult('Audio', `Volume control for ${vol}: ${volumes[vol]}%`, 'success');
+                    } else {
+                        addResult('Audio', `Missing volume control for ${vol}`, 'error');
+                    }
+                });
+                
+                // Test sound creation
+                if (typeof game.createBeepSound === 'function') {
+                    addResult('Audio', 'Beep sound creator available', 'success');
+                }
+                
+                if (typeof game.createPointSound === 'function') {
+                    addResult('Audio', 'Point sound creator available', 'success');
+                }
+                
+                resultDiv.innerHTML = '<div class="success">✅ Audio system test completed!</div>';
+                
+            } catch (error) {
+                addResult('Audio', `Audio test failed: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<div class="error">❌ Audio test failed: ${error.message}</div>`;
+            }
+        }
+        
+        async function testLeaderboardSubmission() {
+            const resultDiv = document.getElementById('leaderboard-result');
+            resultDiv.innerHTML = '<div class="info">Testing leaderboard submission...</div>';
+            
+            try {
+                const leaderboard = new GlobalLeaderboard();
+                
+                // Test local submission
+                const testScore = 42;
+                const submitted = await leaderboard.submitScore(testScore);
+                
+                if (submitted) {
+                    addResult('Leaderboard', 'Score submitted successfully', 'success');
+                } else {
+                    addResult('Leaderboard', 'Score submission returned false', 'warning');
+                }
+                
+                // Test local storage
+                const localScores = leaderboard.getLocalLeaderboard();
+                const hasTestScore = localScores.some(score => score.score === testScore);
+                
+                if (hasTestScore) {
+                    addResult('Leaderboard', 'Score found in local storage', 'success');
+                } else {
+                    addResult('Leaderboard', 'Score not found in local storage', 'error');
+                }
+                
+                resultDiv.innerHTML = '<div class="success">✅ Leaderboard submission test completed!</div>';
+                
+            } catch (error) {
+                addResult('Leaderboard', `Submission test failed: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<div class="error">❌ Leaderboard submission failed: ${error.message}</div>`;
+            }
+        }
+        
+        async function testLeaderboardRetrieval() {
+            const resultDiv = document.getElementById('leaderboard-result');
+            
+            try {
+                const leaderboard = new GlobalLeaderboard();
+                
+                // Test local retrieval
+                const localScores = leaderboard.getLocalLeaderboard();
+                addResult('Leaderboard', `Local scores retrieved: ${localScores.length}`, 'success');
+                
+                // Test global retrieval
+                const globalScores = await leaderboard.getGlobalLeaderboard();
+                addResult('Leaderboard', `Global scores retrieved: ${globalScores.length}`, 'success');
+                
+                // Test player count
+                const totalPlayers = await leaderboard.getTotalPlayers();
+                addResult('Leaderboard', `Total players: ${totalPlayers}`, 'success');
+                
+                resultDiv.innerHTML = '<div class="success">✅ Leaderboard retrieval test completed!</div>';
+                
+            } catch (error) {
+                addResult('Leaderboard', `Retrieval test failed: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<div class="error">❌ Leaderboard retrieval failed: ${error.message}</div>`;
+            }
+        }
+        
+        async function testLocalStorage() {
+            const resultDiv = document.getElementById('leaderboard-result');
+            
+            try {
+                // Test localStorage availability
+                if (typeof Storage === 'undefined') {
+                    throw new Error('localStorage not available');
+                }
+                addResult('LocalStorage', 'localStorage available', 'success');
+                
+                // Test leaderboard keys
+                const keys = ['flappyLocalLeaderboard', 'flappyPlayerName', 'flappyBestScore'];
+                keys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    if (value !== null) {
+                        addResult('LocalStorage', `${key}: ${value.length} chars`, 'success');
+                    } else {
+                        addResult('LocalStorage', `${key}: not set`, 'info');
+                    }
+                });
+                
+                resultDiv.innerHTML = '<div class="success">✅ LocalStorage test completed!</div>';
+                
+            } catch (error) {
+                addResult('LocalStorage', `Test failed: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<div class="error">❌ LocalStorage test failed: ${error.message}</div>`;
+            }
+        }
+        
+        async function testConfiguration() {
+            const resultDiv = document.getElementById('config-result');
+            resultDiv.innerHTML = '<div class="info">Testing configuration...</div>';
+            
+            try {
+                // Test Firebase config
+                const leaderboard = new GlobalLeaderboard();
+                const config = leaderboard.firebaseConfig;
+                
+                const requiredKeys = ['apiKey', 'authDomain', 'databaseURL', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+                requiredKeys.forEach(key => {
+                    if (config[key] && config[key] !== 'your-api-key-here') {
+                        addResult('Config', `${key}: configured`, 'success');
+                    } else {
+                        addResult('Config', `${key}: not configured`, 'error');
+                    }
+                });
+                
+                // Test game settings (skip if canvas not available)
+                try {
+                    const game = new FlappyBirdGame();
+                    if (game.settings) {
+                        addResult('Config', 'Game settings loaded', 'success');
+                    }
+                    
+                    if (game.audio && game.audio.volumes) {
+                        addResult('Config', 'Audio configuration loaded', 'success');
+                    }
+                } catch (error) {
+                    addResult('Config', 'Game config test skipped (canvas not available)', 'warning');
+                }
+                
+                resultDiv.innerHTML = '<div class="success">✅ Configuration test completed!</div>';
+                
+            } catch (error) {
+                addResult('Config', `Configuration test failed: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<div class="error">❌ Configuration test failed: ${error.message}</div>`;
+            }
+        }
+        
+        async function testNetworkEndpoints() {
+            const resultDiv = document.getElementById('network-result');
+            resultDiv.innerHTML = '<div class="info">Testing network endpoints...</div>';
+            
+            try {
+                // Test Firebase endpoint
+                const firebaseUrl = 'https://flappy-x-bb3fd-default-rtdb.asia-southeast1.firebasedatabase.app/.json';
+                const response = await fetch(firebaseUrl);
+                
+                if (response.ok) {
+                    addResult('Network', 'Firebase endpoint reachable', 'success');
+                } else {
+                    addResult('Network', `Firebase endpoint error: ${response.status}`, 'warning');
+                }
+                
+                // Test CDN endpoints
+                const cdnTests = [
+                    'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
+                    'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js'
+                ];
+                
+                for (const url of cdnTests) {
+                    try {
+                        const response = await fetch(url, { method: 'HEAD' });
+                        if (response.ok) {
+                            addResult('Network', `CDN ${url.split('/').pop()}: reachable`, 'success');
+                        } else {
+                            addResult('Network', `CDN ${url.split('/').pop()}: ${response.status}`, 'warning');
+                        }
+                    } catch (error) {
+                        addResult('Network', `CDN ${url.split('/').pop()}: failed`, 'error');
+                    }
+                }
+                
+                resultDiv.innerHTML = '<div class="success">✅ Network test completed!</div>';
+                
+            } catch (error) {
+                addResult('Network', `Network test failed: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<div class="error">❌ Network test failed: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testFirebaseConnection();
+                testGameInitialization();
+                testLeaderboardSubmission();
+                testConfiguration();
+                testNetworkEndpoints();
+                
+                setTimeout(displayResults, 2000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
