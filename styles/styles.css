@@ -245,155 +245,17 @@ html, body {
     transform: translateY(-2px);
 }
 
-/* Game Over Screen Styles */
-.gameover-container {
-    max-width: 700px;
-    width: 90%;
-    padding: 2rem;
-    animation: slideInUp 0.8s ease-out;
-}
-
-.gameover-header {
-    text-align: center;
-    margin-bottom: 2rem;
-    animation: bounceIn 1s ease-out 0.2s both;
-}
-
-.result-icon {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    animation: bounce 2s infinite;
-}
-
-.gameover-title {
-    font-size: 2.8rem;
-    margin: 0 0 0.5rem 0;
+.screen h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
     color: #e74c3c;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-    font-weight: 800;
 }
 
-.result-subtitle {
+.screen p {
     font-size: 1.2rem;
-    color: #bdc3c7;
-    margin: 0;
-}
-
-.score-section {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-    animation: fadeInUp 0.6s ease-out 0.4s both;
-}
-
-.score-card {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    border-radius: 15px;
-    padding: 1.5rem;
-    text-align: center;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.score-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    transition: left 0.5s;
-}
-
-.score-card:hover::before {
-    left: 100%;
-}
-
-.score-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-    border-color: rgba(255, 255, 255, 0.4);
-}
-
-.current-score {
-    border-color: rgba(231, 76, 60, 0.5);
-}
-
-.best-score {
-    border-color: rgba(243, 156, 18, 0.5);
-}
-
-.score-label {
-    font-size: 1rem;
-    color: #bdc3c7;
     margin-bottom: 0.5rem;
-    font-weight: 500;
-}
-
-.score-value {
-    font-size: 2.5rem;
-    font-weight: 900;
-    color: #ffffff;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-}
-
-.achievement-section {
-    margin-bottom: 2rem;
-    animation: fadeInUp 0.6s ease-out 0.5s both;
-}
-
-.achievement-message {
-    background: linear-gradient(135deg, rgba(243, 156, 18, 0.2), rgba(230, 126, 34, 0.1));
-    border: 2px solid rgba(243, 156, 18, 0.4);
-    border-radius: 12px;
-    padding: 1rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.8rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #f39c12;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-.achievement-icon {
-    font-size: 1.5rem;
-    animation: pulse 2s infinite;
-}
-
-.leaderboard-header {
-    margin-bottom: 1rem;
-    animation: fadeInUp 0.6s ease-out 0.6s both;
-}
-
-.leaderboard-title {
-    color: #f39c12;
-    margin: 0 0 0.5rem 0;
-    text-align: center;
-    font-size: 1.4rem;
-    font-weight: 700;
-}
-
-.leaderboard-status {
-    text-align: center;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-    color: #95a5a6;
-}
-
-.status-text, .player-count {
-    display: block;
-    margin: 0.2rem 0;
-}
-
-.gameover-actions {
-    margin-top: 2rem;
-    animation: fadeInUp 0.6s ease-out 0.8s both;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 /* Animations */
@@ -1042,101 +904,49 @@ input[type="file"] {
 
 /* Leaderboard Styles */
 .player-name-section {
-    margin: 1.5rem 0;
+    margin: 1rem 0;
     text-align: center;
-    animation: fadeInUp 0.6s ease-out 0.7s both;
 }
 
-.name-input-container {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 15px;
-    padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-}
-
-.name-label {
+.player-name-section label {
     display: block;
     color: #3498db;
-    font-size: 1rem;
-    margin-bottom: 1rem;
-    font-weight: 600;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-.name-input-wrapper {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
 }
 
 .name-input {
-    padding: 1rem 1.5rem;
-    border: 2px solid rgba(52, 152, 219, 0.5);
-    border-radius: 12px;
-    font-size: 1.1rem;
-    width: 250px;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(52, 152, 219, 0.3);
+    border-radius: 8px;
     color: white;
+    font-size: 1rem;
+    padding: 0.5rem;
     text-align: center;
-    transition: all 0.3s ease;
-    font-weight: 500;
+    width: 150px;
+    margin-right: 0.5rem;
 }
 
 .name-input:focus {
     outline: none;
     border-color: #3498db;
-    box-shadow: 0 0 15px rgba(52, 152, 219, 0.3);
-    background: rgba(0, 0, 0, 0.5);
-}
-
-.name-input::placeholder {
-    color: #95a5a6;
-    font-style: italic;
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .save-name-btn {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    border: 2px solid rgba(46, 204, 113, 0.3);
-    border-radius: 12px;
+    background: linear-gradient(45deg, #27ae60, #2ecc71);
+    border: none;
+    border-radius: 6px;
     color: white;
     cursor: pointer;
-    font-size: 1rem;
-    font-weight: 600;
-    padding: 1rem 1.5rem;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    position: relative;
-    overflow: hidden;
-}
-
-.save-name-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-}
-
-.save-name-btn:hover::before {
-    left: 100%;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    transition: all 0.2s ease;
 }
 
 .save-name-btn:hover {
-    background: linear-gradient(135deg, #27ae60, #2ecc71);
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
-    border-color: rgba(46, 204, 113, 0.6);
-}
-
-.save-name-btn:active {
-    transform: translateY(0) scale(1.02);
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    transform: scale(1.05);
 }
 
 .leaderboard-section {

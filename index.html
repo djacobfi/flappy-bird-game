@@ -87,64 +87,33 @@
             
             <!-- Game Over Screen -->
             <div id="gameOverScreen" class="screen hidden">
-                <div class="gameover-container">
-                    <div class="gameover-header">
-                        <div class="result-icon">🏁</div>
-                        <h2 class="gameover-title">Adventure Complete!</h2>
-                        <div class="result-subtitle">How did you do?</div>
-                    </div>
-                    
-                    <div class="score-section">
-                        <div class="score-card current-score">
-                            <div class="score-label">Your Score</div>
-                            <div class="score-value" id="finalScore">0</div>
-                        </div>
-                        <div class="score-card best-score">
-                            <div class="score-label">Best Score</div>
-                            <div class="score-value" id="bestScore">0</div>
-                        </div>
-                    </div>
-                    
-                    <div class="achievement-section">
-                        <div class="achievement-message" id="achievementMessage">
-                            <span class="achievement-icon">🌟</span>
-                            <span class="achievement-text">Great job!</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Player Name Input -->
-                    <div class="player-name-section">
-                        <div class="name-input-container">
-                            <label for="playerNameInput" class="name-label">👤 Enter your name:</label>
-                            <div class="name-input-wrapper">
-                                <input type="text" id="playerNameInput" class="name-input" maxlength="20" placeholder="Player Name">
-                                <button id="saveNameBtn" class="save-name-btn">💾 Save</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Leaderboard Display -->
-                    <div class="leaderboard-section">
-                        <div class="leaderboard-header">
-                            <h3 class="leaderboard-title">🏆 Global Leaderboard</h3>
-                            <div class="leaderboard-status">
-                                <span id="leaderboardStatus" class="status-text">📡 Connecting...</span>
-                                <span id="totalPlayers" class="player-count" style="display: none;">👥 <span id="playerCount">0</span> players</span>
-                            </div>
-                        </div>
-                        <ol id="leaderboardList" class="leaderboard-list">
-                            <li>Loading...</li>
-                        </ol>
-                        <button id="refreshLeaderboard" class="refresh-btn">🔄 Refresh Leaderboard</button>
-                    </div>
-                    
-                    <div class="gameover-actions">
-                        <button id="restartBtn" class="game-btn primary restart-btn">
-                            <span class="btn-icon">🔄</span>
-                            <span class="btn-text">New Adventure</span>
-                        </button>
-                    </div>
+                <h2>🏁 Adventure Complete!</h2>
+                <div class="score-display">
+                    <p>Score: <span id="finalScore" class="score-number">0</span></p>
+                    <p>Best: <span id="bestScore" class="score-number">0</span></p>
                 </div>
+                
+                <!-- Player Name Input -->
+                <div class="player-name-section">
+                    <label for="playerNameInput">👤 Player Name:</label>
+                    <input type="text" id="playerNameInput" class="name-input" maxlength="20" placeholder="Enter your name">
+                    <button id="saveNameBtn" class="save-name-btn">💾</button>
+                </div>
+                
+                <!-- Leaderboard Display -->
+                <div class="leaderboard-section">
+                    <h3>🏆 Global Leaderboard</h3>
+                    <div class="leaderboard-status">
+                        <span id="leaderboardStatus">📡 Connecting...</span>
+                        <span id="totalPlayers" style="display: none;">👥 Total Players: <span id="playerCount">0</span></span>
+                    </div>
+                    <ol id="leaderboardList" class="leaderboard-list">
+                        <li>Loading...</li>
+                    </ol>
+                    <button id="refreshLeaderboard" class="refresh-btn">🔄 Refresh</button>
+                </div>
+                
+                <button id="restartBtn" class="game-btn primary">🔄 New Adventure</button>
             </div>
             
             <!-- In-Game HUD -->
