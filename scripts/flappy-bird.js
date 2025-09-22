@@ -1079,6 +1079,20 @@ class FlappyBirdGame {
             this.handleJumpEnd();
         });
         
+        // Add touch events to the entire document for start screen
+        document.addEventListener('touchstart', (e) => {
+            if (this.gameState === 'menu') {
+                e.preventDefault();
+                this.handleJumpStart();
+            }
+        });
+        document.addEventListener('touchend', (e) => {
+            if (this.gameState === 'menu') {
+                e.preventDefault();
+                this.handleJumpEnd();
+            }
+        });
+        
         // UI buttons
         this.setupUIEventListeners();
         
