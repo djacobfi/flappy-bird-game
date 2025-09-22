@@ -94,6 +94,14 @@ class FlappyBirdGame {
         // Score submission tracking
         this.currentGameSubmitted = false;
         
+        // Pipe variation pattern control to avoid repetitive heights
+        this.pipePattern = {
+            lastBand: null,        // 'low' | 'mid' | 'high'
+            consecutive: 0,        // how many consecutive in the same band
+            zigzagActive: false,   // alternate high/low when active
+            zigzagNextHigh: Math.random() < 0.5
+        };
+        
         // Easter egg power-up system
         this.powerUp = {
             active: false,
