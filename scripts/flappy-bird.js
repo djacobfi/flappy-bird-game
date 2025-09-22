@@ -977,7 +977,6 @@ class FlappyBirdGame {
         const elements = {
             startBtn: () => this.startGame(),
             restartBtn: () => this.handleRestart(),
-            toggleMusic: () => this.toggleMusic(),
             settingsBtn: () => this.toggleSettings(),
             closeSettingsBtn: () => this.hideSettings(),
             pauseBtn: () => this.togglePause(),
@@ -1060,7 +1059,6 @@ class FlappyBirdGame {
         
         // Set other UI elements
         document.getElementById('bestScore').textContent = this.bestScore;
-        document.getElementById('toggleMusic').textContent = this.audio.enabled ? '🔊 Music' : '🔇 Music';
         
         // Hide HUD initially (show only during gameplay)
         document.getElementById('gameHUD').style.display = 'none';
