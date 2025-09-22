@@ -99,7 +99,9 @@ class FlappyBirdGame {
             lastBand: null,        // 'low' | 'mid' | 'high'
             consecutive: 0,        // how many consecutive in the same band
             zigzagActive: false,   // alternate high/low when active
-            zigzagNextHigh: Math.random() < 0.5
+            zigzagNextHigh: Math.random() < 0.5,
+            lastPipeHeight: null,  // track last pipe height for immediate next pipe avoidance
+            pipeCount: 0           // track total pipes created
         };
         
         // Easter egg power-up system
@@ -1192,12 +1194,14 @@ class FlappyBirdGame {
         this.score = 0;
         this.camera = { x: 0, y: 0 };
         
-        // Pipe variation pattern control to avoid repetitive heights
+        // Reset pipe variation pattern control
         this.pipePattern = {
             lastBand: null,        // 'low' | 'mid' | 'high'
             consecutive: 0,        // how many consecutive in the same band
             zigzagActive: false,   // alternate high/low when active
-            zigzagNextHigh: Math.random() < 0.5
+            zigzagNextHigh: Math.random() < 0.5,
+            lastPipeHeight: null,  // track last pipe height for immediate next pipe avoidance
+            pipeCount: 0           // track total pipes created
         };
         
         // Reset power-up and clean up any remaining resources
@@ -1618,6 +1622,33 @@ class FlappyBirdGame {
                     const classify = (y) => (y < lowThreshold ? 'low' : (y < highThreshold ? 'mid' : 'high'));
                     let band = classify(topHeight);
                     
+                    // CRITICAL: Ensure the very next pipe is NEVER at the same level
+                    if (self.pipePattern.lastPipeHeight !== null) {
+                        const heightDifference = Math.abs(topHeight - self.pipePattern.lastPipeHeight);
+                        const minDifference = range * 0.15; // Minimum 15% of range difference
+                        
+                        if (heightDifference < minDifference) {
+                            // Force a different height - choose opposite or middle
+                            const lastBand = classify(self.pipePattern.lastPipeHeight);
+                            let targetY;
+                            
+                            if (lastBand === 'high') {
+                                // Last was high, go low or mid
+                                targetY = Math.random() < 0.6 ? (minHeight + range * 0.2) : (minHeight + range * 0.5);
+                            } else if (lastBand === 'low') {
+                                // Last was low, go high or mid
+                                targetY = Math.random() < 0.6 ? (minHeight + range * 0.8) : (minHeight + range * 0.5);
+                            } else {
+                                // Last was mid, go high or low
+                                targetY = Math.random() < 0.5 ? (minHeight + range * 0.2) : (minHeight + range * 0.8);
+                            }
+                            
+                            // Blend toward target
+                            topHeight = topHeight * 0.4 + targetY * 0.6;
+                            band = classify(topHeight);
+                        }
+                    }
+                    
                     // Optionally enable brief zig-zag sequences for variety (but keep playable)
                     if (!self.pipePattern.zigzagActive && Math.random() < 0.12 && self.score >= 3) {
                         self.pipePattern.zigzagActive = true;
@@ -1638,10 +1669,10 @@ class FlappyBirdGame {
                         self.pipePattern.zigzagNextHigh = !self.pipePattern.zigzagNextHigh;
                     }
                     
-                    // Prevent too many in the same band in a row
+                    // Prevent too many in the same band in a row (but allow 3rd, 4th, etc.)
                     if (self.pipePattern.lastBand === band) {
                         self.pipePattern.consecutive += 1;
-                        if (self.pipePattern.consecutive >= 2) {
+                        if (self.pipePattern.consecutive >= 3) { // Increased from 2 to 3
                             // Nudge toward a different band; prefer mid as safe
                             const targetBand = band === 'mid' ? (Math.random() < 0.5 ? 'high' : 'low') : (Math.random() < 0.7 ? 'mid' : (band === 'high' ? 'low' : 'high'));
                             const targetY = targetBand === 'high' ? (minHeight + range * 0.78)
@@ -1655,6 +1686,10 @@ class FlappyBirdGame {
                         self.pipePattern.lastBand = band;
                         self.pipePattern.consecutive = 0;
                     }
+                    
+                    // Update tracking for next pipe
+                    self.pipePattern.lastPipeHeight = topHeight;
+                    self.pipePattern.pipeCount++;
                 })(this);
 
                 // Gentle drift toward center to prevent getting stuck at extremes
