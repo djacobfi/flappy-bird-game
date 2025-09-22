@@ -841,26 +841,26 @@ class FlappyBirdGame {
             osc3.frequency.setValueAtTime(1046.50, this.audioContext.currentTime); // C6
             osc3.frequency.setValueAtTime(1318.51, this.audioContext.currentTime + 0.15); // E6
             
-            // Volume envelopes for smooth sound
+            // Volume envelopes for smooth sound (10x louder)
             const effectiveVolume = this.getEffectiveVolume('point');
             gain1.gain.setValueAtTime(0, this.audioContext.currentTime);
-            gain1.gain.linearRampToValueAtTime(0.3 * effectiveVolume, this.audioContext.currentTime + 0.05);
-            gain1.gain.exponentialRampToValueAtTime(0.1 * effectiveVolume, this.audioContext.currentTime + 0.3);
-            gain1.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + 1.0);
+            gain1.gain.linearRampToValueAtTime(3.0 * effectiveVolume, this.audioContext.currentTime + 0.05);
+            gain1.gain.exponentialRampToValueAtTime(1.0 * effectiveVolume, this.audioContext.currentTime + 0.3);
+            gain1.gain.exponentialRampToValueAtTime(0.1 * effectiveVolume, this.audioContext.currentTime + 1.0);
             
             gain2.gain.setValueAtTime(0, this.audioContext.currentTime);
-            gain2.gain.linearRampToValueAtTime(0.2 * effectiveVolume, this.audioContext.currentTime + 0.05);
-            gain2.gain.exponentialRampToValueAtTime(0.05 * effectiveVolume, this.audioContext.currentTime + 0.3);
-            gain2.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + 1.0);
+            gain2.gain.linearRampToValueAtTime(2.0 * effectiveVolume, this.audioContext.currentTime + 0.05);
+            gain2.gain.exponentialRampToValueAtTime(0.5 * effectiveVolume, this.audioContext.currentTime + 0.3);
+            gain2.gain.exponentialRampToValueAtTime(0.1 * effectiveVolume, this.audioContext.currentTime + 1.0);
             
             gain3.gain.setValueAtTime(0, this.audioContext.currentTime);
-            gain3.gain.linearRampToValueAtTime(0.15 * effectiveVolume, this.audioContext.currentTime + 0.1);
-            gain3.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + 0.25);
-            gain3.gain.exponentialRampToValueAtTime(0.001 * effectiveVolume, this.audioContext.currentTime + 1.0);
+            gain3.gain.linearRampToValueAtTime(1.5 * effectiveVolume, this.audioContext.currentTime + 0.1);
+            gain3.gain.exponentialRampToValueAtTime(0.1 * effectiveVolume, this.audioContext.currentTime + 0.25);
+            gain3.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + 1.0);
             
             masterGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-            masterGain.gain.linearRampToValueAtTime(1.0 * effectiveVolume, this.audioContext.currentTime + 0.02);
-            masterGain.gain.exponentialRampToValueAtTime(0.01 * effectiveVolume, this.audioContext.currentTime + 1.0);
+            masterGain.gain.linearRampToValueAtTime(10.0 * effectiveVolume, this.audioContext.currentTime + 0.02);
+            masterGain.gain.exponentialRampToValueAtTime(0.1 * effectiveVolume, this.audioContext.currentTime + 1.0);
             
             // Play the sound
             const startTime = this.audioContext.currentTime;
@@ -2832,6 +2832,12 @@ class FlappyBirdGame {
             this.updateButtonText('crashSoundUpload', null);
             // Clear file input
             const fileInput = document.getElementById('crashSoundUpload');
+            if (fileInput) fileInput.value = '';
+        } else if (soundType === 'point') {
+            this.audio.custom.pointSound = null;
+            this.updateButtonText('pointSoundUpload', null);
+            // Clear file input
+            const fileInput = document.getElementById('pointSoundUpload');
             if (fileInput) fileInput.value = '';
         } else if (soundType === 'bgMusic') {
             // Stop current background music if it's playing
