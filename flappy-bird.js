@@ -1752,15 +1752,14 @@ class FlappyBirdGame {
     }
     
     createSideBySidePipes(count) {
-        // Create multiple pipes side by side horizontally
-        const baseX = this.pipes.length === 0 ? 
+        // Create multiple pipes side by side horizontally, placed after the last pipe
+        const lastPipeX = this.pipes.length === 0 ? 
             this.bird.x + this.canvas.width * 0.8 : 
-            this.pipes[this.pipes.length - 1].x + 400;
+            this.pipes[this.pipes.length - 1].x + this.settings.pipeWidth;
         
         const pipeWidth = this.settings.pipeWidth;
         const horizontalSpacing = 60; // Space between side-by-side pipes
-        const totalWidth = (count - 1) * horizontalSpacing + pipeWidth;
-        const startX = baseX - totalWidth / 2; // Center the group
+        const startX = lastPipeX + 200; // Place after the last pipe with some gap
         
         for (let i = 0; i < count; i++) {
             const pipeX = startX + i * horizontalSpacing;
