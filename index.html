@@ -12,7 +12,21 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      gtag('config', 'G-1E6E1025QB');
+      // Get or create consistent user ID
+      let userId = localStorage.getItem('flappyUserId');
+      if (!userId) {
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 15);
+        userId = `user_${timestamp}_${random}`;
+        localStorage.setItem('flappyUserId', userId);
+      }
+
+      gtag('config', 'G-1E6E1025QB', {
+        'user_id': userId,
+        'custom_map': {
+          'custom_parameter_user_id': 'user_id'
+        }
+      });
     </script>
     
     <!-- Favicon -->

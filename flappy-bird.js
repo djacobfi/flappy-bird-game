@@ -1240,7 +1240,8 @@ class FlappyBirdGame {
         if (typeof gtag !== 'undefined') {
             gtag('event', 'game_started', {
                 event_category: 'Game',
-                event_label: 'Game Start'
+                event_label: 'Game Start',
+                custom_parameter_user_id: this.leaderboard.userId
             });
         }
         
@@ -2087,7 +2088,8 @@ class FlappyBirdGame {
                 event_category: 'Power Up',
                 event_label: 'Speed Boost',
                 value: this.score,
-                custom_parameter_score: this.score
+                custom_parameter_score: this.score,
+                custom_parameter_user_id: this.leaderboard.userId
             });
         }
         
@@ -2370,7 +2372,8 @@ class FlappyBirdGame {
                 event_category: 'Game',
                 event_label: 'Game Over',
                 value: this.score,
-                custom_parameter_score: this.score
+                custom_parameter_score: this.score,
+                custom_parameter_user_id: this.leaderboard.userId
             });
         }
         
