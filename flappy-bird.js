@@ -36,6 +36,13 @@ class FlappyBirdGame {
             pipeGap: 250,
             pipeWidth: 50
         };
+
+        // Pipe level variation state to avoid same-level repetitions
+        this.pipeLevelState = {
+            lastBandIndex: null,
+            sameBandCount: 0,
+            bands: 6 // number of vertical bands used to diversify pipe openings
+        };
         
         // Progressive difficulty
         this.difficulty = {
@@ -1572,27 +1579,32 @@ class FlappyBirdGame {
                 
                 topHeight = lastHeight + movement;
                 
-                // Early-game vertical lane snapping for variety without spikes
-                if (this.score < 10) {
-                    const lanes = 5; // number of discrete vertical lanes
-                    const laneHeight = (maxHeight - minHeight) / (lanes + 1);
-                    // 40% chance to snap to a nearby lane to create distinct openings
-                    if (Math.random() < 0.4) {
-                        const laneIndex = Math.max(1, Math.min(lanes, Math.round((topHeight - minHeight) / laneHeight)));
-                        const snapped = minHeight + laneIndex * laneHeight;
-                        // Blend toward the lane to keep motion smooth
-                        topHeight = topHeight * 0.6 + snapped * 0.4;
-                    }
-                } else if (this.score < 25) {
-                    // Mid-game occasional lane influence, lighter touch
-                    if (Math.random() < 0.2) {
-                        const lanes = 6;
-                        const laneHeight = (maxHeight - minHeight) / (lanes + 1);
-                        const laneIndex = Math.max(1, Math.min(lanes, Math.round((topHeight - minHeight) / laneHeight)));
-                        const snapped = minHeight + laneIndex * laneHeight;
-                        topHeight = topHeight * 0.8 + snapped * 0.2;
-                    }
+                // Band snapping with repetition guard to avoid same level repeats
+                const bands = this.pipeLevelState.bands;
+                const bandHeight = (maxHeight - minHeight) / (bands + 1);
+                const candidateBand = Math.max(1, Math.min(bands, Math.round((topHeight - minHeight) / bandHeight)));
+                let chosenBand = candidateBand;
+
+                if (this.pipeLevelState.lastBandIndex === chosenBand) {
+                    this.pipeLevelState.sameBandCount += 1;
+                } else {
+                    this.pipeLevelState.sameBandCount = 0;
                 }
+
+                // If we are repeating the same band 2+ times, force a different band
+                if (this.pipeLevelState.sameBandCount >= 2) {
+                    const possible = [];
+                    for (let i = 1; i <= bands; i++) {
+                        if (i !== chosenBand) possible.push(i);
+                    }
+                    chosenBand = possible[Math.floor(Math.random() * possible.length)];
+                    this.pipeLevelState.sameBandCount = 0; // reset after forcing change
+                }
+
+                this.pipeLevelState.lastBandIndex = chosenBand;
+                const snapped = minHeight + chosenBand * bandHeight;
+                // Blend toward band to keep motion smooth
+                topHeight = topHeight * 0.6 + snapped * 0.4;
 
                 // Gentle drift toward center to prevent getting stuck at extremes
                 const centerY = (minHeight + maxHeight) / 2;
