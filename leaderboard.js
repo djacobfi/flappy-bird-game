@@ -7,13 +7,14 @@ class GlobalLeaderboard {
     constructor() {
         // Firebase configuration (you'll need to replace with your own)
         this.firebaseConfig = {
-            apiKey: "your-api-key-here",
-            authDomain: "flappy-bird-leaderboard.firebaseapp.com",
-            databaseURL: "https://flappy-bird-leaderboard-default-rtdb.firebaseio.com",
-            projectId: "flappy-bird-leaderboard",
-            storageBucket: "flappy-bird-leaderboard.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "your-app-id-here"
+            apiKey: "AIzaSyDM05u04JICdhyXG5VYRnXzvbr-rUdie-U",
+            authDomain: "flappyx-d87a0.firebaseapp.com",
+            databaseURL: "https://flappyx-d87a0-default-rtdb.firebaseio.com",
+            projectId: "flappyx-d87a0",
+            storageBucket: "flappyx-d87a0.firebasestorage.app",
+            messagingSenderId: "962661707767",
+            appId: "1:962661707767:web:0a6d56f1dde64e3be3c8f2",
+            measurementId: "G-1E6E1025QB"
         };
         
         this.db = null;
@@ -34,18 +35,9 @@ class GlobalLeaderboard {
         
         console.log(`📊 Final local scores after processing: ${this.localScores.length}`);
         
-        // Add demo scores only if truly no scores exist (first time users)
-        if (this.localScores.length === 0 && !localStorage.getItem('flappyBestScore')) {
-            console.log('🎮 First time player detected, adding demo scores');
-            this.localScores = [
-                { name: 'FlappyMaster', score: 42, timestamp: Date.now() - 86400000 },
-                { name: 'SkyDancer', score: 38, timestamp: Date.now() - 172800000 },
-                { name: 'WingCommander', score: 35, timestamp: Date.now() - 259200000 },
-                { name: 'AirAce', score: 31, timestamp: Date.now() - 345600000 },
-                { name: 'BirdBrain', score: 28, timestamp: Date.now() - 432000000 }
-            ];
-            localStorage.setItem('flappyLocalLeaderboard', JSON.stringify(this.localScores));
-        }
+        // Remove any demo/bot rows that may exist from older versions
+        this.localScores = this.filterScores(this.localScores);
+        localStorage.setItem('flappyLocalLeaderboard', JSON.stringify(this.localScores));
         
         this.initializeFirebase();
     }
@@ -55,8 +47,21 @@ class GlobalLeaderboard {
         const nouns = ['Bird', 'Eagle', 'Falcon', 'Hawk', 'Phoenix', 'Flyer', 'Ace', 'Hero', 'Star', 'Champion'];
         const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
         const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-        const randomNum = Math.floor(Math.random() * 999) + 1;
-        return `${randomAdj}${randomNoun}${randomNum}`;
+        // Default names must not include numbers
+        return `${randomAdj}${randomNoun}`;
+    }
+
+    // Remove demo/bot/invalid entries and normalize list
+    filterScores(scores) {
+        const blockedNames = new Set(['FlappyMaster','SkyDancer','WingCommander','AirAce','BirdBrain']);
+        return (scores || [])
+            .filter(s => s && typeof s.score === 'number' && s.name)
+            .filter(s => !blockedNames.has(s.name))
+            .filter(s => {
+                const n = String(s.name).toLowerCase();
+                return !n.includes('bot') && !n.includes('demo');
+            })
+            .sort((a, b) => b.score - a.score);
     }
     
     checkForBackupScores() {
@@ -116,10 +121,18 @@ class GlobalLeaderboard {
             if (typeof firebase !== 'undefined') {
                 console.log('🔥 Firebase SDK detected, attempting connection...');
                 
-                // Try to initialize Firebase with timeout
+                // Try to initialize Firebase with timeout (avoid duplicate init)
                 const initPromise = new Promise((resolve, reject) => {
                     try {
-                        firebase.initializeApp(this.firebaseConfig);
+                        // Check if Firebase is already initialized
+                        let app;
+                        try {
+                            app = firebase.app();
+                            console.log('🔥 Using existing Firebase app');
+                        } catch (e) {
+                            app = firebase.initializeApp(this.firebaseConfig);
+                            console.log('🔥 Initialized new Firebase app');
+                        }
                         this.db = firebase.database();
                         resolve();
                     } catch (error) {
@@ -184,11 +197,13 @@ class GlobalLeaderboard {
         // Try to save to Firebase if connected
         if (this.isConnected) {
             try {
+                console.log('🔥 Attempting to save to Firebase with config:', this.firebaseConfig);
                 await this.saveToFirebase(scoreEntry);
                 console.log('🏆 Score submitted to global leaderboard!');
                 return true;
             } catch (error) {
                 console.error('❌ Failed to submit to global leaderboard:', error);
+                console.error('❌ Firebase config being used:', this.firebaseConfig);
                 return false;
             }
         }
@@ -274,8 +289,9 @@ class GlobalLeaderboard {
                 scores.push(child.val());
             });
             
-            console.log(`✅ Loaded ${scores.length} scores from Firebase`);
-            return scores.sort((a, b) => b.score - a.score);
+            const filtered = this.filterScores(scores);
+            console.log(`✅ Loaded ${scores.length} scores from Firebase (showing ${filtered.length} after filtering)`);
+            return filtered;
             
         } catch (error) {
             console.error('❌ Failed to fetch global leaderboard:', error);
@@ -286,7 +302,8 @@ class GlobalLeaderboard {
     }
     
     getLocalLeaderboard(limit = 10) {
-        return this.localScores.slice(0, limit);
+        const filtered = this.filterScores(this.localScores);
+        return filtered.slice(0, limit);
     }
     
     setPlayerName(name) {
