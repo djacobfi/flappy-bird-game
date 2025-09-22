@@ -57,31 +57,14 @@
         
         <!-- Game UI Overlay -->
         <div class="game-ui">
-            <!-- Start Screen (minimal) -->
+            <!-- Start Screen -->
             <div id="startScreen" class="screen">
-                <div class="start-minimal">
-                    <h1 class="game-title">🐦 Flappy X</h1>
-                    <p class="start-instructions">Tap anywhere to start</p>
-
-                    <div class="start-actions">
-                        <button id="toggleMusic" class="small-btn">🔊 Music</button>
-                        <button id="openLeaderboard" class="small-btn">🏆 View Leaderboard</button>
-                        <button id="openSettings" class="small-btn">🎨 Customize Your Game</button>
-                    </div>
-
-                    <!-- Start screen leaderboard (toggle) -->
-                    <div id="startLeaderboard" class="leaderboard-section" style="display:none; max-height: 280px;">
-                        <div class="leaderboard-header" style="margin-top:0;">
-                            <h3 class="leaderboard-title">🏆 Global Leaderboard</h3>
-                        </div>
-                        <ol id="startLeaderboardList" class="leaderboard-list">
-                            <li>Loading...</li>
-                        </ol>
-                        <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:0.5rem;">
-                            <button id="refreshLeaderboard" class="refresh-btn" style="max-width:180px;">🔄 Refresh</button>
-                            <button id="closeStartLeaderboard" class="small-btn">✖ Close</button>
-                        </div>
-                    </div>
+                <h1>🐦 Flappy X Adventure</h1>
+                <p>Journey through changing seasons and holidays!</p>
+                <p class="controls-text">Click anywhere, press Space, or tap to fly</p>
+                <div class="menu-buttons">
+                    <button id="startBtn" class="game-btn primary">🎮 Play</button>
+                    <button id="toggleMusic" class="game-btn secondary">🔊 Music</button>
                 </div>
             </div>
             
@@ -113,7 +96,7 @@
                     <button id="refreshLeaderboard" class="refresh-btn">🔄 Refresh</button>
                 </div>
                 
-                <button id="restartBtn" class="game-btn primary">🔄 New Adventure</button>
+                <button id="restartBtn" class="game-btn primary">🔄 Replay</button>
             </div>
             
             <!-- In-Game HUD -->

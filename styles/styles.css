@@ -28,13 +28,6 @@ html, body {
     height: 100%;
     background: #4EC0CA;
     cursor: pointer;
-    touch-action: none;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
 }
 
 /* Game UI Overlay */
@@ -59,197 +52,23 @@ html, body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(20, 20, 40, 0.8));
+    background: rgba(0, 0, 0, 0.85);
     color: white;
     text-align: center;
     pointer-events: all;
-    backdrop-filter: blur(10px);
-    overflow-y: auto;
+    backdrop-filter: blur(5px);
 }
 
 .screen.hidden {
     display: none;
 }
 
-/* Minimal start screen */
-.start-minimal {
-    text-align: center;
-    padding: 1.5rem;
-    animation: fadeInUp 0.5s ease-out;
-}
-
-.start-instructions {
-    font-size: 1.1rem;
-    color: #ecf0f1;
-    margin: 0.25rem 0 1rem 0;
-    opacity: 0.9;
-}
-
-.start-actions {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    margin-bottom: 0.75rem;
-}
-
-.small-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    padding: 0.5rem 0.9rem;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
-}
-
-.small-btn:hover {
-    background: rgba(255, 255, 255, 0.14);
-    transform: translateY(-1px);
-}
-
-/* Welcome Screen Styles */
-.welcome-container {
-    max-width: 600px;
-    width: 90%;
-    padding: 2rem;
-    animation: slideInUp 0.8s ease-out;
-}
-
-.game-logo {
-    margin-bottom: 2rem;
-    animation: bounceIn 1s ease-out 0.3s both;
-}
-
-.game-title {
-    font-size: 4rem;
-    margin: 0;
+.screen h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
     color: #f39c12;
-    text-shadow: 0 0 20px rgba(243, 156, 18, 0.6), 3px 3px 6px rgba(0, 0, 0, 0.8);
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
     animation: glow 2s ease-in-out infinite alternate;
-    font-weight: 900;
-    letter-spacing: -2px;
-}
-
-.subtitle {
-    font-size: 1.5rem;
-    color: #e74c3c;
-    margin-top: 0.5rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-    font-weight: 600;
-    letter-spacing: 1px;
-}
-
-.welcome-content {
-    margin-bottom: 2.5rem;
-}
-
-.feature-highlights {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.feature-item {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 1rem;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    font-size: 1rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    animation: fadeInUp 0.6s ease-out;
-}
-
-.feature-item:nth-child(1) { animation-delay: 0.1s; }
-.feature-item:nth-child(2) { animation-delay: 0.2s; }
-.feature-item:nth-child(3) { animation-delay: 0.3s; }
-.feature-item:nth-child(4) { animation-delay: 0.4s; }
-
-.feature-item:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.game-description {
-    margin-bottom: 2rem;
-    animation: fadeInUp 0.6s ease-out 0.5s both;
-}
-
-.game-description p {
-    font-size: 1.3rem;
-    color: #ecf0f1;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-    margin: 0;
-    line-height: 1.4;
-}
-
-.controls-info {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    flex-wrap: wrap;
-    margin-bottom: 2rem;
-    animation: fadeInUp 0.6s ease-out 0.6s both;
-}
-
-.control-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 0.8rem 1.2rem;
-    border-radius: 25px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-}
-
-.control-item:hover {
-    background: rgba(0, 0, 0, 0.5);
-    transform: scale(1.05);
-}
-
-.control-icon {
-    font-size: 1.2rem;
-}
-
-.welcome-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    animation: fadeInUp 0.6s ease-out 0.7s both;
-}
-
-.version-info {
-    color: #95a5a6;
-    font-size: 0.9rem;
-}
-
-.social-links {
-    display: flex;
-    gap: 1rem;
-}
-
-.social-link {
-    color: #3498db;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    background: rgba(52, 152, 219, 0.1);
-    border: 1px solid rgba(52, 152, 219, 0.3);
-}
-
-.social-link:hover {
-    background: rgba(52, 152, 219, 0.2);
-    transform: translateY(-2px);
 }
 
 .screen h2 {
@@ -265,78 +84,15 @@ html, body {
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
-/* Animations */
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translateY(50px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes bounceIn {
-    0% {
-        opacity: 0;
-        transform: scale(0.3);
-    }
-    50% {
-        opacity: 1;
-        transform: scale(1.05);
-    }
-    70% {
-        transform: scale(0.9);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes bounce {
-    0%, 20%, 50%, 80%, 100% {
-        transform: translateY(0);
-    }
-    40% {
-        transform: translateY(-10px);
-    }
-    60% {
-        transform: translateY(-5px);
-    }
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.1);
-    }
-    100% {
-        transform: scale(1);
-    }
+.controls-text {
+    color: #bdc3c7;
+    font-size: 1rem;
+    margin-bottom: 2rem;
 }
 
 @keyframes glow {
-    from { 
-        text-shadow: 0 0 20px rgba(243, 156, 18, 0.6), 3px 3px 6px rgba(0, 0, 0, 0.8);
-    }
-    to { 
-        text-shadow: 0 0 30px rgba(243, 156, 18, 0.8), 3px 3px 6px rgba(0, 0, 0, 0.8);
-    }
+    from { text-shadow: 3px 3px 6px rgba(243, 156, 18, 0.8), 0 0 20px rgba(243, 156, 18, 0.3); }
+    to { text-shadow: 3px 3px 6px rgba(243, 156, 18, 0.8), 0 0 30px rgba(243, 156, 18, 0.6); }
 }
 
 /* Buttons */
@@ -345,93 +101,42 @@ html, body {
     gap: 1.5rem;
     flex-wrap: wrap;
     justify-content: center;
-    animation: fadeInUp 0.6s ease-out 0.8s both;
 }
 
 .game-btn {
-    padding: 1.2rem 2.5rem;
+    padding: 1rem 2rem;
     font-size: 1.1rem;
     border: none;
-    border-radius: 30px;
+    border-radius: 25px;
     cursor: pointer;
-    font-weight: 700;
+    font-weight: bold;
     transition: all 0.3s ease;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    min-width: 180px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.game-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-}
-
-.game-btn:hover::before {
-    left: 100%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    min-width: 160px;
 }
 
 .game-btn.primary {
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    background: linear-gradient(45deg, #8e44ad, #9b59b6);
     color: white;
-    border: 2px solid rgba(231, 76, 60, 0.3);
-}
-
-.game-btn.primary:hover {
-    background: linear-gradient(135deg, #c0392b, #a93226);
-    transform: translateY(-4px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
-    border-color: rgba(231, 76, 60, 0.6);
 }
 
 .game-btn.secondary {
-    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    background: linear-gradient(45deg, #27ae60, #2ecc71);
     color: white;
-    border: 2px solid rgba(39, 174, 96, 0.3);
 }
 
-.game-btn.secondary:hover {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    transform: translateY(-4px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
-    border-color: rgba(39, 174, 96, 0.6);
+.game-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.game-btn.primary:hover {
+    background: linear-gradient(45deg, #9b59b6, #8e44ad);
+    box-shadow: 0 6px 20px rgba(142, 68, 173, 0.4);
 }
 
 .game-btn:active {
-    transform: translateY(-2px) scale(1.02);
-}
-
-.btn-icon {
-    font-size: 1.3rem;
-    animation: bounce 2s infinite;
-}
-
-.btn-text {
-    font-weight: 700;
-}
-
-.start-btn .btn-icon {
-    animation-delay: 0.5s;
-}
-
-.music-btn .btn-icon {
-    animation-delay: 1s;
-}
-
-.restart-btn .btn-icon {
-    animation-delay: 0.3s;
+    transform: translateY(-1px);
 }
 
 /* In-Game HUD */
