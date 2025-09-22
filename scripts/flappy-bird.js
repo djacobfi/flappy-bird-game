@@ -894,43 +894,9 @@ class FlappyBirdGame {
         let melodyInterval;
         let bassInterval;
         let percussionInterval;
-        
-        return {
-            start: () => {
-                // Ensure audio context is ready (critical for mobile/PWA)
-                if (!this.audioContext) {
-                    console.warn('⚠️ No audio context available for background music');
-                    return;
-                }
-                
-                if (this.audioContext.state === 'suspended') {
-                    console.log('🔊 Resuming audio context for melody...');
-                    this.audioContext.resume().then(() => {
-                        console.log('✅ Audio context resumed, starting melody');
-                        this.startMelodyIntervals();
-                    }).catch(e => {
-                        console.error('❌ Failed to resume audio context for melody:', e);
-                    });
-                    return;
-                }
-                
-                this.startMelodyIntervals();
-            },
-            stop: () => {
-                if (melodyInterval) {
-                    clearInterval(melodyInterval);
-                }
-                if (bassInterval) {
-                    clearInterval(bassInterval);
-                }
-                if (percussionInterval) {
-                    clearInterval(percussionInterval);
-                }
-            }
-        };
-        
-        // Define the melody intervals method within the closure
-        this.startMelodyIntervals = () => {
+
+        // Start all melody/bass/percussion intervals (closure-local to keep references)
+        const startMelodyIntervals = () => {
                 
                 // EPIC melody line with POWER!
                 melodyInterval = setInterval(() => {
@@ -1048,6 +1014,40 @@ class FlappyBirdGame {
                         kickOsc.stop(this.audioContext.currentTime + 0.15);
                     }
                 }, 400); // Fast percussion for ADRENALINE!
+        };
+
+        return {
+            start: () => {
+                // Ensure audio context is ready (critical for mobile/PWA)
+                if (!this.audioContext) {
+                    console.warn('⚠️ No audio context available for background music');
+                    return;
+                }
+                
+                if (this.audioContext.state === 'suspended') {
+                    console.log('🔊 Resuming audio context for melody...');
+                    this.audioContext.resume().then(() => {
+                        console.log('✅ Audio context resumed, starting melody');
+                        startMelodyIntervals();
+                    }).catch(e => {
+                        console.error('❌ Failed to resume audio context for melody:', e);
+                    });
+                    return;
+                }
+                
+                startMelodyIntervals();
+            },
+            stop: () => {
+                if (melodyInterval) {
+                    clearInterval(melodyInterval);
+                }
+                if (bassInterval) {
+                    clearInterval(bassInterval);
+                }
+                if (percussionInterval) {
+                    clearInterval(percussionInterval);
+                }
+            }
         };
     }
     
