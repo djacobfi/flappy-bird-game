@@ -7,14 +7,14 @@ class GlobalLeaderboard {
     constructor() {
         // Firebase configuration (you'll need to replace with your own)
         this.firebaseConfig = {
-            apiKey: "AIzaSyAtSBB3Ao22BMxLhKd6vdwyHsDStvYBb4I",
-            authDomain: "flappy-x-bb3fd.firebaseapp.com",
-            databaseURL: "https://flappy-x-bb3fd-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "flappy-x-bb3fd",
-            storageBucket: "flappy-x-bb3fd.firebasestorage.app",
-            messagingSenderId: "951359218855",
-            appId: "1:951359218855:web:fa4c784ba02d7097a0a782",
-            measurementId: "G-86QFLG37JW"
+            apiKey: "AIzaSyDM05u04JICdhyXG5VYRnXzvbr-rUdie-U",
+            authDomain: "flappyx-d87a0.firebaseapp.com",
+            databaseURL: "https://flappyx-d87a0-default-rtdb.firebaseio.com",
+            projectId: "flappyx-d87a0",
+            storageBucket: "flappyx-d87a0.firebasestorage.app",
+            messagingSenderId: "962661707767",
+            appId: "1:962661707767:web:0a6d56f1dde64e3be3c8f2",
+            measurementId: "G-1E6E1025QB"
         };
         
         this.db = null;
@@ -121,33 +121,29 @@ class GlobalLeaderboard {
             if (typeof firebase !== 'undefined') {
                 console.log('🔥 Firebase SDK detected, attempting connection...');
                 
-                // Check if Firebase app already exists (mobile issue)
-                let app;
-                try {
-                    app = firebase.app();
-                    console.log('📱 Using existing Firebase app (mobile compatibility)');
-                } catch (e) {
-                    // App doesn't exist, create it
-                    app = firebase.initializeApp(this.firebaseConfig);
-                    console.log('🔥 Firebase app initialized');
-                }
-                
-                this.db = firebase.database();
-                
-                // Mobile-specific connection test with longer timeout
-                const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase());
-                const timeout = isMobile ? 8000 : 3000; // Longer timeout for mobile
-                
-                const testPromise = this.testConnection();
-                const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Firebase connection timeout')), timeout);
+                // Try to initialize Firebase with timeout
+                const initPromise = new Promise((resolve, reject) => {
+                    try {
+                        firebase.initializeApp(this.firebaseConfig);
+                        this.db = firebase.database();
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
                 });
                 
-                await Promise.race([testPromise, timeoutPromise]);
+                // 3-second timeout for Firebase initialization
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Firebase initialization timeout')), 3000);
+                });
+                
+                await Promise.race([initPromise, timeoutPromise]);
                 
                 this.isConnected = true;
                 console.log('✅ Firebase connected successfully!');
                 
+                // Test connection with timeout
+                await this.testConnection();
             } else {
                 console.warn('⚠️ Firebase not available, using local storage only');
                 this.useLocalStorageOnly();
@@ -266,10 +262,6 @@ class GlobalLeaderboard {
         }
         
         try {
-            // Mobile-specific timeout and retry logic
-            const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase());
-            const timeout = isMobile ? 10000 : 5000; // Longer timeout for mobile
-            
             // Add timeout to Firebase query
             const queryPromise = this.db.ref('leaderboard')
                 .orderByChild('score')
@@ -277,7 +269,7 @@ class GlobalLeaderboard {
                 .once('value');
             
             const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Firebase query timeout')), timeout);
+                setTimeout(() => reject(new Error('Firebase query timeout')), 5000);
             });
             
             const snapshot = await Promise.race([queryPromise, timeoutPromise]);
@@ -294,20 +286,7 @@ class GlobalLeaderboard {
         } catch (error) {
             console.error('❌ Failed to fetch global leaderboard:', error);
             console.log('💾 Falling back to local leaderboard');
-            
-            // Mobile-specific retry logic
-            const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase());
-            if (isMobile && error.message.includes('timeout')) {
-                console.log('📱 Mobile timeout detected, attempting reconnection...');
-                this.isConnected = false;
-                // Try to reconnect after a delay
-                setTimeout(() => {
-                    this.initializeFirebase();
-                }, 2000);
-            } else {
-                this.isConnected = false; // Mark as disconnected for future calls
-            }
-            
+            this.isConnected = false; // Mark as disconnected for future calls
             return this.getLocalLeaderboard(limit);
         }
     }
