@@ -59,44 +59,120 @@
         <div class="game-ui">
             <!-- Start Screen -->
             <div id="startScreen" class="screen">
-                <h1>🐦 Flappy X Adventure</h1>
-                <p>Journey through changing seasons and holidays!</p>
-                <p class="controls-text">Click anywhere, press Space, or tap to fly</p>
-                <div class="menu-buttons">
-                    <button id="startBtn" class="game-btn primary">🚀 Start Adventure</button>
-                    <button id="toggleMusic" class="game-btn secondary">🔊 Music</button>
+                <div class="welcome-container">
+                    <div class="game-logo">
+                        <h1 class="game-title">🐦 Flappy X</h1>
+                        <div class="subtitle">Epic Adventure</div>
+                    </div>
+                    
+                    <div class="welcome-content">
+                        <div class="feature-highlights">
+                            <div class="feature-item">🌟 Dynamic Seasons</div>
+                            <div class="feature-item">🎁 Holiday Themes</div>
+                            <div class="feature-item">🏆 Global Leaderboard</div>
+                            <div class="feature-item">🎵 Custom Music</div>
+                        </div>
+                        
+                        <div class="game-description">
+                            <p>Soar through ever-changing worlds filled with challenges and surprises!</p>
+                        </div>
+                        
+                        <div class="controls-info">
+                            <div class="control-item">
+                                <span class="control-icon">🖱️</span>
+                                <span>Click to fly</span>
+                            </div>
+                            <div class="control-item">
+                                <span class="control-icon">⌨️</span>
+                                <span>Space bar</span>
+                            </div>
+                            <div class="control-item">
+                                <span class="control-icon">👆</span>
+                                <span>Tap screen</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-buttons">
+                        <button id="startBtn" class="game-btn primary start-btn">
+                            <span class="btn-icon">🚀</span>
+                            <span class="btn-text">Start Adventure</span>
+                        </button>
+                        <button id="toggleMusic" class="game-btn secondary music-btn">
+                            <span class="btn-icon">🔊</span>
+                            <span class="btn-text">Music</span>
+                        </button>
+                    </div>
+                    
+                    <div class="welcome-footer">
+                        <div class="version-info">v3.3.0</div>
+                        <div class="social-links">
+                            <a href="https://discord.gg/nzyvDwnEku" target="_blank" class="social-link">💬 Discord</a>
+                        </div>
+                    </div>
                 </div>
             </div>
             
             <!-- Game Over Screen -->
             <div id="gameOverScreen" class="screen hidden">
-                <h2>🏁 Adventure Complete!</h2>
-                <div class="score-display">
-                    <p>Score: <span id="finalScore" class="score-number">0</span></p>
-                    <p>Best: <span id="bestScore" class="score-number">0</span></p>
-                </div>
-                
-                <!-- Player Name Input -->
-                <div class="player-name-section">
-                    <label for="playerNameInput">👤 Player Name:</label>
-                    <input type="text" id="playerNameInput" class="name-input" maxlength="20" placeholder="Enter your name">
-                    <button id="saveNameBtn" class="save-name-btn">💾</button>
-                </div>
-                
-                <!-- Leaderboard Display -->
-                <div class="leaderboard-section">
-                    <h3>🏆 Global Leaderboard</h3>
-                    <div class="leaderboard-status">
-                        <span id="leaderboardStatus">📡 Connecting...</span>
-                        <span id="totalPlayers" style="display: none;">👥 Total Players: <span id="playerCount">0</span></span>
+                <div class="gameover-container">
+                    <div class="gameover-header">
+                        <div class="result-icon">🏁</div>
+                        <h2 class="gameover-title">Adventure Complete!</h2>
+                        <div class="result-subtitle">How did you do?</div>
                     </div>
-                    <ol id="leaderboardList" class="leaderboard-list">
-                        <li>Loading...</li>
-                    </ol>
-                    <button id="refreshLeaderboard" class="refresh-btn">🔄 Refresh</button>
+                    
+                    <div class="score-section">
+                        <div class="score-card current-score">
+                            <div class="score-label">Your Score</div>
+                            <div class="score-value" id="finalScore">0</div>
+                        </div>
+                        <div class="score-card best-score">
+                            <div class="score-label">Best Score</div>
+                            <div class="score-value" id="bestScore">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="achievement-section">
+                        <div class="achievement-message" id="achievementMessage">
+                            <span class="achievement-icon">🌟</span>
+                            <span class="achievement-text">Great job!</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Player Name Input -->
+                    <div class="player-name-section">
+                        <div class="name-input-container">
+                            <label for="playerNameInput" class="name-label">👤 Enter your name:</label>
+                            <div class="name-input-wrapper">
+                                <input type="text" id="playerNameInput" class="name-input" maxlength="20" placeholder="Player Name">
+                                <button id="saveNameBtn" class="save-name-btn">💾 Save</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Leaderboard Display -->
+                    <div class="leaderboard-section">
+                        <div class="leaderboard-header">
+                            <h3 class="leaderboard-title">🏆 Global Leaderboard</h3>
+                            <div class="leaderboard-status">
+                                <span id="leaderboardStatus" class="status-text">📡 Connecting...</span>
+                                <span id="totalPlayers" class="player-count" style="display: none;">👥 <span id="playerCount">0</span> players</span>
+                            </div>
+                        </div>
+                        <ol id="leaderboardList" class="leaderboard-list">
+                            <li>Loading...</li>
+                        </ol>
+                        <button id="refreshLeaderboard" class="refresh-btn">🔄 Refresh Leaderboard</button>
+                    </div>
+                    
+                    <div class="gameover-actions">
+                        <button id="restartBtn" class="game-btn primary restart-btn">
+                            <span class="btn-icon">🔄</span>
+                            <span class="btn-text">New Adventure</span>
+                        </button>
+                    </div>
                 </div>
-                
-                <button id="restartBtn" class="game-btn primary">🔄 New Adventure</button>
             </div>
             
             <!-- In-Game HUD -->
