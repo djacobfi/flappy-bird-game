@@ -1236,6 +1236,14 @@ class FlappyBirdGame {
             this.analytics.logEvent('game_started');
         }
         
+        // Also track with Google Analytics gtag
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'game_started', {
+                event_category: 'Game',
+                event_label: 'Game Start'
+            });
+        }
+        
         // Auto-close settings when game starts
         this.hideSettings();
         
@@ -2073,6 +2081,16 @@ class FlappyBirdGame {
             });
         }
         
+        // Also track with Google Analytics gtag
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'power_up_activated', {
+                event_category: 'Power Up',
+                event_label: 'Speed Boost',
+                value: this.score,
+                custom_parameter_score: this.score
+            });
+        }
+        
         console.log('🚀 POWER-UP ACTIVATED! GOTTA GO FAST!');
         
         // Stop background music and play Sonic theme
@@ -2343,6 +2361,16 @@ class FlappyBirdGame {
             this.analytics.logEvent('game_over', {
                 score: this.score,
                 final_score: this.score
+            });
+        }
+        
+        // Also track with Google Analytics gtag
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'game_over', {
+                event_category: 'Game',
+                event_label: 'Game Over',
+                value: this.score,
+                custom_parameter_score: this.score
             });
         }
         
