@@ -18,6 +18,7 @@ class GlobalLeaderboard {
         };
         
         this.db = null;
+        this.analytics = null;
         this.isConnected = false;
         this.playerName = localStorage.getItem('flappyPlayerName') || this.generateRandomName();
         
@@ -134,6 +135,13 @@ class GlobalLeaderboard {
                             console.log('🔥 Initialized new Firebase app');
                         }
                         this.db = firebase.database();
+                        
+                        // Initialize Analytics
+                        if (typeof firebase.analytics !== 'undefined') {
+                            this.analytics = firebase.analytics();
+                            console.log('📊 Firebase Analytics initialized');
+                        }
+                        
                         resolve();
                     } catch (error) {
                         reject(error);
@@ -178,6 +186,14 @@ class GlobalLeaderboard {
         console.log('💾 Using local storage leaderboard only');
     }
     
+    // Track Analytics events
+    trackEvent(eventName, parameters = {}) {
+        if (this.analytics) {
+            this.analytics.logEvent(eventName, parameters);
+            console.log(`📊 Analytics event: ${eventName}`, parameters);
+        }
+    }
+    
     async submitScore(score) {
         const scoreEntry = {
             name: this.playerName,
@@ -200,6 +216,14 @@ class GlobalLeaderboard {
                 console.log('🔥 Attempting to save to Firebase with config:', this.firebaseConfig);
                 await this.saveToFirebase(scoreEntry);
                 console.log('🏆 Score submitted to global leaderboard!');
+                
+                // Track score submission
+                this.trackEvent('score_submitted', {
+                    score: score,
+                    player_name: this.playerName,
+                    leaderboard_type: 'global'
+                });
+                
                 return true;
             } catch (error) {
                 console.error('❌ Failed to submit to global leaderboard:', error);
