@@ -7,13 +7,14 @@ class GlobalLeaderboard {
     constructor() {
         // Firebase configuration (you'll need to replace with your own)
         this.firebaseConfig = {
-            apiKey: "your-api-key-here",
-            authDomain: "flappy-bird-leaderboard.firebaseapp.com",
-            databaseURL: "https://flappy-bird-leaderboard-default-rtdb.firebaseio.com",
-            projectId: "flappy-bird-leaderboard",
-            storageBucket: "flappy-bird-leaderboard.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "your-app-id-here"
+            apiKey: "AIzaSyAtSBB3Ao22BMxLhKd6vdwyHsDStvYBb4I",
+            authDomain: "flappy-x-bb3fd.firebaseapp.com",
+            databaseURL: "https://flappy-x-bb3fd-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "flappy-x-bb3fd",
+            storageBucket: "flappy-x-bb3fd.firebasestorage.app",
+            messagingSenderId: "951359218855",
+            appId: "1:951359218855:web:fa4c784ba02d7097a0a782",
+            measurementId: "G-86QFLG37JW"
         };
         
         this.db = null;
