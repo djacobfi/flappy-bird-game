@@ -1570,6 +1570,28 @@ class FlappyBirdGame {
                 
                 topHeight = lastHeight + movement;
                 
+                // Early-game vertical lane snapping for variety without spikes
+                if (this.score < 10) {
+                    const lanes = 5; // number of discrete vertical lanes
+                    const laneHeight = (maxHeight - minHeight) / (lanes + 1);
+                    // 40% chance to snap to a nearby lane to create distinct openings
+                    if (Math.random() < 0.4) {
+                        const laneIndex = Math.max(1, Math.min(lanes, Math.round((topHeight - minHeight) / laneHeight)));
+                        const snapped = minHeight + laneIndex * laneHeight;
+                        // Blend toward the lane to keep motion smooth
+                        topHeight = topHeight * 0.6 + snapped * 0.4;
+                    }
+                } else if (this.score < 25) {
+                    // Mid-game occasional lane influence, lighter touch
+                    if (Math.random() < 0.2) {
+                        const lanes = 6;
+                        const laneHeight = (maxHeight - minHeight) / (lanes + 1);
+                        const laneIndex = Math.max(1, Math.min(lanes, Math.round((topHeight - minHeight) / laneHeight)));
+                        const snapped = minHeight + laneIndex * laneHeight;
+                        topHeight = topHeight * 0.8 + snapped * 0.2;
+                    }
+                }
+
                 // Gentle drift toward center to prevent getting stuck at extremes
                 const centerY = (minHeight + maxHeight) / 2;
                 const distanceFromCenter = Math.abs(topHeight - centerY);
@@ -1665,31 +1687,57 @@ class FlappyBirdGame {
     }
     
     createMovingPipe() {
-        // Create a single moving pipe that moves vertically
+        // Backwards compatibility: keep as vertical mover
         const pipeX = this.bird.x + this.canvas.width * 0.8;
         const pipeWidth = this.settings.pipeWidth;
-        const pipeHeight = 200; // Height of the moving pipe
-        const gapSize = 120; // Smaller gap for moving pipe challenge
-        
-        // Random starting position (will move up and down)
+        const pipeHeight = 200;
+        const gapSize = 120;
         const startY = this.canvas.height * 0.3 + Math.random() * (this.canvas.height * 0.4);
-        
         const movingPipe = {
             x: pipeX,
             y: startY,
             width: pipeWidth,
             height: pipeHeight,
-            gapSize: gapSize,
+            gapSize,
             scored: false,
             type: 'moving',
-            direction: Math.random() < 0.5 ? 1 : -1, // 1 = down, -1 = up
+            direction: Math.random() < 0.5 ? 1 : -1,
             speed: this.movingPipeSpeed,
-            minY: 50, // Minimum Y position
-            maxY: this.canvas.height - pipeHeight - 50 // Maximum Y position
+            minY: 50,
+            maxY: this.canvas.height - pipeHeight - 50
         };
-        
         this.movingPipes.push(movingPipe);
-        console.log('🎯 Created moving pipe at', pipeX, 'with gap size', gapSize);
+    }
+
+    createRandomMovingPipe() {
+        // Very random, but safe, single moving pipe (either top-only or bottom-only visual)
+        const isVertical = Math.random() < 0.7; // prefer vertical motion
+        const isTopOnly = Math.random() < 0.5;  // choose top/bottom look
+        const pipeX = this.bird.x + this.canvas.width * (0.9 + Math.random() * 0.3);
+        const pipeWidth = this.settings.pipeWidth;
+        const pipeHeight = 180 + Math.random() * 80;
+        const speed = this.movingPipeSpeed * (0.8 + Math.random() * 0.6);
+
+        // Start position
+        const startY = isTopOnly
+            ? Math.random() * (this.canvas.height * 0.4)
+            : this.canvas.height * 0.6 + Math.random() * (this.canvas.height * 0.35 - pipeHeight);
+
+        const movingPipe = {
+            x: pipeX,
+            y: startY,
+            width: pipeWidth,
+            height: pipeHeight,
+            scored: false,
+            type: 'moving',
+            isTopOnly,
+            isVertical,
+            direction: Math.random() < 0.5 ? 1 : -1,
+            speed,
+            minY: 30,
+            maxY: this.canvas.height - pipeHeight - 30
+        };
+        this.movingPipes.push(movingPipe);
     }
     
     spawnEasterEgg(x) {
