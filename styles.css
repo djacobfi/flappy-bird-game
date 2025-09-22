@@ -203,7 +203,7 @@ html, body {
 /* Pause Button */
 .pause-btn {
     position: fixed;
-    top: 5rem; /* Position below settings button */
+    top: 6.5rem; /* Increased gap below settings button */
     right: 2rem; /* Align with settings button */
     width: 60px;
     height: 60px;
@@ -925,7 +925,7 @@ input[type="file"] {
 /* Mobile Pause Button */
 @media (max-width: 768px) {
     .pause-btn {
-        top: 4.5rem; /* Position below settings button on mobile */
+        top: 6rem; /* Increased gap below settings button on mobile */
         right: 1.5rem; /* Align with settings button */
         width: 50px;
         height: 50px;
@@ -955,7 +955,7 @@ input[type="file"] {
 
 @media (max-width: 480px) {
     .pause-btn {
-        top: 4rem; /* Position below settings button on small screens */
+        top: 5.5rem; /* Increased gap below settings button on small screens */
         right: 1rem; /* Align with settings button */
         width: 45px;
         height: 45px;
