@@ -1455,27 +1455,18 @@ class FlappyBirdGame {
         const groupRandom = Math.random();
         let pipeGroupSize;
         
-        if (groupRandom < 0.4) {
-            pipeGroupSize = 1; // 40% chance for single pipe
-        } else if (groupRandom < 0.65) {
+        if (groupRandom < 0.5) {
+            pipeGroupSize = 1; // 50% chance for single pipe
+        } else if (groupRandom < 0.75) {
             pipeGroupSize = 2; // 25% chance for double pipe
-        } else if (groupRandom < 0.8) {
-            pipeGroupSize = 3; // 15% chance for triple pipe
         } else if (groupRandom < 0.9) {
-            pipeGroupSize = 4; // 10% chance for quadruple pipe
+            pipeGroupSize = 3; // 15% chance for triple pipe
         } else {
-            pipeGroupSize = 5; // 10% chance for quintuple pipe (rare)
+            pipeGroupSize = Math.random() < 0.5 ? 4 : 5; // 10% chance for 4-5 pipes (rare)
         }
         
-        // Decide if pipes should be side-by-side or sequential
-        const sideBySide = Math.random() < 0.3; // 30% chance for side-by-side pipes
-        
-        if (sideBySide && pipeGroupSize > 1) {
-            this.createSideBySidePipes(pipeGroupSize);
-        } else {
-            for (let i = 0; i < pipeGroupSize; i++) {
-                this.createSinglePipe(i, pipeGroupSize);
-            }
+        for (let i = 0; i < pipeGroupSize; i++) {
+            this.createSinglePipe(i, pipeGroupSize);
         }
         
         // Random chance to create a moving pipe instead of regular pipes
@@ -1749,113 +1740,6 @@ class FlappyBirdGame {
             maxY: this.canvas.height - pipeHeight - 30
         };
         this.movingPipes.push(movingPipe);
-    }
-    
-    createSideBySidePipes(count) {
-        // Create multiple pipes side by side horizontally, placed after the last pipe
-        const lastPipeX = this.pipes.length === 0 ? 
-            this.bird.x + this.canvas.width * 0.8 : 
-            this.pipes[this.pipes.length - 1].x + this.settings.pipeWidth;
-        
-        const pipeWidth = this.settings.pipeWidth;
-        const horizontalSpacing = 60; // Space between side-by-side pipes
-        const startX = lastPipeX + 200; // Place after the last pipe with some gap
-        
-        for (let i = 0; i < count; i++) {
-            const pipeX = startX + i * horizontalSpacing;
-            this.createSingleSidePipe(pipeX, i, count);
-        }
-    }
-    
-    createSingleSidePipe(pipeX, index, totalCount) {
-        const minHeight = 50;
-        const maxHeight = this.canvas.height - this.settings.pipeGap - minHeight;
-        
-        // Determine pipe type for variety
-        const pipeTypeRandom = Math.random();
-        let pipeType;
-        
-        // Early game: mostly traditional pipes for easier learning
-        if (this.score < 5) {
-            pipeType = 'full'; // Only traditional pipes for first 5 points
-        } else if (this.score < 15) {
-            // Gradual introduction of variety
-            if (pipeTypeRandom < 0.8) {
-                pipeType = 'full'; // 80% chance - traditional full pipe
-            } else if (pipeTypeRandom < 0.9) {
-                pipeType = 'topOnly'; // 10% chance - only top pipe (fly under)
-            } else {
-                pipeType = 'bottomOnly'; // 10% chance - only bottom pipe (fly over)
-            }
-        } else {
-            // Full variety but still balanced for playability
-            if (pipeTypeRandom < 0.7) {
-                pipeType = 'full'; // 70% chance - traditional full pipe
-            } else if (pipeTypeRandom < 0.85) {
-                pipeType = 'topOnly'; // 15% chance - only top pipe (fly under)
-            } else {
-                pipeType = 'bottomOnly'; // 15% chance - only bottom pipe (fly over)
-            }
-        }
-        
-        // Create pipe with varied heights for side-by-side effect
-        let topHeight;
-        
-        if (pipeType === 'full') {
-            // Create varied heights for side-by-side pipes
-            const centerY = (minHeight + maxHeight) / 2;
-            const variation = (maxHeight - minHeight) * 0.3; // 30% variation
-            const heightVariation = (Math.random() - 0.5) * variation;
-            
-            // Add some pattern to the heights (not completely random)
-            const patternOffset = Math.sin(index * 0.8) * variation * 0.3;
-            topHeight = centerY + heightVariation + patternOffset;
-            
-            // Ensure we stay within playable bounds
-            const safeMargin = 40;
-            topHeight = Math.max(minHeight + safeMargin, Math.min(maxHeight - safeMargin, topHeight));
-            
-        } else if (pipeType === 'topOnly') {
-            topHeight = this.canvas.height * 0.3 + Math.random() * (this.canvas.height * 0.3);
-        } else { // bottomOnly
-            topHeight = -100; // No top pipe
-        }
-        
-        let pipe;
-        
-        if (pipeType === 'full') {
-            pipe = {
-                x: pipeX,
-                topHeight: topHeight,
-                bottomY: topHeight + this.settings.pipeGap,
-                scored: false,
-                type: 'full'
-            };
-        } else if (pipeType === 'topOnly') {
-            pipe = {
-                x: pipeX,
-                topHeight: topHeight,
-                bottomY: this.canvas.height + 100, // No bottom pipe
-                scored: false,
-                type: 'topOnly'
-            };
-        } else { // bottomOnly
-            const bottomHeight = this.canvas.height * 0.6 + Math.random() * (this.canvas.height * 0.2);
-            pipe = {
-                x: pipeX,
-                topHeight: -100, // No top pipe
-                bottomY: bottomHeight,
-                scored: false,
-                type: 'bottomOnly'
-            };
-        }
-        
-        this.pipes.push(pipe);
-        
-        // Spawn easter egg with chance (only on the last pipe in the group)
-        if (index === totalCount - 1 && Math.random() < this.easterEggSpawnChance && !this.powerUp.active) {
-            this.spawnEasterEgg(pipeX + this.settings.pipeWidth + 100);
-        }
     }
     
     spawnEasterEgg(x) {
