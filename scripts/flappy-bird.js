@@ -136,7 +136,8 @@ class FlappyBirdGame {
         };
         
         this.easterEggs = [];
-        this.easterEggSpawnChance = 0.12; // 12% chance per pipe
+        this.easterEggSpawnChance = 0.02; // Make easter egg rare: ~2% chance per eligible group
+        this.lastEasterEggSpawnTime = 0; // cooldown timer to prevent frequent spawns
         
         // Moving pipe system
         this.movingPipes = [];
@@ -1897,8 +1898,14 @@ class FlappyBirdGame {
         this.pipes.push(pipe);
         
         // Spawn easter egg with chance (only if power-up not active and it's the last pipe in group)
-        if (pipeIndex === groupSize - 1 && Math.random() < this.easterEggSpawnChance && !this.powerUp.active) {
+        if (
+            pipeIndex === groupSize - 1 &&
+            !this.powerUp.active &&
+            Math.random() < this.easterEggSpawnChance &&
+            (Date.now() - this.lastEasterEggSpawnTime) > 30000 // 30s cooldown
+        ) {
             this.spawnEasterEgg(pipeX + this.settings.pipeWidth + 100);
+            this.lastEasterEggSpawnTime = Date.now();
         }
     }
     

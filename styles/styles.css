@@ -1080,6 +1080,33 @@ input[type="file"] {
     filter: brightness(0) invert(1); /* Make it white */
 }
 
+/* Instagram link styling */
+.instagram-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(225, 48, 108, 0.12); /* Instagram pink */
+    border: 1px solid rgba(225, 48, 108, 0.35);
+    border-radius: 8px;
+    color: #ffffff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.instagram-link:hover {
+    background: rgba(225, 48, 108, 0.24);
+    border-color: rgba(225, 48, 108, 0.55);
+    transform: translateY(-1px);
+}
+
+.instagram-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
 /* Footer */
 .footer {
     position: fixed;
