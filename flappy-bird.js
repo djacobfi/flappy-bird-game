@@ -36,13 +36,6 @@ class FlappyBirdGame {
             pipeGap: 250,
             pipeWidth: 50
         };
-
-        // Pipe level variation state to avoid same-level repetitions
-        this.pipeLevelState = {
-            lastBandIndex: null,
-            sameBandCount: 0,
-            bands: 6 // number of vertical bands used to diversify pipe openings
-        };
         
         // Progressive difficulty
         this.difficulty = {
@@ -1191,6 +1184,14 @@ class FlappyBirdGame {
         this.score = 0;
         this.camera = { x: 0, y: 0 };
         
+        // Pipe variation pattern control to avoid repetitive heights
+        this.pipePattern = {
+            lastBand: null,        // 'low' | 'mid' | 'high'
+            consecutive: 0,        // how many consecutive in the same band
+            zigzagActive: false,   // alternate high/low when active
+            zigzagNextHigh: Math.random() < 0.5
+        };
+        
         // Reset power-up and clean up any remaining resources
         if (this.powerUp.active) {
             this.deactivatePowerUp();
@@ -1579,32 +1580,74 @@ class FlappyBirdGame {
                 
                 topHeight = lastHeight + movement;
                 
-                // Band snapping with repetition guard to avoid same level repeats
-                const bands = this.pipeLevelState.bands;
-                const bandHeight = (maxHeight - minHeight) / (bands + 1);
-                const candidateBand = Math.max(1, Math.min(bands, Math.round((topHeight - minHeight) / bandHeight)));
-                let chosenBand = candidateBand;
-
-                if (this.pipeLevelState.lastBandIndex === chosenBand) {
-                    this.pipeLevelState.sameBandCount += 1;
-                } else {
-                    this.pipeLevelState.sameBandCount = 0;
-                }
-
-                // If we are repeating the same band 2+ times, force a different band
-                if (this.pipeLevelState.sameBandCount >= 2) {
-                    const possible = [];
-                    for (let i = 1; i <= bands; i++) {
-                        if (i !== chosenBand) possible.push(i);
+                // Early-game vertical lane snapping for variety without spikes
+                if (this.score < 10) {
+                    const lanes = 5; // number of discrete vertical lanes
+                    const laneHeight = (maxHeight - minHeight) / (lanes + 1);
+                    // 40% chance to snap to a nearby lane to create distinct openings
+                    if (Math.random() < 0.4) {
+                        const laneIndex = Math.max(1, Math.min(lanes, Math.round((topHeight - minHeight) / laneHeight)));
+                        const snapped = minHeight + laneIndex * laneHeight;
+                        // Blend toward the lane to keep motion smooth
+                        topHeight = topHeight * 0.6 + snapped * 0.4;
                     }
-                    chosenBand = possible[Math.floor(Math.random() * possible.length)];
-                    this.pipeLevelState.sameBandCount = 0; // reset after forcing change
+                } else if (this.score < 25) {
+                    // Mid-game occasional lane influence, lighter touch
+                    if (Math.random() < 0.2) {
+                        const lanes = 6;
+                        const laneHeight = (maxHeight - minHeight) / (lanes + 1);
+                        const laneIndex = Math.max(1, Math.min(lanes, Math.round((topHeight - minHeight) / laneHeight)));
+                        const snapped = minHeight + laneIndex * laneHeight;
+                        topHeight = topHeight * 0.8 + snapped * 0.2;
+                    }
                 }
 
-                this.pipeLevelState.lastBandIndex = chosenBand;
-                const snapped = minHeight + chosenBand * bandHeight;
-                // Blend toward band to keep motion smooth
-                topHeight = topHeight * 0.6 + snapped * 0.4;
+                // Apply band logic to avoid repeating the same vertical level
+                (function enforceBands(self) {
+                    const range = maxHeight - minHeight;
+                    const lowThreshold = minHeight + range * 0.33;
+                    const highThreshold = minHeight + range * 0.66;
+                    const classify = (y) => (y < lowThreshold ? 'low' : (y < highThreshold ? 'mid' : 'high'));
+                    let band = classify(topHeight);
+                    
+                    // Optionally enable brief zig-zag sequences for variety (but keep playable)
+                    if (!self.pipePattern.zigzagActive && Math.random() < 0.12 && self.score >= 3) {
+                        self.pipePattern.zigzagActive = true;
+                        self.pipePattern.zigzagNextHigh = Math.random() < 0.5;
+                    } else if (self.pipePattern.zigzagActive && Math.random() < 0.08) {
+                        self.pipePattern.zigzagActive = false; // randomly end sequence
+                    }
+                    
+                    if (self.pipePattern.zigzagActive) {
+                        const targetBand = self.pipePattern.zigzagNextHigh ? 'high' : 'low';
+                        if (band !== targetBand) {
+                            const targetY = targetBand === 'high' ? minHeight + range * 0.8 : minHeight + range * 0.2;
+                            // Blend toward target gently
+                            topHeight = topHeight * 0.7 + targetY * 0.3;
+                            band = classify(topHeight);
+                        }
+                        // Flip for next time
+                        self.pipePattern.zigzagNextHigh = !self.pipePattern.zigzagNextHigh;
+                    }
+                    
+                    // Prevent too many in the same band in a row
+                    if (self.pipePattern.lastBand === band) {
+                        self.pipePattern.consecutive += 1;
+                        if (self.pipePattern.consecutive >= 2) {
+                            // Nudge toward a different band; prefer mid as safe
+                            const targetBand = band === 'mid' ? (Math.random() < 0.5 ? 'high' : 'low') : (Math.random() < 0.7 ? 'mid' : (band === 'high' ? 'low' : 'high'));
+                            const targetY = targetBand === 'high' ? (minHeight + range * 0.78)
+                                            : targetBand === 'mid' ? (minHeight + range * 0.5)
+                                            : (minHeight + range * 0.22);
+                            topHeight = topHeight * 0.65 + targetY * 0.35;
+                            band = classify(topHeight);
+                            self.pipePattern.consecutive = 0; // reset streak after adjustment
+                        }
+                    } else {
+                        self.pipePattern.lastBand = band;
+                        self.pipePattern.consecutive = 0;
+                    }
+                })(this);
 
                 // Gentle drift toward center to prevent getting stuck at extremes
                 const centerY = (minHeight + maxHeight) / 2;
