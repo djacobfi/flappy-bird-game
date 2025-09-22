@@ -1,5 +1,5 @@
 /**
- * Flappy Bird Adventure Game
+ * Flappy X Adventure Game
  * Features: Dynamic backgrounds, holiday themes, customizable assets, variable jump mechanics
  */
 
@@ -7,6 +7,9 @@ class FlappyBirdGame {
     constructor() {
         // Force cache refresh on mobile browsers
         this.forceCacheRefresh();
+        
+        // Initialize version management
+        this.initializeVersion();
         
         // Core game elements
         this.canvas = document.getElementById('gameCanvas');
@@ -18,8 +21,9 @@ class FlappyBirdGame {
         }
         
         // Game state
-        this.gameState = 'menu'; // 'menu', 'playing', 'gameOver'
+        this.gameState = 'menu'; // 'menu', 'playing', 'gameOver', 'paused'
         this.lastGameState = null; // For render optimization
+        this.isPaused = false;
         this.score = 0;
         this.bestScore = parseInt(localStorage.getItem('flappyBestScore')) || 0;
         
@@ -120,6 +124,11 @@ class FlappyBirdGame {
         
         this.easterEggs = [];
         this.easterEggSpawnChance = 0.12; // 12% chance per pipe
+        
+        // Moving pipe system
+        this.movingPipes = [];
+        this.movingPipeSpawnChance = 0.15; // 15% chance per regular pipe
+        this.movingPipeSpeed = 1.5; // Vertical movement speed
         
         // Sonic power-up music
         this.sonicMusic = null;
@@ -222,7 +231,6 @@ class FlappyBirdGame {
             simplifyBackground: isLowEnd && pixelRatio < 1.5
         };
         
-        console.log(`🎮 Device optimized: Mobile=${isMobile}, LowEnd=${isLowEnd}, FPS=${this.targetFPS}`);
     }
     
     setupCanvas() {
@@ -243,7 +251,6 @@ class FlappyBirdGame {
         this.bird.width = 50 * birdScale; // 2x bigger on mobile
         this.bird.height = 40 * birdScale; // 2x bigger on mobile
         
-        console.log(`🐦 Bird size: ${Math.round(this.bird.width)}x${Math.round(this.bird.height)} (Mobile: ${isMobile}, Scale: ${birdScale.toFixed(2)})`);
         this.settings.pipeWidth = Math.max(60 * scale, 40);
         this.settings.pipeGap = Math.max(250 * scale, 180);
         
@@ -471,14 +478,12 @@ class FlappyBirdGame {
             
             // Mobile-specific audio context handling
             if (this.audioContext.state === 'suspended') {
-                console.log('🔊 Audio context suspended, will resume on user interaction');
             }
             
             // Ensure audio context works on mobile
             const resumeAudioContext = () => {
                 if (this.audioContext.state === 'suspended') {
                     this.audioContext.resume().then(() => {
-                        console.log('✅ Audio context resumed for mobile');
                     });
                 }
             };
@@ -501,7 +506,6 @@ class FlappyBirdGame {
         // Default background music - full melody (ensure it works on mobile)
         if (this.audioContext) {
             this.audio.sounds.bgMusic = this.createMelodySound();
-            console.log('✅ Background music system created');
         } else {
             console.warn('⚠️ Cannot create background music - no audio context');
             this.audio.sounds.bgMusic = null;
@@ -510,7 +514,6 @@ class FlappyBirdGame {
     
     loadMarioTapSound() {
         // Load Super Mario laugh sound with comprehensive fallback system
-        console.log('🔊 Loading Mario laugh tap sound...');
         
         // Try the simple filename first (no spaces)
         const marioLaugh = new Audio('mario-laugh.mp3');
@@ -996,15 +999,12 @@ class FlappyBirdGame {
             toggleMusic: () => this.toggleMusic(),
             settingsBtn: () => this.toggleSettings(),
             closeSettingsBtn: () => this.hideSettings(),
+            pauseBtn: () => this.togglePause(),
             removeTapSound: () => this.removeCustomSound('tap'),
             removeCrashSound: () => this.removeCustomSound('crash'),
             removeBgMusic: () => this.removeCustomSound('bgMusic'),
             saveNameBtn: () => this.savePlayerName(),
             refreshLeaderboard: () => this.refreshLeaderboard(),
-            testBgMusic: () => this.testBackgroundMusic(),
-            testAudioContext: () => this.testAudioContext(),
-            debugLeaderboard: () => this.leaderboard.debugLocalStorage(),
-            clearCache: () => this.clearCacheAndRefresh()
         };
         
         // Setup volume sliders
@@ -1114,10 +1114,32 @@ class FlappyBirdGame {
         }
     }
     
+    togglePause() {
+        if (this.gameState === 'playing') {
+            this.isPaused = !this.isPaused;
+            this.gameState = this.isPaused ? 'paused' : 'playing';
+            
+            const pauseBtn = document.getElementById('pauseBtn');
+            if (pauseBtn) {
+                pauseBtn.textContent = this.isPaused ? '▶️' : '⏸️';
+            }
+        }
+    }
+    
     startGame() {
         this.gameState = 'playing';
+        this.isPaused = false;
         document.getElementById('startScreen').classList.add('hidden');
         document.getElementById('gameOverScreen').classList.add('hidden');
+        
+        // Auto-close settings when game starts
+        this.hideSettings();
+        
+        // Show pause button
+        const pauseBtn = document.getElementById('pauseBtn');
+        if (pauseBtn) {
+            pauseBtn.classList.add('playing');
+        }
         
         // Show the in-game HUD
         document.getElementById('gameHUD').style.display = 'block';
@@ -1156,6 +1178,7 @@ class FlappyBirdGame {
         
         this.pipes = [];
         this.easterEggs = [];
+        this.movingPipes = []; // New: moving single pipes
         this.score = 0;
         this.camera = { x: 0, y: 0 };
         
@@ -1296,10 +1319,10 @@ class FlappyBirdGame {
     update() {
         if (this.gameState !== 'playing') return;
         
-        // Progressive difficulty
-        this.settings.gravity = this.difficulty.baseGravity + (this.score * 0.01);
+        // Progressive difficulty (gravity stays constant for consistent controls)
+        this.settings.gravity = this.difficulty.baseGravity; // Keep gravity constant
         this.settings.pipeSpeed = this.difficulty.basePipeSpeed + (this.score * 0.05);
-        this.settings.pipeGap = Math.max(this.difficulty.basePipeGap - (this.score * 2), 120);
+        this.settings.pipeGap = Math.max(this.difficulty.basePipeGap - (this.score * 2), 220);
         
         // Update bird physics with delta time
         const smoothDelta = Math.max(0.5, Math.min(2.0, this.deltaTime || 1)); // Clamp delta
@@ -1343,12 +1366,20 @@ class FlappyBirdGame {
         
         if (shouldCreatePipe && !this.powerUp.safeZoneActive) {
             this.createPipe();
+            
+            // Occasionally create a moving pipe instead of regular pipes
+            if (Math.random() < this.movingPipeSpawnChance) {
+                this.createMovingPipe();
+            }
         } else if (shouldCreatePipe && this.powerUp.safeZoneActive) {
             console.log('🛡️ Safe zone active - skipping pipe generation');
         }
         
         // Update pipes
         this.updatePipes();
+        
+        // Update moving pipes
+        this.updateMovingPipes();
         
         // Update easter eggs
         this.updateEasterEggs();
@@ -1418,11 +1449,27 @@ class FlappyBirdGame {
     }
     
     createPipe() {
-        // Determine how many pipes to create in this group (1-3 pipes)
-        const pipeGroupSize = Math.random() < 0.7 ? 1 : Math.random() < 0.8 ? 2 : 3;
+        // More random pipe group sizes with varied probabilities
+        const groupRandom = Math.random();
+        let pipeGroupSize;
+        
+        if (groupRandom < 0.5) {
+            pipeGroupSize = 1; // 50% chance for single pipe
+        } else if (groupRandom < 0.75) {
+            pipeGroupSize = 2; // 25% chance for double pipe
+        } else if (groupRandom < 0.9) {
+            pipeGroupSize = 3; // 15% chance for triple pipe
+        } else {
+            pipeGroupSize = Math.random() < 0.5 ? 4 : 5; // 10% chance for 4-5 pipes (rare)
+        }
         
         for (let i = 0; i < pipeGroupSize; i++) {
             this.createSinglePipe(i, pipeGroupSize);
+        }
+        
+        // Random chance to create a moving pipe instead of regular pipes
+        if (Math.random() < 0.08) { // 8% chance for moving pipe
+            this.createRandomMovingPipe();
         }
     }
     
@@ -1617,6 +1664,34 @@ class FlappyBirdGame {
         }
     }
     
+    createMovingPipe() {
+        // Create a single moving pipe that moves vertically
+        const pipeX = this.bird.x + this.canvas.width * 0.8;
+        const pipeWidth = this.settings.pipeWidth;
+        const pipeHeight = 200; // Height of the moving pipe
+        const gapSize = 120; // Smaller gap for moving pipe challenge
+        
+        // Random starting position (will move up and down)
+        const startY = this.canvas.height * 0.3 + Math.random() * (this.canvas.height * 0.4);
+        
+        const movingPipe = {
+            x: pipeX,
+            y: startY,
+            width: pipeWidth,
+            height: pipeHeight,
+            gapSize: gapSize,
+            scored: false,
+            type: 'moving',
+            direction: Math.random() < 0.5 ? 1 : -1, // 1 = down, -1 = up
+            speed: this.movingPipeSpeed,
+            minY: 50, // Minimum Y position
+            maxY: this.canvas.height - pipeHeight - 50 // Maximum Y position
+        };
+        
+        this.movingPipes.push(movingPipe);
+        console.log('🎯 Created moving pipe at', pipeX, 'with gap size', gapSize);
+    }
+    
     spawnEasterEgg(x) {
         this.easterEggs.push({
             x: x,
@@ -1685,6 +1760,54 @@ class FlappyBirdGame {
                 this.bird.y + this.bird.height > egg.y) {
                 
                 this.collectEasterEgg(i);
+            }
+        }
+    }
+    
+    updateMovingPipes() {
+        // Performance optimization: Limit moving pipes count
+        const MAX_MOVING_PIPES = 3;
+        if (this.movingPipes.length > MAX_MOVING_PIPES) {
+            console.log(`⚡ Performance: Limiting moving pipes to ${MAX_MOVING_PIPES} (was ${this.movingPipes.length})`);
+            this.movingPipes = this.movingPipes.slice(-MAX_MOVING_PIPES);
+        }
+        
+        for (let i = this.movingPipes.length - 1; i >= 0; i--) {
+            const pipe = this.movingPipes[i];
+            
+            // Move pipe horizontally (same as regular pipes)
+            const speedIncrease = this.score * 0.08;
+            const maxSpeedIncrease = this.settings.pipeSpeed * 2;
+            const dynamicPipeSpeed = this.settings.pipeSpeed + Math.min(speedIncrease, maxSpeedIncrease);
+            pipe.x -= dynamicPipeSpeed;
+            
+            // Move pipe vertically
+            pipe.y += pipe.direction * pipe.speed;
+            
+            // Bounce off top and bottom boundaries
+            if (pipe.y <= pipe.minY) {
+                pipe.y = pipe.minY;
+                pipe.direction = 1; // Change to moving down
+            } else if (pipe.y >= pipe.maxY) {
+                pipe.y = pipe.maxY;
+                pipe.direction = -1; // Change to moving up
+            }
+            
+            // Remove off-screen moving pipes
+            if (pipe.x + pipe.width < this.camera.x - 50) {
+                this.movingPipes.splice(i, 1);
+                continue;
+            }
+            
+            // Score when passing moving pipe
+            if (!pipe.scored && pipe.x + pipe.width < this.bird.x) {
+                pipe.scored = true;
+                this.score++;
+                this.world.totalPipesPassed++;
+                this.updateScore();
+                this.updateDifficulty();
+                this.checkSeasonChanges();
+                console.log('🎯 Passed moving pipe! Score:', this.score);
             }
         }
     }
@@ -1962,8 +2085,20 @@ class FlappyBirdGame {
     
     gameOver() {
         this.gameState = 'gameOver';
+        this.isPaused = false;
         this.gameOverTime = Date.now();
-        this.playSound('crash');
+        
+        // Hide pause button
+        const pauseBtn = document.getElementById('pauseBtn');
+        if (pauseBtn) {
+            pauseBtn.classList.remove('playing');
+            pauseBtn.textContent = '⏸️';
+        }
+        
+        // Only play crash sound if volume is not zero
+        if (this.getEffectiveVolume('crash') > 0) {
+            this.playSound('crash');
+        }
         
         if (this.score > this.bestScore) {
             this.bestScore = this.score;
@@ -2007,6 +2142,11 @@ class FlappyBirdGame {
     // Audio System
     playSound(soundType) {
         const now = Date.now();
+        
+        // Skip playing sounds if volume is zero to prevent issues
+        if (this.getEffectiveVolume(soundType) <= 0) {
+            return;
+        }
         
         if (soundType === 'tap') {
             // Spam-tap: restart sound from beginning
@@ -2060,6 +2200,12 @@ class FlappyBirdGame {
             enabled: this.audio.enabled,
             volume: this.getEffectiveVolume('music')
         });
+        
+        // Skip starting music if volume is zero
+        if (this.getEffectiveVolume('music') <= 0) {
+            console.log('🎵 Skipping background music - volume is zero');
+            return;
+        }
         
         if (this.audio.custom.bgMusic) {
             this.audio.custom.bgMusic.volume = this.getEffectiveVolume('music');
@@ -2483,91 +2629,6 @@ class FlappyBirdGame {
         this.updateRemoveButtonState('bgMusic');
     }
     
-    // Debug Methods
-    testBackgroundMusic() {
-        console.log('🎵 Manual background music test...');
-        console.log('Audio context:', this.audioContext ? this.audioContext.state : 'null');
-        console.log('Background music object:', !!this.audio.sounds.bgMusic);
-        console.log('Audio enabled:', this.audio.enabled);
-        console.log('Music volume:', this.getEffectiveVolume('music'));
-        
-        if (this.audio.sounds.bgMusic) {
-            try {
-                this.audio.sounds.bgMusic.start();
-                console.log('✅ Background music test started');
-            } catch (e) {
-                console.error('❌ Background music test failed:', e);
-            }
-        } else {
-            console.warn('⚠️ No background music object available');
-        }
-    }
-    
-    testAudioContext() {
-        console.log('🔊 Audio context test...');
-        console.log('Audio context exists:', !!this.audioContext);
-        console.log('Audio context state:', this.audioContext ? this.audioContext.state : 'null');
-        console.log('Audio context sample rate:', this.audioContext ? this.audioContext.sampleRate : 'null');
-        
-        if (this.audioContext && this.audioContext.state === 'suspended') {
-            console.log('🔄 Attempting to resume audio context...');
-            this.audioContext.resume().then(() => {
-                console.log('✅ Audio context resumed successfully');
-            }).catch(e => {
-                console.error('❌ Failed to resume audio context:', e);
-            });
-        }
-    }
-    
-    clearCacheAndRefresh() {
-        console.log('🔄 Manual cache clear requested...');
-        
-        // Show confirmation dialog
-        if (confirm('This will clear all cached data and refresh the game. Continue?')) {
-            // Clear localStorage (except important game data)
-            const keysToKeep = ['flappyBestScore', 'flappyPlayerName', 'flappyLocalLeaderboard', 'flappyLocalLeaderboard_backup'];
-            const allKeys = Object.keys(localStorage);
-            
-            allKeys.forEach(key => {
-                if (!keysToKeep.includes(key)) {
-                    localStorage.removeItem(key);
-                    console.log('🧹 Cleared:', key);
-                }
-            });
-            
-            // Update version to force cache refresh
-            localStorage.setItem('flappyGameVersion', '3.1.0-cleared-' + Date.now());
-            
-            // Clear service worker cache if available
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.ready.then(registration => {
-                    if (registration.active) {
-                        registration.active.postMessage({ type: 'CLEAR_CACHE' });
-                    }
-                }).catch(e => console.log('Service worker not available:', e.message));
-            }
-            
-            // Clear browser cache (force reload)
-            if ('caches' in window) {
-                caches.keys().then(names => {
-                    names.forEach(name => {
-                        caches.delete(name);
-                        console.log('🧹 Cleared cache:', name);
-                    });
-                }).then(() => {
-                    // Force reload with cache bypass
-                    setTimeout(() => {
-                        window.location.href = window.location.href + '?nocache=' + Date.now();
-                    }, 500);
-                });
-            } else {
-                // Fallback for browsers without Cache API
-                setTimeout(() => {
-                    window.location.href = window.location.href + '?nocache=' + Date.now();
-                }, 500);
-            }
-        }
-    }
     
     // Leaderboard Methods
     async savePlayerName() {
@@ -3829,7 +3890,7 @@ class FlappyBirdGame {
             console.log('📱 Mobile detected - implementing cache refresh strategies');
             
             // Force reload if localStorage indicates stale cache
-            const currentVersion = '3.1.0';
+            const currentVersion = this.currentVersion || '3.2.0';
             const storedVersion = localStorage.getItem('flappyGameVersion');
             
             if (storedVersion !== currentVersion) {
@@ -3849,6 +3910,53 @@ class FlappyBirdGame {
         // Set up mobile app lifecycle detection
         this.setupMobileLifecycleHandlers();
         }
+    }
+    
+    initializeVersion() {
+        // Generate version number based on current date and time
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hour = String(now.getHours()).padStart(2, '0');
+        const minute = String(now.getMinutes()).padStart(2, '0');
+        
+        // Create version in format: YYYY.MM.DD.HHMM
+        const autoVersion = `${year}.${month}.${day}.${hour}${minute}`;
+        
+        // Store the auto-generated version
+        this.currentVersion = autoVersion;
+        
+        // Update version display if it exists
+        this.updateVersionDisplay();
+        
+        // Update cache-busting parameters
+        this.updateCacheBustingParameters();
+    }
+    
+    updateVersionDisplay() {
+        const versionElement = document.querySelector('.version-number');
+        if (versionElement) {
+            versionElement.textContent = `v${this.currentVersion}`;
+        }
+    }
+    
+    updateCacheBustingParameters() {
+        // Update all cache-busting parameters in the document
+        const scripts = document.querySelectorAll('script[src*="?v="]');
+        const links = document.querySelectorAll('link[href*="?v="]');
+        
+        [...scripts, ...links].forEach(element => {
+            const src = element.src || element.href;
+            if (src) {
+                const newSrc = src.replace(/\?v=[\d.]+/, `?v=${this.currentVersion}`);
+                if (element.src) {
+                    element.src = newSrc;
+                } else {
+                    element.href = newSrc;
+                }
+            }
+        });
     }
     
     clearCachedAssets() {
@@ -3960,7 +4068,7 @@ class FlappyBirdGame {
     
     checkForCacheIssues() {
         // Check if the game is running an old version
-        const currentVersion = '3.1.0';
+        const currentVersion = '3.2.0';
         const storedVersion = localStorage.getItem('flappyGameVersion');
         
         if (!storedVersion || storedVersion !== currentVersion) {

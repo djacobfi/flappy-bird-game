@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Bird - Full Screen Adventure</title>
+    <title>Flappy X - Full Screen Adventure</title>
     
     <!-- Cache Control for Mobile -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <!-- Cache-busted resources -->
-    <link rel="stylesheet" href="styles.css?v=3.1.0">
+    <link rel="stylesheet" href="styles.css?v=3.2.0">
 </head>
 <body>
     <!-- Full Screen Game Container -->
@@ -27,7 +27,7 @@
         <div class="game-ui">
             <!-- Start Screen -->
             <div id="startScreen" class="screen">
-                <h1>🐦 Flappy Bird Adventure</h1>
+                <h1>🐦 Flappy X Adventure</h1>
                 <p>Journey through changing seasons and holidays!</p>
                 <p class="controls-text">Click anywhere, press Space, or tap to fly</p>
                 <div class="menu-buttons">
@@ -82,50 +82,6 @@
                 <button id="closeSettingsBtn" class="close-btn">&times;</button>
             </div>
             
-            <!-- Master Volume Section -->
-            <div class="setting-section master-section">
-                <h4>🎛️ Master Controls</h4>
-                <div class="volume-control master-volume">
-                    <label for="masterVolumeSlider">🎛️ Master Volume: <span id="masterVolumeDisplay">100%</span></label>
-                    <input type="range" id="masterVolumeSlider" min="0" max="100" value="100" class="volume-slider master-slider">
-                </div>
-                
-                <!-- Debug Controls -->
-                  <div class="debug-controls">
-                      <button id="testBgMusic" class="debug-btn">🎵 Test Background Music</button>
-                      <button id="testAudioContext" class="debug-btn">🔊 Test Audio Context</button>
-                      <button id="debugLeaderboard" class="debug-btn">📊 Debug Leaderboard</button>
-                      <button id="clearCache" class="debug-btn">🔄 Clear Cache & Refresh</button>
-                  </div>
-            </div>
-            
-            <!-- Audio Volume Controls -->
-            <div class="setting-section audio-section">
-                <h4>🔊 Audio Levels</h4>
-                
-                <div class="volume-grid">
-                    <div class="volume-control">
-                        <label for="musicVolumeSlider">🎵 Music: <span id="musicVolumeDisplay">30%</span></label>
-                        <input type="range" id="musicVolumeSlider" min="0" max="100" value="30" class="volume-slider">
-                    </div>
-                    
-                    <div class="volume-control">
-                        <label for="tapVolumeSlider">🔊 Tap: <span id="tapVolumeDisplay">70%</span></label>
-                        <input type="range" id="tapVolumeSlider" min="0" max="100" value="70" class="volume-slider">
-                    </div>
-                    
-                    <div class="volume-control">
-                        <label for="crashVolumeSlider">💥 Crash: <span id="crashVolumeDisplay">80%</span></label>
-                        <input type="range" id="crashVolumeSlider" min="0" max="100" value="80" class="volume-slider">
-                    </div>
-                    
-                    <div class="volume-control">
-                        <label for="powerupVolumeSlider">🚀 Power-up: <span id="powerupVolumeDisplay">60%</span></label>
-                        <input type="range" id="powerupVolumeSlider" min="0" max="100" value="60" class="volume-slider">
-                    </div>
-                </div>
-            </div>
-            
             <!-- Customization Section -->
             <div class="setting-section customization-section">
                 <h4>🎨 Customization</h4>
@@ -158,13 +114,70 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Master Volume Section -->
+            <div class="setting-section master-section">
+                <h4>🎛️ Master Controls</h4>
+                <div class="volume-control master-volume">
+                    <label for="masterVolumeSlider">🎛️ Master Volume: <span id="masterVolumeDisplay">100%</span></label>
+                    <input type="range" id="masterVolumeSlider" min="0" max="100" value="100" class="volume-slider master-slider">
+                </div>
+                
+            </div>
+            
+            <!-- Audio Volume Controls -->
+            <div class="setting-section audio-section">
+                <h4>🔊 Audio Levels</h4>
+                
+                <div class="volume-grid">
+                    <div class="volume-control">
+                        <label for="musicVolumeSlider">🎵 Music: <span id="musicVolumeDisplay">30%</span></label>
+                        <input type="range" id="musicVolumeSlider" min="0" max="100" value="30" class="volume-slider">
+                    </div>
+                    
+                    <div class="volume-control">
+                        <label for="tapVolumeSlider">🔊 Tap: <span id="tapVolumeDisplay">70%</span></label>
+                        <input type="range" id="tapVolumeSlider" min="0" max="100" value="70" class="volume-slider">
+                    </div>
+                    
+                    <div class="volume-control">
+                        <label for="crashVolumeSlider">💥 Crash: <span id="crashVolumeDisplay">80%</span></label>
+                        <input type="range" id="crashVolumeSlider" min="0" max="100" value="80" class="volume-slider">
+                    </div>
+                    
+                    <div class="volume-control">
+                        <label for="powerupVolumeSlider">🚀 Power-up: <span id="powerupVolumeDisplay">60%</span></label>
+                        <input type="range" id="powerupVolumeSlider" min="0" max="100" value="60" class="volume-slider">
+                    </div>
+                </div>
+            </div>
+            
+            
+            <!-- Help & Support Section -->
+            <div class="setting-section help-section">
+                <h4>🆘 Help & Support</h4>
+                <div class="help-links">
+                    <a href="https://discord.gg/vz2Q8bMj" target="_blank" class="discord-link">
+                        <span class="discord-icon">💬</span>
+                        Join Discord for Help
+                    </a>
+                </div>
+            </div>
         </div>
+        
+        <!-- Pause Button -->
+        <button id="pauseBtn" class="pause-btn" title="Pause Game">⏸️</button>
         
         <!-- Settings Button -->
         <button id="settingsBtn" class="settings-btn" title="Game Settings">⚙️</button>
         
-        <!-- Version Number -->
-        <div class="version-number">v3.1.0</div>
+        <!-- Footer -->
+        <div class="footer">
+            <div class="version-number">v3.2.0</div>
+            <a href="https://discord.com/invite/nzyvDwnEku" target="_blank" class="discord-footer" title="Join Discord for Help">
+                <span class="discord-logo">💬</span>
+            </a>
+        </div>
     </div>
 
     <!-- Firebase SDK -->
@@ -172,7 +185,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
     <!-- Leaderboard System -->
-    <script src="leaderboard.js?v=3.1.0"></script>
-    <script src="flappy-bird.js?v=3.1.0"></script>
+    <script src="leaderboard.js?v=3.2.0"></script>
+    <script src="flappy-bird.js?v=3.2.0"></script>
 </body>
 </html>
