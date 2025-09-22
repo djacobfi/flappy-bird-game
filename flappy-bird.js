@@ -154,6 +154,9 @@ class FlappyBirdGame {
         // Global leaderboard system
         this.leaderboard = new GlobalLeaderboard();
         
+        // Analytics tracking
+        this.analytics = this.leaderboard.analytics;
+        
         this.init();
     }
     
@@ -1228,6 +1231,11 @@ class FlappyBirdGame {
         document.getElementById('startScreen').classList.add('hidden');
         document.getElementById('gameOverScreen').classList.add('hidden');
         
+        // Track game start
+        if (this.analytics) {
+            this.analytics.logEvent('game_started');
+        }
+        
         // Auto-close settings when game starts
         this.hideSettings();
         
@@ -2057,6 +2065,14 @@ class FlappyBirdGame {
         this.powerUp.gracePipeAllowed = false; // Reset grace pipe for new power-up
         this.powerUp.gracePipeUsed = false;
         
+        // Track power-up activation
+        if (this.analytics) {
+            this.analytics.logEvent('power_up_activated', {
+                score: this.score,
+                power_up_type: 'speed_boost'
+            });
+        }
+        
         console.log('🚀 POWER-UP ACTIVATED! GOTTA GO FAST!');
         
         // Stop background music and play Sonic theme
@@ -2321,6 +2337,14 @@ class FlappyBirdGame {
         this.gameState = 'gameOver';
         this.isPaused = false;
         this.gameOverTime = Date.now();
+        
+        // Track game over with score
+        if (this.analytics) {
+            this.analytics.logEvent('game_over', {
+                score: this.score,
+                final_score: this.score
+            });
+        }
         
         // Hide pause button
         const pauseBtn = document.getElementById('pauseBtn');
