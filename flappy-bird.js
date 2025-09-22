@@ -3124,11 +3124,11 @@ class FlappyBirdGame {
         const label = document.querySelector(`label[for="${uploadId}"]`);
         if (label) {
             const defaults = {
-                birdUpload: '🐦 Upload Bird Sprite',
-                tapSoundUpload: '🔊 Upload Tap Sound',
+                birdUpload: '🐦 Bird Sprite',
+                tapSoundUpload: '🔊 Tap Sound',
                 crashSoundUpload: '💥 Upload Crash Sound',
-                pointSoundUpload: '🎯 Upload Point Sound',
-                bgMusicUpload: '🎵 Upload Background Music'
+                pointSoundUpload: '🎯 Point Sound',
+                bgMusicUpload: '🎵 Background Music'
             };
             
             label.textContent = defaults[uploadId];
