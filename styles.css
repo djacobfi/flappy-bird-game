@@ -883,7 +883,7 @@ input[type="file"] {
     right: 0.8rem;
     display: flex;
     align-items: center;
-    gap: 0.8rem;
+    gap: 1.5rem; /* Increased gap between version and Discord icon */
     z-index: 15;
     flex-direction: row-reverse;
 }
@@ -939,7 +939,7 @@ input[type="file"] {
     .footer {
         bottom: 0.5rem;
         right: 0.5rem;
-        gap: 0.3rem;
+        gap: 1rem; /* Increased gap on mobile */
     }
     
     .version-number {
@@ -970,6 +970,7 @@ input[type="file"] {
     .footer {
         bottom: 0.3rem;
         right: 0.3rem;
+        gap: 0.8rem; /* Increased gap on small mobile */
     }
     
     .version-number {
