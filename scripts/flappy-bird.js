@@ -1091,6 +1091,9 @@ class FlappyBirdGame {
             startBtn: () => this.startGame(),
             restartBtn: () => this.handleRestart(),
             toggleMusic: () => this.toggleMusic(),
+            openLeaderboard: () => this.toggleStartLeaderboard(true),
+            openSettings: () => this.toggleSettings(),
+            closeStartLeaderboard: () => this.toggleStartLeaderboard(false),
             settingsBtn: () => this.toggleSettings(),
             closeSettingsBtn: () => this.hideSettings(),
             pauseBtn: () => this.togglePause(),
@@ -1131,6 +1134,24 @@ class FlappyBirdGame {
                 });
             }
         });
+    }
+
+    toggleStartLeaderboard(show) {
+        const container = document.getElementById('startLeaderboard');
+        if (!container) return;
+        container.style.display = show ? 'block' : 'none';
+        if (show) {
+            // If we have a leaderboard instance, refresh the list into startLeaderboardList
+            try {
+                if (this.leaderboard) {
+                    const listEl = document.getElementById('startLeaderboardList');
+                    if (listEl) {
+                        // Reuse existing render method via public API if available
+                        this.refreshLeaderboard('#startLeaderboardList');
+                    }
+                }
+            } catch (e) {}
+        }
     }
     
     setupFileUploadListeners() {

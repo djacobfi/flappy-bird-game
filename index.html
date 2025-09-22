@@ -57,57 +57,29 @@
         
         <!-- Game UI Overlay -->
         <div class="game-ui">
-            <!-- Start Screen -->
+            <!-- Start Screen (minimal) -->
             <div id="startScreen" class="screen">
-                <div class="welcome-container">
-                    <div class="game-logo">
-                        <h1 class="game-title">🐦 Flappy X</h1>
-                        <div class="subtitle">Epic Adventure</div>
+                <div class="start-minimal">
+                    <h1 class="game-title">🐦 Flappy X</h1>
+                    <p class="start-instructions">Tap anywhere to start</p>
+
+                    <div class="start-actions">
+                        <button id="toggleMusic" class="small-btn">🔊 Music</button>
+                        <button id="openLeaderboard" class="small-btn">🏆 View Leaderboard</button>
+                        <button id="openSettings" class="small-btn">🎨 Customize Your Game</button>
                     </div>
-                    
-                    <div class="welcome-content">
-                        <div class="feature-highlights">
-                            <div class="feature-item">🌟 Dynamic Seasons</div>
-                            <div class="feature-item">🎁 Holiday Themes</div>
-                            <div class="feature-item">🏆 Global Leaderboard</div>
-                            <div class="feature-item">🎵 Custom Music</div>
+
+                    <!-- Start screen leaderboard (toggle) -->
+                    <div id="startLeaderboard" class="leaderboard-section" style="display:none; max-height: 280px;">
+                        <div class="leaderboard-header" style="margin-top:0;">
+                            <h3 class="leaderboard-title">🏆 Global Leaderboard</h3>
                         </div>
-                        
-                        <div class="game-description">
-                            <p>Soar through ever-changing worlds filled with challenges and surprises!</p>
-                        </div>
-                        
-                        <div class="controls-info">
-                            <div class="control-item">
-                                <span class="control-icon">🖱️</span>
-                                <span>Click to fly</span>
-                            </div>
-                            <div class="control-item">
-                                <span class="control-icon">⌨️</span>
-                                <span>Space bar</span>
-                            </div>
-                            <div class="control-item">
-                                <span class="control-icon">👆</span>
-                                <span>Tap screen</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="menu-buttons">
-                        <button id="startBtn" class="game-btn primary start-btn">
-                            <span class="btn-icon">🚀</span>
-                            <span class="btn-text">Start Adventure</span>
-                        </button>
-                        <button id="toggleMusic" class="game-btn secondary music-btn">
-                            <span class="btn-icon">🔊</span>
-                            <span class="btn-text">Music</span>
-                        </button>
-                    </div>
-                    
-                    <div class="welcome-footer">
-                        <div class="version-info">v3.3.0</div>
-                        <div class="social-links">
-                            <a href="https://discord.gg/nzyvDwnEku" target="_blank" class="social-link">💬 Discord</a>
+                        <ol id="startLeaderboardList" class="leaderboard-list">
+                            <li>Loading...</li>
+                        </ol>
+                        <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:0.5rem;">
+                            <button id="refreshLeaderboard" class="refresh-btn" style="max-width:180px;">🔄 Refresh</button>
+                            <button id="closeStartLeaderboard" class="small-btn">✖ Close</button>
                         </div>
                     </div>
                 </div>
