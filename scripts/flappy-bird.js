@@ -1053,28 +1053,56 @@ class FlappyBirdGame {
     
     
     setupEventListeners() {
-        // Game controls
+        // Game controls - Enhanced for better responsiveness
         document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
+            if (e.code === 'Space' || e.key === ' ') {
                 e.preventDefault();
                 this.handleJumpStart();
             }
         });
         
         document.addEventListener('keyup', (e) => {
-            if (e.code === 'Space') {
+            if (e.code === 'Space' || e.key === ' ') {
                 e.preventDefault();
                 this.handleJumpEnd();
             }
         });
         
-        this.canvas.addEventListener('mousedown', () => this.handleJumpStart());
-        this.canvas.addEventListener('mouseup', () => this.handleJumpEnd());
+        // Canvas mouse events
+        this.canvas.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            this.handleJumpStart();
+        });
+        this.canvas.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            this.handleJumpEnd();
+        });
+        this.canvas.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.handleJumpStart();
+        });
+        
+        // Canvas touch events
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             this.handleJumpStart();
         });
         this.canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.handleJumpEnd();
+        });
+        
+        // Additional touch events for better mobile support
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        });
+        
+        // Trackpad support
+        this.canvas.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            this.handleJumpStart();
+        });
+        this.canvas.addEventListener('pointerup', (e) => {
             e.preventDefault();
             this.handleJumpEnd();
         });
