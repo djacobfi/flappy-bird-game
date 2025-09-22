@@ -238,15 +238,14 @@ class GlobalLeaderboard {
                     leaderboard_type: 'global'
                 });
                 
-                // Also track with Google Analytics gtag
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'score_submitted', {
-                        event_category: 'Leaderboard',
-                        event_label: 'Global Score Submission',
-                        value: score,
-                        custom_parameter_score: score,
-                        custom_parameter_player: this.playerName,
-                        custom_parameter_user_id: this.userId
+                // Also track with Mixpanel
+                if (typeof mixpanel !== 'undefined' && mixpanel.track) {
+                    mixpanel.track('score_submitted', {
+                        category: 'Leaderboard',
+                        label: 'Global Score Submission',
+                        score: score,
+                        player: this.playerName,
+                        user_id: this.userId
                     });
                 }
                 
