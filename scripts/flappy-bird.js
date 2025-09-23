@@ -30,7 +30,8 @@ class FlappyBirdGame {
         // Game settings
         this.settings = {
             gravity: 0.4,
-            jumpPower: { min: -8, max: -15 },
+            // Require continuous taps: a single, modest upward impulse per tap
+            jumpPower: { min: -7.5, max: -7.5 },
             birdSpeed: 4, // Increased from 2 for better responsiveness
             pipeSpeed: 1.5,
             pipeGap: 250,
@@ -53,7 +54,7 @@ class FlappyBirdGame {
         this.jumpState = {
             isPressed: false,
             pressTime: 0,
-            maxHoldTime: 300
+            maxHoldTime: 120
         };
         
         // Audio system with individual volume controls
@@ -76,7 +77,9 @@ class FlappyBirdGame {
                 pointLastPlayed: 0,
                 currentTapAudio: null,
                 currentCrashAudio: null,
-                currentPointAudio: null
+                currentPointAudio: null,
+                tapQueue: [],
+                tapPlaying: false
             }
         };
         
@@ -1232,17 +1235,9 @@ class FlappyBirdGame {
     }
     
     jump() {
-        let jumpPower = this.settings.jumpPower.min;
-        
-        if (this.jumpState.isPressed) {
-            const holdTime = Date.now() - this.jumpState.pressTime;
-            const holdRatio = Math.min(holdTime / this.jumpState.maxHoldTime, 1);
-            jumpPower = this.settings.jumpPower.min + 
-                       (this.settings.jumpPower.max - this.settings.jumpPower.min) * holdRatio;
-        }
-        
-        this.bird.velocity = jumpPower;
-        this.playSound('tap');
+        // Flappy-style: each tap gives a fixed impulse; must keep tapping to fly
+        this.bird.velocity = this.settings.jumpPower.min;
+        this.enqueueTapSound();
     }
     
     // Game Loop
@@ -2401,6 +2396,49 @@ class FlappyBirdGame {
             } else if (this.audio.sounds.point) {
                 this.audio.sounds.point();
             }
+        }
+    }
+
+    // Queue-based tap sound playback: play each fully, no overlap spam
+    enqueueTapSound() {
+        const volume = this.getEffectiveVolume('tap');
+        if (volume <= 0) return;
+        
+        // If custom tap sound exists, queue its URL; else queue synthesized action
+        if (this.audio.custom.tapSound) {
+            this.audio.state.tapQueue.push({ type: 'custom' });
+        } else if (typeof this.audio.sounds.tap === 'function') {
+            this.audio.state.tapQueue.push({ type: 'synth' });
+        }
+        
+        this.processTapQueue();
+    }
+    
+    processTapQueue() {
+        if (this.audio.state.tapPlaying) return;
+        const next = this.audio.state.tapQueue.shift();
+        if (!next) return;
+        
+        this.audio.state.tapPlaying = true;
+        const volume = this.getEffectiveVolume('tap');
+        const onEnded = () => {
+            this.audio.state.tapPlaying = false;
+            this.processTapQueue();
+        };
+        
+        try {
+            if (next.type === 'custom') {
+                const tapAudio = this.audio.custom.tapSound.cloneNode();
+                tapAudio.volume = volume;
+                tapAudio.addEventListener('ended', onEnded, { once: true });
+                tapAudio.play().catch(() => onEnded());
+            } else {
+                // Synth tap is ~duration 0.2s; invoke and schedule onEnded
+                this.audio.sounds.tap();
+                setTimeout(onEnded, 220);
+            }
+        } catch (_) {
+            onEnded();
         }
     }
     
